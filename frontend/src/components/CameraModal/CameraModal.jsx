@@ -1,122 +1,235 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { pipelineStore } from '../../state/pipelineStore';
+import mlog from '../../services/debugLogger';
 import './CameraModal.css';
 
 const CameraModal = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [stream, setStream] = useState(null);
+  const streamRef = useRef(null);
+  const mountedRef = useRef(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [capturedImage, setCapturedImage] = useState(null);
   const [extractionResult, setExtractionResult] = useState(null);
+  const [isCameraReady, setIsCameraReady] = useState(false);
 
-  useEffect(() => {
-    // Request camera access
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(mediaStream => {
-        setStream(mediaStream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-      })
-      .catch(err => {
-        console.error("Error accessing camera:", err);
-        setError("Unable to access camera. Please check permissions.");
+  // Centralized stream cleanup — always uses the ref for reliability
+  const stopStream = useCallback(() => {
+    const hadStream = !!streamRef.current;
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraReady(false);
+    mlog.camera('stopStream', { hadStream });
+  }, []);
+
+  // Start camera — called on mount and on retake
+  const startCamera = useCallback(async () => {
+    // Always clean up any leftover stream first
+    stopStream();
+    setError('');
+
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+
+      // Guard: StrictMode may have unmounted us while getUserMedia was pending
+      if (!mountedRef.current) {
+        mlog.camera('getUserMedia resolved BUT component unmounted — killing orphan stream');
+        mediaStream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
+      streamRef.current = mediaStream;
+      mlog.camera('getUserMedia SUCCESS', { tracks: mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label, readyState: t.readyState })) });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+      setIsCameraReady(true);
+    } catch (err) {
+      console.error('[CameraModal] Error accessing camera:', err);
+      mlog.camera('getUserMedia FAILED', { error: err.message });
+      setError('Unable to access camera. Please check permissions.');
+      pipelineStore.dispatch('TRACE_APPEND', {
+        agent: 'Vision Agent',
+        step: 'camera_error',
+        type: 'error',
+        status: 'failed',
+        details: { message: `Camera access denied: ${err.message}` },
+        timestamp: new Date().toISOString()
       });
+    }
+  }, [stopStream]);
+
+  // On mount: start camera + emit trace. On unmount: always stop stream.
+  useEffect(() => {
+    mountedRef.current = true;
+    startCamera();
+
+    pipelineStore.dispatch('TRACE_APPEND', {
+      agent: 'Vision Agent',
+      step: 'camera_opened',
+      type: 'event',
+      status: 'started',
+      details: { message: 'Camera viewfinder opened for prescription scan' },
+      timestamp: new Date().toISOString()
+    });
 
     return () => {
-      // Cleanup
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      mountedRef.current = false;
+      stopStream();
     };
-  }, [capturedImage]); // Re-run effect if we reset the captured image
-
-  useEffect(() => {
-    if (stream && videoRef.current && !videoRef.current.srcObject) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps — runs only on mount/unmount
 
   const handleCapture = () => {
-    if (!videoRef.current || !canvasRef.current || !stream) return;
-    
-    // Stop stream tracks to freeze camera
-    stream.getTracks().forEach(track => track.stop());
-    setStream(null);
+    mlog.camera('handleCapture called', { hasVideo: !!videoRef.current, hasCanvas: !!canvasRef.current, hasStream: !!streamRef.current });
+    if (!videoRef.current || !canvasRef.current || !streamRef.current) {
+      mlog.camera('handleCapture ABORTED — missing refs');
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    // ⚡ CRITICAL: Read dimensions and draw frame WHILE stream is still live
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    mlog.camera('canvas dimensions from live video', { w, h });
+
+    if (w === 0 || h === 0) {
+      mlog.camera('handleCapture ABORTED — video dimensions are 0 (stream not ready)');
+      return;
+    }
+
+    canvas.width = w;
+    canvas.height = h;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, w, h);
+
+    // NOW freeze the camera by stopping the stream (after frame is captured)
+    stopStream();
 
     setIsProcessing(true);
     setExtractionResult(null);
-    
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
+    pipelineStore.dispatch('TRACE_APPEND', {
+      agent: 'Vision Agent',
+      step: 'image_captured',
+      type: 'event',
+      status: 'completed',
+      details: { message: 'Prescription image captured, sending to extraction pipeline...' },
+      timestamp: new Date().toISOString()
+    });
+
     canvas.toBlob(async (blob) => {
       if (!blob) {
-        setError("Capture failed");
+        setError('Capture failed — could not create image blob.');
         setIsProcessing(false);
+        pipelineStore.dispatch('TRACE_APPEND', {
+          agent: 'Vision Agent',
+          step: 'capture_failed',
+          type: 'error',
+          status: 'failed',
+          details: { message: 'Failed to create image blob from canvas' },
+          timestamp: new Date().toISOString()
+        });
         return;
       }
-      
+
       const imageUrl = URL.createObjectURL(blob);
       setCapturedImage(imageUrl);
-      
+
       const sessionId = pipelineStore.get().sessionId;
-      pipelineStore.dispatch('RECORD_APPEND', { text: "📷 Processing Prescription..." });
-      
+      pipelineStore.dispatch('RECORD_APPEND', { text: '📷 Processing Prescription...' });
+
+      // Show in chat
+      pipelineStore.dispatch('USER_MESSAGE_SENT', {
+        type: 'image',
+        text: 'Captured prescription via camera',
+        url: imageUrl
+      });
+
       try {
         const formData = new FormData();
         formData.append('image', blob, 'prescription.jpg');
-        
+
         const url = new URL('http://localhost:8000/api/prescription/upload');
         url.searchParams.append('session_id', sessionId);
-        
+
         const res = await fetch(url, {
           method: 'POST',
           body: formData
         });
-        
-        if (!res.ok) throw new Error("Upload failed");
-        
+
+        if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+
         const data = await res.json();
-        
+
         if (data.medicines && data.medicines.length > 0) {
-           const meds = data.medicines.map(m => m.name);
-           pipelineStore.dispatch('SHELF_CARD_READY', {
-             type: 'medical',
-             card: {
-               title: 'EXTRACTED MEDICINES',
-               severity: 0,
-               content: meds
-             }
-           });
+          const meds = data.medicines.map(m => m.name);
+          pipelineStore.dispatch('SHELF_CARD_READY', {
+            type: 'medical',
+            card: {
+              title: 'EXTRACTED MEDICINES',
+              severity: 0,
+              content: meds
+            }
+          });
+
+          // Trigger CHECKOUT_READY with extracted medicines
+          let totalPrice = 0;
+          const items = data.medicines.map(m => {
+            totalPrice += m.price || 0;
+            return {
+              name: m.name,
+              stockStatus: m.available ? 'In Stock' : 'Out of Stock',
+              price: m.price || 0,
+              warnings: m.warnings || [],
+              substitute: m.substitute || null
+            };
+          });
+
+          pipelineStore.dispatch('CHECKOUT_READY', {
+            orderSummary: {
+              pid: sessionId,
+              complaint: 'Prescription Scan',
+              validation: { status: 'Pending Review', severity: 0 },
+              items,
+              substitutions: [],
+              totalPrice,
+              orderId: `ORD-${Date.now().toString().slice(-4)}`
+            }
+          });
         }
-        
+
         setExtractionResult(data);
-        pipelineStore.dispatch('RECORD_APPEND', { text: "✅ Prescription processed successfully" });
-        
+        pipelineStore.dispatch('RECORD_APPEND', { text: '✅ Prescription processed successfully' });
+
         pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
-           text: data.message,
-           footnotes: [{ agent: 'Vision', text: `Extraction Status: ${data.extraction_status}` }]
+          text: data.message,
+          footnotes: [{ agent: 'Vision', text: `Extraction Status: ${data.extraction_status}` }]
         });
-        
-        // Dispatch vision confidence
+
         pipelineStore.dispatch('INPUT_CONFIDENCE_UPDATED', {
           type: 'vision',
           score: data.extraction_status === 'success' ? Math.floor(Math.random() * 15 + 85) : 0
         });
-        
-        // Don't close camera automatically so they can see the results
       } catch (err) {
-        console.error("Upload error:", err);
+        console.error('[CameraModal] Upload error:', err);
         setError(`Failed to upload prescription: ${err.message}`);
+        pipelineStore.dispatch('TRACE_APPEND', {
+          agent: 'Vision Agent',
+          step: 'upload_error',
+          type: 'error',
+          status: 'failed',
+          details: { message: `Prescription upload failed: ${err.message}` },
+          timestamp: new Date().toISOString()
+        });
       } finally {
         setIsProcessing(false);
       }
@@ -127,13 +240,35 @@ const CameraModal = () => {
     setCapturedImage(null);
     setExtractionResult(null);
     setError('');
+    startCamera();
+
+    pipelineStore.dispatch('TRACE_APPEND', {
+      agent: 'Vision Agent',
+      step: 'camera_retake',
+      type: 'event',
+      status: 'started',
+      details: { message: 'Retaking prescription image...' },
+      timestamp: new Date().toISOString()
+    });
   };
 
   const handleConfirm = () => {
+    stopStream();
+    pipelineStore.dispatch('RECORD_APPEND', { text: '📷 Prescription scan confirmed' });
     pipelineStore.dispatch('CLOSE_CAMERA', {});
   };
 
   const handleClose = () => {
+    stopStream();
+    pipelineStore.dispatch('RECORD_APPEND', { text: '📷 Camera scan cancelled' });
+    pipelineStore.dispatch('TRACE_APPEND', {
+      agent: 'Vision Agent',
+      step: 'camera_cancelled',
+      type: 'event',
+      status: 'completed',
+      details: { message: 'Camera scan cancelled by user' },
+      timestamp: new Date().toISOString()
+    });
     pipelineStore.dispatch('CLOSE_CAMERA', {});
   };
 
@@ -182,7 +317,7 @@ const CameraModal = () => {
                 <button 
                   className="camera-capture-btn" 
                   onClick={handleCapture}
-                  disabled={isProcessing || !!error}
+                  disabled={isProcessing || !!error || !isCameraReady}
                 >
                   [ CAPTURE IMAGE ]
                 </button>

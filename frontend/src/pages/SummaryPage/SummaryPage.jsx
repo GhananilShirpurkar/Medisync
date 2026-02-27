@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { pipelineStore } from '../../state/pipelineStore';
+import mlog from '../../services/debugLogger';
 import './SummaryPage.css';
 
 const SummaryPage = () => {
@@ -11,11 +12,57 @@ const SummaryPage = () => {
         return () => unsubscribe();
     }, []);
 
-    // Payment Simulation: confirm after 9 seconds
+    // Payment Simulation: confirm after 9 seconds, then send WhatsApp notification
     useEffect(() => {
-        const timer = setTimeout(() => {
+        const timer = setTimeout(async () => {
             setPaymentConfirmed(true);
             pipelineStore.dispatch('payment_confirmed', {});
+
+            // Actually send WhatsApp notification via backend
+            const currentState = pipelineStore.get();
+            const phone = currentState.phone;
+            const order = currentState.orderSummary || currentState.pendingOrderSummary;
+
+            mlog.whatsapp('payment_confirmed — attempting notification', { 
+              hasPhone: !!phone, phone: phone || 'MISSING', 
+              hasOrder: !!order, orderId: order?.orderId || 'MISSING',
+              itemCount: order?.items?.length || 0
+            });
+
+            if (phone && order) {
+                try {
+                    const res = await fetch('http://localhost:8000/api/notifications/order-confirmation', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phone: phone,
+                            order_id: order.orderId || `ORD-${Date.now().toString().slice(-4)}`,
+                            patient_name: currentState.pid || 'Patient',
+                            items: (order.items || []).map(item => ({
+                                medicine_name: item.name,
+                                quantity: 1,
+                                price: item.price || 0
+                            })),
+                            total_amount: order.totalPrice || 0,
+                            estimated_pickup_time: '30 minutes'
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.success) {
+                        mlog.whatsapp('SENT OK', { message_id: data.message_id });
+                        console.log('[WhatsApp] Notification sent successfully:', data.message_id);
+                    } else {
+                        mlog.whatsapp('SEND FAILED', { message: data.message });
+                        console.warn('[WhatsApp] Notification failed:', data.message);
+                    }
+                } catch (err) {
+                    mlog.whatsapp('API ERROR', { error: err.message });
+                    console.error('[WhatsApp] Failed to send notification:', err);
+                }
+            } else {
+                console.warn('[WhatsApp] Missing phone or order data — skipping notification', { phone: !!phone, order: !!order });
+            }
         }, 9000);
         return () => clearTimeout(timer);
     }, []);

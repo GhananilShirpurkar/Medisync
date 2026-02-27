@@ -50,8 +50,17 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
         }
       }
       
-      pipelineStore.dispatch('RECORD_APPEND', { text: "📎 Prescription file uploaded..." });
-      
+      pipelineStore.dispatch('RECORD_APPEND', { text: '📎 Prescription file uploaded...' });
+
+      pipelineStore.dispatch('TRACE_APPEND', {
+        agent: 'Vision Agent',
+        step: 'file_upload_started',
+        type: 'event',
+        status: 'started',
+        details: { message: `Uploading prescription file: ${file.name}` },
+        timestamp: new Date().toISOString()
+      });
+
       // Also show it in the chat UI
       pipelineStore.dispatch('USER_MESSAGE_SENT', {
          type: 'image',
@@ -108,11 +117,19 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
            text: data.message,
            footnotes: [{ agent: 'Vision', text: `Status: ${data.extraction_status}` }]
         });
-        
-        // Dispatch vision confidence
+
         pipelineStore.dispatch('INPUT_CONFIDENCE_UPDATED', {
           type: 'vision',
-          score: data.extraction_status === 'success' ? Math.floor(Math.random() * 15 + 85) : 0 // Random between 85-99 for success, 0 for fail
+          score: data.extraction_status === 'success' ? Math.floor(Math.random() * 15 + 85) : 0
+        });
+
+        pipelineStore.dispatch('TRACE_APPEND', {
+          agent: 'Vision Agent',
+          step: 'file_upload_completed',
+          type: 'event',
+          status: 'completed',
+          details: { message: `Prescription file processed: ${data.extraction_status}`, medicines_found: data.medicines?.length || 0 },
+          timestamp: new Date().toISOString()
         });
       } catch (err) {
         console.error("File upload error:", err);
@@ -132,6 +149,7 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
 
   const handleTriggerCamera = () => {
     pipelineStore.dispatch('OPEN_CAMERA', {});
+    pipelineStore.dispatch('RECORD_APPEND', { text: '📷 Opening camera for prescription scan...' });
   };
 
   const toggleRecording = async () => {

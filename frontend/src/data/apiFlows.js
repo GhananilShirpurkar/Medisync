@@ -107,7 +107,7 @@ export const runIdentityFlowAPI = async (phoneNumber) => {
     initWebSocket(sessionId);
     
     pipelineStore.dispatch('RECORD_APPEND', { text: `Session opened (${sessionId})` });
-    pipelineStore.dispatch('identity_resolved', { pid: phoneNumber || 'PID-API' });
+    pipelineStore.dispatch('IDENTITY_RESOLVED', { pid: phoneNumber || 'PID-API', phone: phoneNumber || '' });
     
   } catch (error) {
     console.error("Failed to init identity flow", error);

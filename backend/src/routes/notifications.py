@@ -12,6 +12,7 @@ from typing import Optional, List, Dict, Any
 import logging
 
 from notifications.whatsapp_service import (
+    WhatsAppNotificationService,
     send_order_confirmation_sync,
     send_prescription_summary_sync,
     send_bill_pdf_sync,
@@ -92,8 +93,9 @@ async def send_order_confirmation(request: SendOrderConfirmationRequest):
             "estimated_pickup_time": request.estimated_pickup_time
         }
         
-        # Send notification
-        message_id = send_order_confirmation_sync(request.phone, order)
+        # Use async service directly (sync wrappers use asyncio.run which fails in FastAPI)
+        service = WhatsAppNotificationService()
+        message_id = await service.send_order_confirmation(request.phone, order)
         
         if message_id:
             return {
@@ -104,7 +106,7 @@ async def send_order_confirmation(request: SendOrderConfirmationRequest):
         else:
             return {
                 "success": False,
-                "message": "Failed to send notification (check logs)"
+                "message": "Failed to send notification (check Twilio config and logs)"
             }
             
     except Exception as e:
