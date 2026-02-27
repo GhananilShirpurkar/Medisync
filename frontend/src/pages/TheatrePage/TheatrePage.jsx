@@ -5,6 +5,7 @@ import TheatreLayout from '../../layouts/TheatreLayout/TheatreLayout';
 import ConsultationStage from '../../components/ConsultationStage/ConsultationStage';
 import ClinicalRecord from '../../components/ClinicalRecord/ClinicalRecord';
 import CameraModal from '../../components/CameraModal/CameraModal';
+import VoiceCallModal from '../../components/VoiceCallModal/VoiceCallModal';
 import AgentLog from '../../components/AgentLog/AgentLog';
 import FusionGauge from '../../components/FusionGauge/FusionGauge';
 
@@ -292,6 +293,7 @@ const TheatrePage = () => {
         ordersPanelContent={ordersPanelContent}
       />
       {pipelineState.isCameraOpen && <CameraModal />}
+      {pipelineState.isVoiceCallOpen && <VoiceCallModal />}
     </>
   );
 };

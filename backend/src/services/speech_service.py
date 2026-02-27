@@ -21,11 +21,41 @@ except ImportError:
     print("⚠️  faster-whisper not installed. Install with: pip install faster-whisper")
 
 
+
 # ------------------------------------------------------------------
 # CONFIGURATION
 # ------------------------------------------------------------------
-WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "base")  # tiny | base | small
-WHISPER_LANGUAGE = os.getenv("WHISPER_LANGUAGE", "en")  # en | hi | auto
+WHISPER_MODEL_SIZE = os.getenv("WHISPER_MODEL", "small")  # tiny | base | small | medium
+WHISPER_LANGUAGE = os.getenv("WHISPER_LANGUAGE", "en")     # en | hi | auto
+
+# Domain-specific prompt for pharmacy context (reduces hallucination)
+WHISPER_PROMPT = (
+    "This is a pharmacy consultation. The patient is describing symptoms "
+    "like headache, fever, cold, cough, body pain, stomach ache, or "
+    "requesting medicines like paracetamol, ibuprofen, aspirin, cough syrup. "
+    "They may state their age, allergies, or how long they have had symptoms."
+)
+
+
+# ------------------------------------------------------------------
+# RESIDENT MODEL SINGLETON
+# ------------------------------------------------------------------
+_whisper_model = None
+
+def _get_whisper_model():
+    """Load Whisper model once and keep it resident for fast inference."""
+    global _whisper_model
+    if _whisper_model is None:
+        if not WHISPER_AVAILABLE:
+            return None
+        print(f"🎤 Loading Whisper '{WHISPER_MODEL_SIZE}' model (one-time, stays resident)...")
+        _whisper_model = WhisperModel(
+            WHISPER_MODEL_SIZE,
+            device="cpu",
+            compute_type="int8"  # Quantized for faster CPU inference
+        )
+        print(f"✅ Whisper '{WHISPER_MODEL_SIZE}' model loaded and resident in memory")
+    return _whisper_model
 
 
 # ------------------------------------------------------------------
@@ -34,17 +64,7 @@ WHISPER_LANGUAGE = os.getenv("WHISPER_LANGUAGE", "en")  # en | hi | auto
 def preprocess_audio(audio_path: str) -> str:
     """
     Preprocess audio for optimal transcription.
-    
-    Steps:
-    1. Convert to 16kHz mono WAV
-    2. Normalize volume
-    3. Remove silence (optional)
-    
-    Args:
-        audio_path: Path to input audio file
-        
-    Returns:
-        Path to preprocessed audio file
+    Convert to 16kHz mono WAV + normalize volume.
     """
     try:
         try:
@@ -54,24 +74,17 @@ def preprocess_audio(audio_path: str) -> str:
             print("⚠️  pydub not installed, skipping audio preprocessing")
             return audio_path
 
-        # Load audio
         audio = AudioSegment.from_file(audio_path)
         
-        # Convert to mono
         if audio.channels > 1:
             audio = audio.set_channels(1)
-        
-        # Convert to 16kHz (Whisper's native sample rate)
         if audio.frame_rate != 16000:
             audio = audio.set_frame_rate(16000)
         
-        # Normalize volume
         audio = normalize(audio)
         
-        # Save preprocessed audio
         output_path = "/tmp/preprocessed_audio.wav"
         audio.export(output_path, format="wav")
-        
         return output_path
         
     except Exception as e:
@@ -80,35 +93,15 @@ def preprocess_audio(audio_path: str) -> str:
 
 
 # ------------------------------------------------------------------
-# SPEECH-TO-TEXT
+# SPEECH-TO-TEXT (fast — model stays resident)
 # ------------------------------------------------------------------
 def transcribe_audio(audio_path: str, language: Optional[str] = None) -> Dict[str, Any]:
     """
-    Transcribe audio file to text using Whisper.
-    
-    RAM-SAFE PATTERN:
-    - Model loaded inside function
-    - Model deleted after use
-    - Never keep model resident
-    
-    Args:
-        audio_path: Path to audio file (WAV, MP3, etc.)
-        language: Language code (en, hi, etc.) or None for auto-detection
-        
-    Returns:
-        Dictionary with transcription and metadata
-        
-    Example:
-        {
-            "success": True,
-            "transcription": "I need paracetamol and cough syrup",
-            "language": "en",
-            "language_probability": 0.98,
-            "duration": 3.5,
-            "method": "faster-whisper-base"
-        }
+    Transcribe audio file to text using resident Whisper model.
+    First call loads the model (~5s). Subsequent calls are instant.
     """
-    if not WHISPER_AVAILABLE:
+    model = _get_whisper_model()
+    if model is None:
         return {
             "success": False,
             "error": "faster-whisper not installed",
@@ -116,41 +109,28 @@ def transcribe_audio(audio_path: str, language: Optional[str] = None) -> Dict[st
         }
     
     try:
-        # RAM-SAFE: Load model inside function
-        print(f"🎤 Loading Whisper {WHISPER_MODEL_SIZE} model (this may take 3-5 seconds)...")
-        model = WhisperModel(
-            WHISPER_MODEL_SIZE,
-            device="cpu",
-            compute_type="int8"  # Quantized for faster CPU inference
-        )
-        print("✅ Whisper model loaded successfully")
-        
-        # Preprocess audio (optional, can be skipped for speed)
-        # preprocessed_path = preprocess_audio(audio_path)
-        preprocessed_path = audio_path  # Skip preprocessing for now
+        # Preprocess audio for better quality
+        preprocessed_path = preprocess_audio(audio_path)
         
         # Determine language
         lang = language or WHISPER_LANGUAGE
         if lang == "auto":
-            lang = None  # Let Whisper detect automatically
+            lang = None
         
-        # Transcribe
+        # Transcribe with domain prompt
         segments, info = model.transcribe(
             preprocessed_path,
             beam_size=5,
             language=lang,
-            vad_filter=True,  # Voice activity detection (removes silence)
-            vad_parameters=dict(min_silence_duration_ms=500)
+            vad_filter=True,
+            vad_parameters=dict(min_silence_duration_ms=500),
+            initial_prompt=WHISPER_PROMPT
         )
         
-        # Combine segments
-        full_text = []
-        for segment in segments:
-            full_text.append(segment.text)
-        
+        full_text = [segment.text for segment in segments]
         transcription = ' '.join(full_text).strip()
         
-        result = {
+        return {
             "success": True,
             "transcription": transcription,
             "language": info.language,
@@ -158,14 +138,6 @@ def transcribe_audio(audio_path: str, language: Optional[str] = None) -> Dict[st
             "duration": info.duration,
             "method": f"faster-whisper-{WHISPER_MODEL_SIZE}"
         }
-        
-        # RAM-SAFE: Delete model and force garbage collection
-        del model
-        import gc
-        gc.collect()
-        print("🗑️  Whisper model unloaded from memory")
-        
-        return result
         
     except Exception as e:
         print(f"❌ Whisper transcription failed: {e}")

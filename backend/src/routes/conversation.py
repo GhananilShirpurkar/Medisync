@@ -1204,6 +1204,27 @@ async def voice_input(
         # Get conversation history
         messages = conversation_service.get_messages(session_id)
         
+        # ── Identity Resolution (same as text route) ─────────────────
+        # Ensures voice users get a PID so switching to text doesn't re-greet
+        session_user_id = session.get("user_id")
+        is_returning_user = session_user_id and session_user_id.startswith("PID-")
+        
+        if not is_returning_user:
+            phone_number = None
+            is_phone_id = session_user_id and identity_agent.extract_phone_number(session_user_id)
+            if is_phone_id:
+                phone_number = identity_agent.extract_phone_number(session_user_id)
+            
+            if phone_number:
+                patient_info = identity_agent.resolve_identity(phone_number)
+                pid = patient_info["pid"]
+                conversation_service.update_session(
+                    session_id=session_id,
+                    user_id=pid,
+                    patient_context={"pid": pid, "phone": patient_info["phone"], "name": patient_info.get("name")}
+                )
+                print(f"🆔 Voice call: resolved identity → {pid}")
+        
         # Step 1: Classify intent
         await trace_manager.emit(
             session_id=session_id,
@@ -1226,6 +1247,14 @@ async def voice_input(
         )
         
         intent = intent_result.get("intent", "symptom")
+        
+        # ── Intent Inheritance (same as text route) ──────────────────
+        # If user was discussing symptoms and now says something vague, keep the symptom flow
+        previous_intent = session.get("intent")
+        if previous_intent == "symptom":
+            if intent in ["unknown", "greeting", "generic_help"] or intent_result.get("confidence", 1.0) < 0.5:
+                print(f"🧠 Voice: inheriting previous intent '{previous_intent}' (was '{intent}')")
+                intent = previous_intent
         
         # Check for client-side triggers
         client_action = None
@@ -1355,17 +1384,16 @@ async def voice_input(
         
         # Step 4: Generate recommendations based on intent
         if intent == "symptom":
-            # Find medicines for symptoms
-            await trace_manager.emit(
-                session_id=session_id,
-                agent_name="Medical Agent",
-                step_name="Find Medicines",
-                action_type="tool_use",
-                status="started",
-                details={"transcription": transcription}
-            )
+            # Use ALL user messages for symptom matching (not just current transcription)
+            all_messages = conversation_service.get_messages(session_id)
+            combined_symptoms = " ".join([
+                msg.get("content", "") 
+                for msg in all_messages 
+                if msg.get("role") == "user"
+            ])
+            
             recommendations = await _get_symptom_recommendations(
-                transcription,
+                combined_symptoms,
                 patient_context
             )
             await trace_manager.emit(

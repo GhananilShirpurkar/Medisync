@@ -1,0 +1,335 @@
+/* ═══════════════════════════════════════════════════
+   VOICE CALL MODAL — Neo-brutalist call screen
+   ═══════════════════════════════════════════════════ */
+
+.voice-call-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 5, 10, 0.92);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: vc-fade-in 0.3s ease-out;
+}
+
+@keyframes vc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.voice-call-modal {
+  background: #0a0a14;
+  border: 1px solid #222;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 24px 24px;
+  gap: 20px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+  animation: vc-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes vc-slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ── Header ───────────────────────────────────── */
+
+.vc-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: #555;
+  text-transform: uppercase;
+}
+
+.vc-timer {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Avatar Ring ──────────────────────────────── */
+
+.vc-avatar-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vc-avatar {
+  width: 80px;
+  height: 80px;
+  background: #111;
+  border: 2px solid #333;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  transition: border-color 0.3s;
+}
+
+.vc-avatar-ring.active .vc-avatar { border-color: #0f0; }
+.vc-avatar-ring.processing .vc-avatar { border-color: #ff0; }
+.vc-avatar-ring.speaking .vc-avatar { border-color: #0af; }
+.vc-avatar-ring.ended .vc-avatar { border-color: #f44; }
+
+.vc-avatar-icon {
+  font-size: 2rem;
+}
+
+/* ── Ringing Pulses ──────────────────────────── */
+
+.vc-ring-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  animation: vc-ring 2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+
+.vc-ring-pulse.r2 { animation-delay: 0.4s; }
+.vc-ring-pulse.r3 { animation-delay: 0.8s; }
+
+@keyframes vc-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ── Listening Waves ─────────────────────────── */
+
+.vc-listening-waves {
+  position: absolute;
+  bottom: -10px;
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+  height: 24px;
+}
+
+.vc-wave {
+  width: 4px;
+  background: #0f0;
+  border-radius: 1px;
+  animation: vc-waveform 0.8s ease-in-out infinite alternate;
+}
+
+.vc-wave:nth-child(1) { animation-delay: 0.0s; height: 6px; }
+.vc-wave:nth-child(2) { animation-delay: 0.15s; height: 14px; }
+.vc-wave:nth-child(3) { animation-delay: 0.3s; height: 20px; }
+.vc-wave:nth-child(4) { animation-delay: 0.45s; height: 10px; }
+.vc-wave:nth-child(5) { animation-delay: 0.6s; height: 16px; }
+
+@keyframes vc-waveform {
+  from { transform: scaleY(0.4); }
+  to { transform: scaleY(1.4); }
+}
+
+/* ── Speaking Indicator ──────────────────────── */
+
+.vc-speaking-indicator {
+  position: absolute;
+  bottom: -10px;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  height: 24px;
+}
+
+.vc-speak-bar {
+  width: 3px;
+  background: #0af;
+  border-radius: 1px;
+  animation: vc-speak 0.6s ease-in-out infinite alternate;
+}
+
+.vc-speak-bar:nth-child(1) { animation-delay: 0.0s; height: 4px; }
+.vc-speak-bar:nth-child(2) { animation-delay: 0.08s; height: 12px; }
+.vc-speak-bar:nth-child(3) { animation-delay: 0.16s; height: 18px; }
+.vc-speak-bar:nth-child(4) { animation-delay: 0.24s; height: 22px; }
+.vc-speak-bar:nth-child(5) { animation-delay: 0.32s; height: 16px; }
+.vc-speak-bar:nth-child(6) { animation-delay: 0.40s; height: 10px; }
+.vc-speak-bar:nth-child(7) { animation-delay: 0.48s; height: 6px; }
+
+@keyframes vc-speak {
+  from { transform: scaleY(0.5); }
+  to { transform: scaleY(1.5); }
+}
+
+/* ── Status ───────────────────────────────────── */
+
+.vc-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  color: #ccc;
+}
+
+.vc-phase-emoji {
+  font-size: 1rem;
+}
+
+/* ── Transcript Area ─────────────────────────── */
+
+.vc-transcript-area {
+  width: 100%;
+  min-height: 64px;
+  padding: 12px;
+  background: #0d0d14;
+  border: 1px solid #1a1a2a;
+  font-family: var(--font-human, sans-serif);
+  font-size: 0.85rem;
+  color: #aaa;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vc-transcript-you {
+  color: #bbb;
+}
+
+.vc-transcript-ai {
+  color: #0af;
+}
+
+.vc-who {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #555;
+  margin-right: 4px;
+}
+
+.vc-transcript-hint {
+  color: #444;
+  font-style: italic;
+  text-align: center;
+}
+
+/* ── Turn Count ──────────────────────────────── */
+
+.vc-turn-count {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.7rem;
+  color: #444;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Controls ────────────────────────────────── */
+
+.vc-controls {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding-top: 8px;
+}
+
+.vc-mute-btn,
+.vc-end-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.vc-mute-btn {
+  background: #1a1a2a;
+  border: 1px solid #333;
+}
+
+.vc-mute-btn:hover {
+  transform: scale(1.08);
+  border-color: #555;
+}
+
+.vc-mute-btn.muted {
+  background: #2a1a1a;
+  border-color: #f44;
+}
+
+.vc-end-btn {
+  background: #c0392b;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(192, 57, 43, 0.3);
+}
+
+.vc-end-btn:hover {
+  transform: scale(1.08);
+  background: #e74c3c;
+  box-shadow: 0 0 30px rgba(231, 76, 60, 0.4);
+}
+
+.vc-end-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Processing spinner ──────────────────────── */
+
+.vc-avatar-ring.processing .vc-avatar {
+  animation: vc-processing-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes vc-processing-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.3); }
+  50% { box-shadow: 0 0 20px 4px rgba(255, 255, 0, 0.15); }
+}
+
+/* ── Ended state ─────────────────────────────── */
+
+.vc-avatar-ring.ended .vc-avatar {
+  opacity: 0.5;
+  animation: none;
+}
+
+/* ── Responsive ──────────────────────────────── */
+
+@media (max-width: 400px) {
+  .voice-call-modal {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+  
+  .vc-avatar {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .vc-avatar-icon {
+    font-size: 1.6rem;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-ring-pulse,
+  .vc-wave,
+  .vc-speak-bar {
+    animation: none !important;
+  }
+}

@@ -16,6 +16,7 @@ let state = {
   sessionSettled: false,
   telegramSent: false,
   isCameraOpen: false,
+  isVoiceCallOpen: false,
   isVoiceResponseEnabled: false,
 };
 
@@ -59,6 +60,7 @@ export const pipelineStore = {
           telegramSent: false,
           patientContext: null,
           isCameraOpen: false,
+          isVoiceCallOpen: false,
           // Preserve voice preference across sessions
           isVoiceResponseEnabled: state.isVoiceResponseEnabled,
         };
@@ -198,6 +200,14 @@ export const pipelineStore = {
 
       case 'CLOSE_CAMERA':
         nextState.isCameraOpen = false;
+        break;
+
+      case 'OPEN_VOICE_CALL':
+        nextState.isVoiceCallOpen = true;
+        break;
+
+      case 'CLOSE_VOICE_CALL':
+        nextState.isVoiceCallOpen = false;
         break;
 
       case 'TOGGLE_VOICE_RESPONSE':

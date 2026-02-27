@@ -246,6 +246,19 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
           📷
         </button>
 
+        <button 
+          type="button" 
+          className="pulse-action-btn voice-call-btn"
+          onClick={() => {
+            pipelineStore.dispatch('OPEN_VOICE_CALL', {});
+            pipelineStore.dispatch('SET_VOICE_RESPONSE', { enabled: true });
+          }}
+          disabled={disabled}
+          title="Start Voice Call with AI Pharmacist"
+        >
+          📞
+        </button>
+
         <input
           type="text"
           className="pulse-input"
