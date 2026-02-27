@@ -7,10 +7,19 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
   const [value, setValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isVoiceOutputOn, setIsVoiceOutputOn] = useState(false);
   
   const fileInputRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+
+  // Subscribe to voice output state from the store
+  useEffect(() => {
+    const unsub = pipelineStore.subscribe((s) => {
+      setIsVoiceOutputOn(s.isVoiceResponseEnabled);
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -168,6 +177,11 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
         mediaRecorderRef.current = new MediaRecorder(stream);
         audioChunksRef.current = [];
 
+        // Auto-enable voice output when user starts talking
+        if (!pipelineStore.get().isVoiceResponseEnabled) {
+          pipelineStore.dispatch('SET_VOICE_RESPONSE', { enabled: true });
+        }
+
         mediaRecorderRef.current.ondataavailable = (event) => {
           if (event.data.size > 0) {
             audioChunksRef.current.push(event.data);
@@ -262,6 +276,16 @@ const PulseLine = ({ onSubmit, placeholder, type = 'text', disabled = false }) =
           title="Toggle Voice Input (Space)"
         >
           {isRecording ? '⏹️' : '🎙️'}
+        </button>
+
+        <button
+          type="button"
+          className={`pulse-action-btn voice-output-toggle ${isVoiceOutputOn ? 'active' : ''}`}
+          onClick={() => pipelineStore.dispatch('TOGGLE_VOICE_RESPONSE', {})}
+          disabled={disabled}
+          title={isVoiceOutputOn ? 'Voice Output ON (click to mute)' : 'Voice Output OFF (click to enable)'}
+        >
+          {isVoiceOutputOn ? '🔊' : '🔇'}
         </button>
       </form>
     </div>

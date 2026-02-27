@@ -204,6 +204,10 @@ export const pipelineStore = {
         nextState.isVoiceResponseEnabled = !state.isVoiceResponseEnabled;
         break;
 
+      case 'SET_VOICE_RESPONSE':
+        nextState.isVoiceResponseEnabled = !!payload.enabled;
+        break;
+
       default:
         console.warn(`[PipelineStore] Unhandled event: ${event}`);
     }

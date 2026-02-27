@@ -116,31 +116,61 @@ export const runIdentityFlowAPI = async (phoneNumber) => {
   }
 };
 
-// Helper for TTS
+// Helper for TTS — speaks AI responses aloud when voice output is enabled
+let cachedVoice = null;
+
+// Preload voices (browsers load them async)
+if ('speechSynthesis' in window) {
+  const loadVoices = () => {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      cachedVoice = voices.find(v => v.lang.includes('en-GB') || v.name.includes('Google UK English Female'))
+                 || voices.find(v => v.lang.startsWith('en'))
+                 || voices[0];
+    }
+  };
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
+
 const speakResponse = (text) => {
   const storeState = pipelineStore.get();
-  if (storeState.isVoiceResponseEnabled && 'speechSynthesis' in window) {
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-    
-    // Clean text by removing emojis and some markdown
-    const cleanText = text.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/[#*`]/g, '');
-    
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    
-    // Try to find a good English voice (preferably female or a natural sounding one)
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(v => v.lang.includes('en-GB') || v.name.includes('Google UK English Female')) || voices[0];
-    
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-    
-    utterance.rate = 1.05;
-    utterance.pitch = 1.0;
-    
-    window.speechSynthesis.speak(utterance);
+  
+  if (!storeState.isVoiceResponseEnabled) {
+    return; // Silent — voice output disabled
   }
+
+  if (!('speechSynthesis' in window)) {
+    console.warn('[TTS] speechSynthesis not supported in this browser');
+    return;
+  }
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  // Clean text by removing emojis, markdown, and special characters
+  const cleanText = text
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+    .replace(/[#*`_~]/g, '')
+    .replace(/\n+/g, '. ')
+    .trim();
+
+  if (!cleanText) return;
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+
+  if (cachedVoice) {
+    utterance.voice = cachedVoice;
+  }
+
+  utterance.rate = 1.05;
+  utterance.pitch = 1.0;
+
+  utterance.onend = () => console.log('[TTS] Finished speaking');
+  utterance.onerror = (e) => console.error('[TTS] Error:', e.error);
+
+  window.speechSynthesis.speak(utterance);
+  console.log('[TTS] Speaking response (' + cleanText.length + ' chars)');
 };
 
 export const runConsultationFlowAPI = async (userMessage) => {
