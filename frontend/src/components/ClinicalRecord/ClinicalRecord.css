@@ -1,0 +1,88 @@
+.clinical-record-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  position: relative;
+}
+
+.clinical-record-header {
+  font-family: var(--font-machine);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-faint);
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--divider);
+  padding-bottom: 0.5rem;
+}
+
+.clinical-record-log {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.timeline-rail {
+  position: absolute;
+  left: 13px; /* Center of the node */
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-image: linear-gradient(to bottom, var(--divider-dark) 50%, transparent 50%);
+  background-size: 1px 12px;
+  background-repeat: repeat-y;
+  z-index: 1;
+}
+
+.clinical-record-entry {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-node {
+  width: 12px;
+  height: 12px;
+  border-radius: 0;
+  background-color: var(--bg-room);
+  border: 2px solid var(--indigo);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.timeline-node.active {
+  border-color: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.timeline-content {
+  font-family: var(--font-human);
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  background-color: color-mix(in srgb, var(--divider) 20%, transparent);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--divider);
+  flex: 1;
+}
+
+.clinical-record-entry.subnote .timeline-content {
+  font-size: 11px;
+  color: var(--ink-mute);
+  border-style: dashed;
+}
+
+.blinking-cursor {
+  color: var(--amber);
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}

@@ -1,0 +1,147 @@
+symptom,medicine_name,relevance_score,notes
+headache,Paracetamol 500mg,1.0,First-line treatment for mild to moderate headache
+headache,Ibuprofen 400mg,0.9,Alternative for headache with inflammation
+headache,Aspirin 75mg,0.7,For mild headache
+fever,Paracetamol 500mg,1.0,First-line fever reducer
+fever,Ibuprofen 400mg,0.9,Alternative fever reducer with anti-inflammatory
+body ache,Paracetamol 500mg,0.9,General body pain relief
+body ache,Ibuprofen 400mg,1.0,Better for inflammatory body aches
+muscle pain,Ibuprofen 400mg,1.0,Anti-inflammatory for muscle pain
+muscle pain,Diclofenac Gel,0.9,Topical application for localized muscle pain
+muscle pain,Naproxen 500mg,0.9,Long-acting pain relief
+joint pain,Ibuprofen 400mg,0.9,Anti-inflammatory for joint pain
+joint pain,Diclofenac Gel,1.0,Topical for joint pain
+joint pain,Naproxen 500mg,0.9,Long-acting for chronic joint pain
+toothache,Paracetamol 500mg,0.9,Temporary toothache relief
+toothache,Ibuprofen 400mg,1.0,Better for dental pain with inflammation
+menstrual pain,Ibuprofen 400mg,1.0,First-line for menstrual cramps
+menstrual pain,Paracetamol 500mg,0.8,Alternative for menstrual pain
+menstrual pain,Naproxen 500mg,0.9,Long-acting for severe cramps
+allergy,Cetirizine 10mg,1.0,Non-drowsy antihistamine
+allergy,Fexofenadine 120mg,0.9,Alternative non-drowsy option
+allergy,Loratadine 10mg,0.9,Another non-drowsy option
+sneezing,Cetirizine 10mg,1.0,Antihistamine for sneezing
+sneezing,Fexofenadine 120mg,0.9,Alternative for allergic sneezing
+sneezing,Loratadine 10mg,0.9,Non-drowsy option
+runny nose,Cetirizine 10mg,0.9,Reduces nasal discharge
+runny nose,Fexofenadine 120mg,0.8,Alternative for runny nose
+itching,Cetirizine 10mg,1.0,Antihistamine for itching
+itching,Hydrocortisone Cream,0.9,Topical for skin itching
+itching,Loratadine 10mg,0.8,Oral antihistamine
+hives,Cetirizine 10mg,1.0,First-line for hives
+hives,Fexofenadine 120mg,0.9,Alternative for hives
+acidity,Omeprazole 20mg,1.0,Proton pump inhibitor
+acidity,Pantoprazole 40mg,0.9,Alternative PPI
+acidity,Esomeprazole 40mg,0.9,Another PPI option
+heartburn,Omeprazole 20mg,1.0,Reduces stomach acid
+heartburn,Ranitidine 150mg,0.8,H2 blocker for heartburn
+heartburn,Pantoprazole 40mg,0.9,Alternative PPI
+heartburn,Esomeprazole 40mg,0.9,Strong PPI option
+acid reflux,Omeprazole 20mg,1.0,GERD treatment
+acid reflux,Pantoprazole 40mg,0.9,Alternative for GERD
+acid reflux,Esomeprazole 40mg,0.9,Strong option for GERD
+stomach pain,Omeprazole 20mg,0.8,If acid-related
+stomach pain,Ranitidine 150mg,0.7,For mild stomach discomfort
+nausea,Domperidone 10mg,1.0,Anti-nausea medication
+nausea,Ranitidine 150mg,0.6,If acid-related nausea
+vomiting,Domperidone 10mg,1.0,Prevents vomiting
+bloating,Domperidone 10mg,0.8,Improves gastric motility
+indigestion,Domperidone 10mg,0.8,Aids digestion
+indigestion,Omeprazole 20mg,0.7,If acid-related
+diarrhea,Loperamide 2mg,1.0,Anti-diarrheal
+cough,Cough Syrup,1.0,Cough suppressant
+cough,Salbutamol Inhaler,0.6,If asthma-related cough
+cold,Cough Syrup,0.8,Symptomatic relief
+cold,Paracetamol 500mg,0.7,For cold with fever
+cold,Vitamin C 500mg,0.6,Immune support
+sore throat,Cough Syrup,0.7,Soothes throat
+sore throat,Paracetamol 500mg,0.6,Pain relief
+throat irritation,Cough Syrup,0.8,Soothes irritation
+asthma,Salbutamol Inhaler,1.0,Bronchodilator for asthma
+asthma,Montelukast 10mg,0.9,Asthma prevention
+asthma,Prednisolone 5mg,0.7,For severe asthma (prescription)
+wheezing,Salbutamol Inhaler,1.0,Relieves wheezing
+wheezing,Montelukast 10mg,0.7,Prevents wheezing
+breathing difficulty,Salbutamol Inhaler,1.0,Opens airways
+breathing difficulty,Montelukast 10mg,0.6,Preventive
+high blood pressure,Amlodipine 5mg,1.0,Calcium channel blocker
+high blood pressure,Losartan 50mg,0.9,ARB for hypertension
+high blood pressure,Bisoprolol 5mg,0.8,Beta blocker option
+diabetes,Metformin 500mg,1.0,First-line for type 2 diabetes
+diabetes,Insulin Glargine,0.9,For insulin-dependent diabetes
+high cholesterol,Atorvastatin 10mg,1.0,Statin for cholesterol
+high cholesterol,Simvastatin 20mg,0.9,Alternative statin
+infection,Amoxicillin 500mg,0.9,Broad-spectrum antibiotic (prescription)
+infection,Azithromycin 500mg,0.8,Alternative antibiotic (prescription)
+bacterial infection,Amoxicillin 500mg,1.0,First-line antibiotic
+bacterial infection,Ciprofloxacin 500mg,0.8,Fluoroquinolone option
+respiratory infection,Amoxicillin 500mg,1.0,Common choice
+respiratory infection,Azithromycin 500mg,0.9,Alternative
+respiratory infection,Doxycycline 100mg,0.7,Another option
+skin infection,Azithromycin 500mg,0.8,Systemic treatment
+skin infection,Betadine Solution,0.9,Topical antiseptic
+skin infection,Doxycycline 100mg,0.7,Oral antibiotic
+wound,Betadine Solution,1.0,Wound disinfection
+wound,Dettol Antiseptic,0.9,Alternative antiseptic
+cut,Betadine Solution,1.0,Disinfectant
+cut,Dettol Antiseptic,0.9,Alternative
+burn,Betadine Solution,0.8,Mild burns
+rash,Hydrocortisone Cream,1.0,Anti-inflammatory
+rash,Cetirizine 10mg,0.7,If allergic rash
+eczema,Hydrocortisone Cream,1.0,Topical steroid
+dermatitis,Hydrocortisone Cream,1.0,Anti-inflammatory cream
+fungal infection,Clotrimazole Cream,1.0,Antifungal cream
+fungal infection,Fluconazole 150mg,0.8,Oral antifungal (prescription)
+athlete's foot,Clotrimazole Cream,1.0,Topical antifungal
+ringworm,Clotrimazole Cream,1.0,Antifungal treatment
+yeast infection,Clotrimazole Cream,0.9,Topical treatment
+yeast infection,Fluconazole 150mg,1.0,Oral treatment (prescription)
+cold sore,Acyclovir Cream,1.0,Antiviral cream
+vitamin deficiency,Vitamin D3 1000IU,0.9,For vitamin D deficiency
+vitamin deficiency,Multivitamin,1.0,General supplementation
+vitamin deficiency,Vitamin C 500mg,0.8,For vitamin C deficiency
+weak immunity,Vitamin C 500mg,0.9,Immune booster
+weak immunity,Vitamin D3 1000IU,0.8,Supports immunity
+weak immunity,Multivitamin,1.0,Overall health
+bone pain,Calcium 500mg,0.8,Calcium supplementation
+bone pain,Vitamin D3 1000IU,0.7,Aids calcium absorption
+osteoporosis,Calcium 500mg,1.0,Bone health
+osteoporosis,Vitamin D3 1000IU,0.9,Essential for bone health
+anxiety,Alprazolam 0.5mg,1.0,Anti-anxiety (prescription)
+anxiety,Sertraline 50mg,0.8,Long-term management (prescription)
+depression,Sertraline 50mg,1.0,Antidepressant (prescription)
+panic attack,Alprazolam 0.5mg,1.0,Acute relief (prescription)
+insomnia,Alprazolam 0.5mg,0.7,Short-term use (prescription)
+nerve pain,Gabapentin 300mg,1.0,Neuropathic pain (prescription)
+nerve pain,Tramadol 50mg,0.8,Moderate pain (prescription)
+chronic pain,Tramadol 50mg,1.0,Moderate to severe pain (prescription)
+chronic pain,Gabapentin 300mg,0.9,Nerve-related pain (prescription)
+arthritis,Ibuprofen 400mg,0.9,Anti-inflammatory
+arthritis,Naproxen 500mg,1.0,Long-acting NSAID
+arthritis,Diclofenac Gel,0.8,Topical application
+thyroid problem,Levothyroxine 50mcg,1.0,Hypothyroidism (prescription)
+blood clot,Warfarin 5mg,1.0,Anticoagulant (prescription)
+blood clot,Clopidogrel 75mg,0.8,Antiplatelet (prescription)
+heart disease,Aspirin 75mg,0.9,Prevention
+heart disease,Atorvastatin 10mg,1.0,Cholesterol management (prescription)
+heart disease,Clopidogrel 75mg,0.9,Antiplatelet (prescription)
+stroke prevention,Aspirin 75mg,1.0,Antiplatelet
+stroke prevention,Warfarin 5mg,0.9,Anticoagulant (prescription)
+stroke prevention,Clopidogrel 75mg,0.9,Alternative antiplatelet (prescription)
+urinary problem,Tamsulosin 0.4mg,1.0,Prostate-related (prescription)
+prostate problem,Tamsulosin 0.4mg,1.0,BPH treatment (prescription)
+acne,Doxycycline 100mg,0.9,Antibiotic for acne (prescription)
+acne,Hydrocortisone Cream,0.5,Not recommended - consult doctor
+seasonal allergy,Cetirizine 10mg,1.0,Antihistamine
+seasonal allergy,Fexofenadine 120mg,0.9,Non-drowsy option
+seasonal allergy,Loratadine 10mg,0.9,Another option
+hay fever,Cetirizine 10mg,1.0,First-line treatment
+hay fever,Fexofenadine 120mg,0.9,Alternative
+hay fever,Loratadine 10mg,0.9,Non-drowsy
+fatigue,Multivitamin,0.8,Nutritional support
+fatigue,Vitamin D3 1000IU,0.7,If deficient
+weakness,Multivitamin,0.8,General health
+weakness,Vitamin C 500mg,0.6,Immune support
+energy,Multivitamin,0.7,Daily supplementation
+low energy,Multivitamin,0.8,Nutritional boost
+low energy,Vitamin D3 1000IU,0.6,If deficient

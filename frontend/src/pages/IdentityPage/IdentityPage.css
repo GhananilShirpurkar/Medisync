@@ -1,0 +1,124 @@
+.identity-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-room);
+  /* Fix 4: Subtle Radial Gradient */
+  background-image: radial-gradient(ellipse 600px 400px at 50% 52%, rgba(26,26,46,0.025) 0%, transparent 70%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fix 3: MediSync Wordmark */
+.identity-wordmark {
+  position: absolute;
+  top: 24px;
+  left: 32px;
+  font-family: var(--font-machine);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  user-select: none;
+}
+
+.identity-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 420px;
+  width: 100%;
+}
+
+.identity-prompt {
+  font-family: var(--font-ai);
+  font-style: italic;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 2.5rem;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.identity-input-area {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.identity-form {
+  width: 100%;
+}
+
+/* Fix 1: Input Line */
+.input-line-wrapper {
+  width: 100%;
+  border-bottom: 1px solid var(--ink);
+  opacity: 0.25;
+  transition: opacity 300ms ease, border-color 300ms ease;
+}
+
+.input-line-wrapper.focused {
+  opacity: 0.6;
+}
+
+.input-line-wrapper.error-flash {
+  animation: flash-red 400ms ease-out;
+}
+
+@keyframes flash-red {
+  0% { border-color: var(--ink); opacity: 0.6; }
+  50% { border-color: var(--red); opacity: 0.3; }
+  100% { border-color: var(--ink); opacity: 0.6; }
+}
+
+.identity-input-line {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-human);
+  font-size: 15px;
+  color: var(--ink);
+  padding: 8px 0;
+  text-align: center;
+}
+
+.identity-input-line::placeholder {
+  color: var(--ink-ghost);
+  font-weight: 400;
+}
+
+/* Fix 2: Static Labels */
+.identity-labels {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.identity-label {
+  font-family: var(--font-machine);
+  font-size: 9px;
+  color: var(--ink-ghost);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  user-select: none;
+}
+
+.upload-trigger {
+  cursor: pointer;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.identity-status {
+  text-align: center;
+  font-family: var(--font-machine);
+  font-size: 10px;
+  color: var(--ink-ghost);
+  letter-spacing: 0.05em;
+}

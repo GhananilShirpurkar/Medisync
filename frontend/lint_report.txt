@@ -1,0 +1,62 @@
+
+/home/koanoir/Desktop/Projects/01_sandbox/Medisync/frontend/src/components/OmniInputBar.jsx
+    1:28  error  'useEffect' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+    2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+    2:18  error  'useAnimation' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  127:70  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  125 |                 <motion.div 
+  126 |                   key={i}
+> 127 |                   animate={{ height: Math.max(4, voiceLevel * (0.5 + Math.random())) }}
+      |                                                                      ^^^^^^^^^^^^^ Cannot call impure function
+  128 |                   className="w-1 bg-[#6b8e23]/40 rounded-full"
+  129 |                 />
+  130 |               ))}  react-hooks/purity
+
+/home/koanoir/Desktop/Projects/01_sandbox/Medisync/frontend/src/components/SidebarCart.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/home/koanoir/Desktop/Projects/01_sandbox/Medisync/frontend/src/components/StatusAmbience.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/home/koanoir/Desktop/Projects/01_sandbox/Medisync/frontend/src/components/WorkObject.jsx
+  2:10  error  'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+/home/koanoir/Desktop/Projects/01_sandbox/Medisync/frontend/src/components/WorkspaceCanvas.jsx
+   2:10  error    'motion' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  37:18  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  35 |     });
+  36 |
+> 37 |     if (changed) setPositions(newPositions);
+     |                  ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  38 |   }, [objects]);
+  39 |
+  40 |   // Update Proximities based on current positions  react-hooks/set-state-in-effect
+  38:6   warning  React Hook useEffect has a missing dependency: 'positions'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  69:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  67 |       }
+  68 |     }
+> 69 |     setProximities(newProximities);
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  70 |   }, [positions]);
+  71 |
+  72 |   const handleDragEnd = (id, info) => {                         react-hooks/set-state-in-effect
+
+✖ 11 problems (10 errors, 1 warning)
+

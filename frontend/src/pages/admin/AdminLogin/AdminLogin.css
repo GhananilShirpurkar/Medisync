@@ -1,0 +1,121 @@
+.admin-login-page {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-room);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-login-card {
+  border: 1px solid var(--divider);
+  border-radius: 0;
+  padding: 40px 48px;
+  background-color: var(--bg-stage);
+  max-width: 380px;
+  width: 100%;
+}
+
+.admin-login-title {
+  font-family: 'B612 Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  margin: 0;
+  margin-bottom: 32px;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-login-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.admin-login-field label {
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 6px;
+}
+
+.admin-login-field input {
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  border-radius: 0;
+  background: transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 8px 0;
+  width: 100%;
+  outline: none;
+}
+
+.admin-login-field input:focus {
+  border-bottom-color: var(--ink);
+}
+
+.admin-login-submit-wrapper {
+  margin-top: 24px;
+  position: relative;
+}
+
+.admin-login-submit {
+  width: 100%;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: transparent;
+  font-family: 'B612 Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.admin-login-submit:hover {
+  background-color: var(--ink);
+  color: var(--bg-room);
+}
+
+.admin-login-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  color: var(--red);
+}
+
+.admin-login-back {
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  color: var(--ink-ghost);
+  margin-top: 32px;
+  cursor: pointer;
+  border: none;
+}
+
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  25%  { transform: translateX(-4px); }
+  50%  { transform: translateX(4px); }
+  75%  { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+.shake {
+  animation: shake 300ms ease-in-out;
+}

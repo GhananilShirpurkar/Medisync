@@ -1,0 +1,207 @@
+.theatre-layout-container {
+  display: grid;
+  grid-template-columns: 350px 1fr 350px;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-room);
+  overflow: hidden;
+  gap: 16px;
+  padding: 16px;
+  position: relative;
+}
+
+.left-zone {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--divider);
+  /* Brutalist: no shadow, no rounding */
+  border-radius: 0; 
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  gap: 1rem;
+}
+
+.right-zone {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--divider);
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  gap: 1rem;
+}
+
+.theatre-stage-layer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.theatre-stage-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--divider);
+  border-radius: 0;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+}
+
+/* FIXED METADATA ZONES */
+/* INTEGRATED METADATA ZONES */
+.fixed-patient-zone,
+.fixed-system-zone {
+  font-family: var(--font-machine);
+  font-size: 11px;
+  color: var(--ink-faint);
+  line-height: 1.6;
+  border: 1px solid var(--divider);
+  border-radius: 0;
+  padding: 1rem;
+  background-color: var(--bg-room);
+  pointer-events: auto;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.metadata-header {
+  color: var(--ink-2);
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.metadata-actions {
+  margin-top: 1rem;
+  color: var(--indigo);
+  cursor: pointer;
+}
+
+.status-badge {
+  display: inline-block;
+}
+.status-badge.stable {
+  color: var(--green);
+}
+
+.status-badge.toggle {
+  cursor: pointer;
+  color: var(--ink-2);
+  user-select: none;
+  border: 1px solid var(--divider);
+  padding: 2px 6px;
+  display: inline-block;
+  margin-top: 4px;
+}
+.status-badge.toggle:hover {
+  background: var(--divider);
+}
+
+/* SLIDING PANELS & OVERLAYS */
+.panel-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+.panel-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sliding-panel-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 101;
+  overflow: hidden;
+}
+
+.timeline-sliding-panel {
+  position: absolute;
+  top: 0; left: 0;
+  width: 400px;
+  height: 100%;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--divider);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+.timeline-sliding-panel.open {
+  transform: translateX(0);
+}
+
+.orders-sliding-panel {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translate(-50%, 100%);
+  width: min(800px, 90vw);
+  max-height: 60vh;
+  height: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--divider);
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.6);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+.orders-sliding-panel.open {
+  transform: translate(-50%, 0);
+}
+
+/* Base Triggers */
+.trigger-button {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-room);
+  border: 1px solid var(--divider);
+  border-radius: 0;
+  color: var(--ink-2);
+  font-family: var(--font-machine);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.trigger-button:hover {
+  background: var(--divider);
+  color: var(--ink-1);
+}

@@ -1,0 +1,50 @@
+name,category,manufacturer,price,stock,requires_prescription,description,indications,generic_equivalent,contraindications
+Paracetamol 500mg,Pain Relief,Generic Pharma,25.00,500,False,Fever and pain relief,Fever; Headache; Body ache; Toothache; Menstrual pain,Acetaminophen,Severe liver disease; Alcohol dependence
+Ibuprofen 400mg,Pain Relief,Generic Pharma,35.00,400,False,Anti-inflammatory pain relief,Headache; Muscle pain; Arthritis; Fever; Menstrual cramps,Advil,Stomach ulcers; Kidney disease; Heart disease
+Aspirin 75mg,Cardiovascular,Bayer,20.00,300,False,Blood thinner and pain relief,Heart attack prevention; Stroke prevention; Mild pain,Acetylsalicylic acid,Bleeding disorders; Children under 12; Stomach ulcers
+Cetirizine 10mg,Allergy,Sun Pharma,40.00,350,False,Antihistamine for allergies,Allergic rhinitis; Hay fever; Itching; Hives; Sneezing,Zyrtec,Severe kidney disease; Pregnancy (consult doctor)
+Omeprazole 20mg,Digestive,Dr Reddy's,55.00,250,False,Reduces stomach acid,Acidity; Heartburn; GERD; Stomach ulcers; Acid reflux,Prilosec,Liver disease; Osteoporosis risk
+Metformin 500mg,Diabetes,Cipla,45.00,200,True,Blood sugar control,Type 2 diabetes; PCOS,Glucophage,Kidney disease; Liver disease; Heart failure
+Amlodipine 5mg,Cardiovascular,Lupin,50.00,180,True,Blood pressure control,Hypertension; High blood pressure; Angina,Norvasc,Severe low blood pressure; Aortic stenosis
+Atorvastatin 10mg,Cardiovascular,Ranbaxy,60.00,150,True,Cholesterol management,High cholesterol; Heart disease prevention,Lipitor,Liver disease; Pregnancy; Breastfeeding
+Amoxicillin 500mg,Antibiotic,Alkem,80.00,120,True,Bacterial infection treatment,Bacterial infections; Respiratory infections; UTI; Ear infections,Amoxil,Penicillin allergy; Mononucleosis
+Azithromycin 500mg,Antibiotic,Cipla,120.00,100,True,Broad-spectrum antibiotic,Respiratory infections; Skin infections; STDs,Zithromax,Liver disease; Heart rhythm problems
+Cough Syrup,Respiratory,Himalaya,85.00,200,False,Cough relief,Dry cough; Wet cough; Throat irritation; Cold,None,Asthma (consult doctor); Children under 2
+Vitamin D3 1000IU,Supplement,HealthKart,150.00,400,False,Bone health supplement,Vitamin D deficiency; Bone health; Immunity,Cholecalciferol,Hypercalcemia; Kidney stones
+Vitamin C 500mg,Supplement,HealthKart,120.00,450,False,Immunity booster,Immunity; Cold prevention; Antioxidant; Wound healing,Ascorbic acid,Kidney stones; Iron overload disorders
+Multivitamin,Supplement,Centrum,200.00,300,False,Daily nutritional supplement,General health; Nutritional deficiency; Energy,None,Hypervitaminosis; Specific vitamin allergies
+Calcium 500mg,Supplement,Shelcal,180.00,350,False,Bone health,Calcium deficiency; Osteoporosis; Bone health,Calcium carbonate,Hypercalcemia; Kidney stones
+Diclofenac Gel,Pain Relief,Voltaren,95.00,150,False,Topical pain relief,Muscle pain; Joint pain; Sprains; Arthritis,Voltaren Gel,Open wounds; Skin infections
+Betadine Solution,Antiseptic,Win-Medicare,75.00,200,False,Wound disinfectant,Cuts; Wounds; Burns; Skin infections,Povidone-iodine,Iodine allergy; Thyroid disorders
+Dettol Antiseptic,Antiseptic,Reckitt,65.00,250,False,Antiseptic liquid,Cuts; Wounds; Skin disinfection,Chloroxylenol,Deep wounds; Eyes
+Insulin Glargine,Diabetes,Sanofi,850.00,50,True,Long-acting insulin,Type 1 diabetes; Type 2 diabetes,Lantus,Hypoglycemia; Diabetic ketoacidosis
+Salbutamol Inhaler,Respiratory,Cipla,180.00,100,True,Asthma relief,Asthma; Bronchospasm; COPD; Wheezing,Ventolin,Heart disease; Hyperthyroidism
+Montelukast 10mg,Respiratory,Sun Pharma,95.00,150,True,Asthma prevention,Asthma; Allergic rhinitis; Exercise-induced bronchospasm,Singulair,Liver disease; Phenylketonuria
+Ranitidine 150mg,Digestive,Glenmark,35.00,200,False,Acid reducer,Heartburn; Acid reflux; Stomach ulcers,Zantac,Kidney disease; Porphyria
+Domperidone 10mg,Digestive,Cipla,40.00,180,False,Anti-nausea,Nausea; Vomiting; Bloating; Indigestion,Motilium,Heart rhythm problems; Prolactinoma
+Loperamide 2mg,Digestive,Johnson & Johnson,45.00,150,False,Anti-diarrheal,Diarrhea; Traveler's diarrhea,Imodium,Bloody diarrhea; High fever; Colitis
+Hydrocortisone Cream,Skin,Glaxo,85.00,120,False,Anti-inflammatory cream,Eczema; Dermatitis; Rashes; Itching,Cortisone cream,Fungal infections; Acne; Rosacea
+Clotrimazole Cream,Antifungal,Bayer,70.00,140,False,Antifungal cream,Fungal infections; Athlete's foot; Ringworm; Yeast infections,Lotrimin,Hypersensitivity
+Acyclovir Cream,Antiviral,GSK,120.00,80,False,Antiviral for cold sores,Cold sores; Herpes simplex; Genital herpes,Zovirax,Hypersensitivity
+Levothyroxine 50mcg,Thyroid,Abbott,55.00,150,True,Thyroid hormone replacement,Hypothyroidism; Thyroid deficiency,Synthroid,Hyperthyroidism; Adrenal insufficiency
+Prednisone 5mg,Steroid,Pfizer,40.00,100,True,Anti-inflammatory steroid,Severe allergies; Asthma; Arthritis; Autoimmune diseases,Deltasone,Fungal infections; Live vaccines
+Warfarin 5mg,Cardiovascular,Bristol Myers,65.00,80,True,Blood thinner,Blood clots; Atrial fibrillation; DVT prevention,Coumadin,Bleeding disorders; Pregnancy; Recent surgery
+Losartan 50mg,Cardiovascular,Merck,70.00,120,True,Blood pressure medication,Hypertension; Heart failure; Diabetic nephropathy,Cozaar,Pregnancy; Severe kidney disease
+Gabapentin 300mg,Neurological,Pfizer,90.00,100,True,Nerve pain relief,Neuropathic pain; Seizures; Shingles pain,Neurontin,Kidney disease; Respiratory problems
+Sertraline 50mg,Mental Health,Pfizer,110.00,90,True,Antidepressant,Depression; Anxiety; OCD; PTSD; Panic disorder,Zoloft,MAO inhibitors; Pimozide
+Alprazolam 0.5mg,Mental Health,Pfizer,85.00,70,True,Anti-anxiety medication,Anxiety; Panic disorder,Xanax,Narrow-angle glaucoma; Pregnancy; Respiratory depression
+Pantoprazole 40mg,Digestive,Sun Pharma,60.00,180,False,Proton pump inhibitor,GERD; Acid reflux; Stomach ulcers; Heartburn,Protonix,Liver disease; Osteoporosis risk
+Fexofenadine 120mg,Allergy,Sanofi,50.00,200,False,Non-drowsy antihistamine,Allergic rhinitis; Hay fever; Hives; Seasonal allergies,Allegra,Kidney disease
+Tramadol 50mg,Pain Relief,Janssen,95.00,60,True,Moderate to severe pain relief,Moderate pain; Post-surgical pain; Chronic pain,Ultram,Respiratory depression; Seizure disorders; Addiction history
+Ciprofloxacin 500mg,Antibiotic,Bayer,100.00,90,True,Fluoroquinolone antibiotic,UTI; Respiratory infections; Skin infections; Bone infections,Cipro,Tendon problems; Myasthenia gravis; Children
+Doxycycline 100mg,Antibiotic,Pfizer,85.00,110,True,Tetracycline antibiotic,Acne; Respiratory infections; Lyme disease; Malaria prevention,Vibramycin,Pregnancy; Children under 8; Liver disease
+Fluconazole 150mg,Antifungal,Pfizer,140.00,80,True,Systemic antifungal,Vaginal yeast infections; Oral thrush; Systemic fungal infections,Diflucan,Liver disease; Heart rhythm problems
+Prednisolone 5mg,Steroid,Pfizer,45.00,120,True,Corticosteroid,Inflammation; Allergies; Asthma; Autoimmune diseases,Orapred,Fungal infections; Live vaccines
+Bisoprolol 5mg,Cardiovascular,Merck,55.00,100,True,Beta blocker,Hypertension; Heart failure; Angina,Zebeta,Asthma; Severe bradycardia; Heart block
+Clopidogrel 75mg,Cardiovascular,Sanofi,130.00,90,True,Antiplatelet agent,Heart attack prevention; Stroke prevention; Peripheral artery disease,Plavix,Active bleeding; Severe liver disease
+Esomeprazole 40mg,Digestive,AstraZeneca,75.00,150,False,Proton pump inhibitor,GERD; Acid reflux; Stomach ulcers; Heartburn,Nexium,Liver disease; Osteoporosis risk
+Loratadine 10mg,Allergy,Schering,30.00,300,False,Antihistamine,Allergic rhinitis; Hay fever; Hives; Itching,Claritin,Severe liver disease
+Naproxen 500mg,Pain Relief,Bayer,50.00,180,False,NSAID pain reliever,Arthritis; Muscle pain; Menstrual cramps; Headache,Aleve,Stomach ulcers; Heart disease; Kidney disease
+Simvastatin 20mg,Cardiovascular,Merck,55.00,140,True,Cholesterol medication,High cholesterol; Heart disease prevention,Zocor,Liver disease; Pregnancy; Breastfeeding
+Tamsulosin 0.4mg,Urological,Boehringer,90.00,80,True,Prostate medication,Benign prostatic hyperplasia; Urinary retention,Flomax,Severe liver disease; Sulfa allergy
+Albuterol Nebulizer,Respiratory,GSK,220.00,60,True,Bronchodilator solution,Asthma; COPD; Bronchospasm,ProAir,Heart disease; Hyperthyroidism

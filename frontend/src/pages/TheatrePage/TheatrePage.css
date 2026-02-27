@@ -1,0 +1,45 @@
+.fixed-patient-zone,
+.fixed-system-zone {
+  border: 1px solid var(--divider);
+  border-radius: 0 !important;
+  background-color: var(--bg-room) !important;
+  padding: 1rem;
+  font-family: var(--font-machine);
+  font-size: 11px;
+}
+
+.trigger-button {
+  border-radius: 0 !important;
+  border: 1px solid var(--divider) !important;
+  background: var(--bg-room) !important;
+}
+
+.trigger-button:hover {
+  background: var(--divider) !important;
+}
+
+.patient-meta-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.session-timer {
+  color: var(--amber);
+  margin-top: 4px;
+  font-weight: bold;
+}
+
+.agent-logs-header {
+  font-family: var(--font-machine);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.metadata-header {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}

@@ -1,0 +1,149 @@
+.thermal-card-container {
+  background-color: color-mix(in srgb, var(--bg-room) 80%, transparent);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 600ms linear, border-left-color 400ms ease;
+  border: 1px solid var(--divider-dark);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.thermal-card-container.revealed {
+  clip-path: inset(0 0 0% 0);
+}
+
+.border-critical { border-left: 3px solid var(--red); }
+.border-warn     { border-left: 3px solid var(--amber); }
+.border-safe     { border-left: 3px solid var(--green); }
+.border-neutral  { border-left: 3px solid var(--indigo); }
+
+.thermal-card-header {
+  font-family: var(--font-machine);
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.1em;
+  transition: color 400ms ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-weight: bold;
+}
+
+.color-critical { color: var(--red); }
+.color-warn     { color: var(--amber); }
+.color-safe     { color: var(--green); }
+.color-neutral  { color: var(--indigo); }
+
+/* Triage Progress Ring */
+.triage-progress-ring {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: var(--divider);
+  stroke-width: 3;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 1s ease-out;
+}
+
+.ring-text {
+  position: absolute;
+  font-family: var(--font-machine);
+  font-size: 10px;
+  color: var(--ink);
+  font-weight: bold;
+}
+
+.escalation-banner {
+  background-color: rgba(220, 38, 38, 0.1); /* light red */
+  color: var(--red);
+  padding: 0.5rem;
+  font-family: var(--font-machine);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  animation: pulse-banner 2s infinite;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@keyframes pulse-banner {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+.thermal-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Inventory Layout */
+.thermal-card-body.inventory-layout {
+  gap: 0.75rem;
+}
+
+.inventory-chip {
+  font-family: var(--font-machine);
+  font-size: 10px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  border-left: 2px solid;
+  background-color: var(--bg-room);
+}
+
+.inventory-chip.in-stock {
+  border-left-color: var(--green);
+  color: var(--ink-2);
+  border-top: 1px solid var(--divider);
+  border-bottom: 1px solid var(--divider);
+  border-right: 1px solid var(--divider);
+}
+
+.inventory-chip.out-of-stock {
+  border-left-color: var(--red);
+  color: var(--ink-mute);
+  border-top: 1px dashed var(--divider-dark);
+  border-bottom: 1px dashed var(--divider-dark);
+  border-right: 1px dashed var(--divider-dark);
+  opacity: 0.6;
+}
+
+.thermal-card-line {
+  font-family: var(--font-machine);
+  font-size: 10px;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+.thermal-card-line.strikethrough {
+  text-decoration: line-through;
+  color: var(--ink-faint);
+}

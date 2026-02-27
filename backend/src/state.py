@@ -1,0 +1,97 @@
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field
+
+
+# ============================================================
+# DOMAIN MODELS
+# ============================================================
+
+class OrderItem(BaseModel):
+    """
+    A single medicine request extracted from user input.
+
+    Owned by:
+    - FrontDesk (extraction)
+    - Pharmacist (validation)
+    - Fulfillment (inventory + order)
+    """
+
+    medicine_name: str
+    dosage: Optional[str] = None          # e.g. "500mg"
+    quantity: int = 1
+
+    # Filled later by downstream agents
+    requires_prescription: Optional[bool] = None
+    in_stock: Optional[bool] = None
+
+
+# ============================================================
+# GLOBAL SHARED STATE (LANGGRAPH MEMORY)
+# ============================================================
+
+class PharmacyState(BaseModel):
+    """
+    GLOBAL SHARED STATE
+    -------------------
+    This object is passed between all LangGraph nodes.
+
+    Rules:
+    - Agents may ONLY write fields defined here
+    - Services NEVER touch this directly
+    - This is the system contract
+    """
+
+    # --------------------------------------------------------
+    # Conversation Context
+    # --------------------------------------------------------
+    user_id: Optional[str] = None
+    session_id: Optional[str] = None        # Unique session ID for event tracking
+    whatsapp_phone: Optional[str] = None    # For WhatsApp notifications
+    user_message: Optional[str] = None
+    language: Optional[str] = "en"         # en | hi | mixed
+    intent: Optional[str] = None           # purchase | refill | inquiry | unknown
+
+    # --------------------------------------------------------
+    # Conversation Phase (Pre-Order Orchestration)
+    # --------------------------------------------------------
+    conversation_phase: Optional[str] = "intake"
+    # intake | clarifying | recommending | ordering | info_query | completed
+
+    clarified_symptoms: Optional[str] = None
+    last_medicine_discussed: Optional[str] = None
+    last_recommendations: List[str] = Field(default_factory=list)
+    
+    # --------------------------------------------------------
+    # Order Understanding (from FrontDesk)
+    # --------------------------------------------------------
+    extracted_items: List[OrderItem] = Field(default_factory=list)
+
+    # --------------------------------------------------------
+    # Safety & Validation (Pharmacist)
+    # --------------------------------------------------------
+    prescription_uploaded: bool = False
+    prescription_verified: bool = False
+    safety_issues: List[str] = Field(default_factory=list)
+    pharmacist_decision: Optional[str] = None   # approved | rejected | needs_review
+
+    # --------------------------------------------------------
+    # Proactive Intelligence (future agents)
+    # --------------------------------------------------------
+    proactive_trigger: bool = False
+    predicted_depletion_date: Optional[str] = None
+
+    # --------------------------------------------------------
+    # Fulfillment & Notifications
+    # --------------------------------------------------------
+    order_id: Optional[str] = None
+    total_amount: float = 0.0               # Final order total
+    order_status: Optional[str] = None      # created | fulfilled | failed
+    notifications_sent: bool = False
+
+    # --------------------------------------------------------
+    # Meta / Debug / Tracing
+    # --------------------------------------------------------
+    trace_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    class Config:
+        arbitrary_types_allowed = True

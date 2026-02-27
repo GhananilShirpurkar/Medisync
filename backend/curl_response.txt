@@ -1,0 +1,7 @@
+HTTP/1.1 500 Internal Server Error
+date: Thu, 26 Feb 2026 12:25:27 GMT
+server: uvicorn
+content-length: 222
+content-type: application/json
+
+{"detail":"Conversation error: Expected dict, got <coroutine object fulfillment_agent at 0x750412173680>\nFor troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/INVALID_GRAPH_NODE_RETURN_VALUE"}

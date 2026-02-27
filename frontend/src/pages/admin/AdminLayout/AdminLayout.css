@@ -1,0 +1,136 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-room);
+}
+
+.admin-sidebar {
+  width: 200px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: var(--ink);
+  color: var(--bg-room);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-sidebar-header {
+  padding: 24px 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 24px;
+}
+
+.admin-logo {
+  font-family: 'B612 Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-subtitle {
+  font-family: 'B612 Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: 4px;
+}
+
+.admin-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-nav-item {
+  padding: 12px 20px;
+  font-family: 'B612 Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  display: block;
+}
+
+.admin-nav-item:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.admin-nav-item.active {
+  color: white;
+  border-left-color: white;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.admin-sidebar-footer {
+  padding: 24px 20px;
+  margin-top: auto;
+}
+
+.admin-signout {
+  background: transparent;
+  border: none;
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: color 150ms ease;
+}
+
+.admin-signout:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-content {
+  margin-left: 200px;
+  padding: 32px 40px;
+  min-height: 100vh;
+  width: calc(100% - 200px);
+  background-color: var(--bg-room);
+}
+
+/* Reusable Header Component Styles since they are common to all pages */
+.admin-page-header {
+  border-bottom: 1px solid var(--divider);
+  margin-bottom: 32px;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.admin-page-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.admin-page-title {
+  font-family: 'B612 Mono', monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.admin-user {
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  color: var(--ink-faint);
+}
+
+.admin-page-date {
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  color: var(--ink-ghost);
+}

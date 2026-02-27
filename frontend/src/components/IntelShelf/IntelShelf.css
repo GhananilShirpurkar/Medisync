@@ -1,0 +1,64 @@
+.intel-shelf-container {
+  height: 100%;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.intel-shelf-header {
+  font-family: var(--font-machine);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-faint);
+  margin-bottom: 2rem;
+}
+
+.intel-shelf-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.shelf-slot {
+  width: 100%;
+}
+
+.shelf-ghost-outline {
+  border: 1px dashed var(--divider-dark);
+  padding: 1rem 1.25rem;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 0.5;
+}
+
+.ghost-title {
+  font-family: var(--font-machine);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-ghost);
+}
+
+.ghost-waiting {
+  font-family: var(--font-machine);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-ghost);
+  align-self: flex-end;
+}
+
+.intel-shelf-footer {
+  font-family: var(--font-machine);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-ghost);
+  margin-top: auto;
+  padding-top: 1rem;
+}

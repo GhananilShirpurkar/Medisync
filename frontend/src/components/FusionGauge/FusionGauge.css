@@ -1,0 +1,134 @@
+.fusion-gauge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1.5rem 1rem;
+  border-radius: 8px;
+  transition: background-color 400ms ease;
+}
+
+.fusion-gauge-container.critical-alert {
+  background-color: #FFF8F8;
+}
+
+.gauge-svg-wrapper {
+  position: relative;
+  width: var(--gauge-size);
+  height: var(--gauge-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.gauge-svg-wrapper.pulse-once {
+  animation: singlePulse 400ms ease-out;
+}
+
+@keyframes singlePulse {
+  0% { transform: scale(1.0); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1.0); }
+}
+
+.fusion-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gauge-track {
+  stroke: var(--divider);
+  stroke-linecap: round;
+}
+
+.gauge-arc {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1), stroke 600ms ease;
+}
+
+.gauge-center-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.gauge-percentage {
+  font-family: var(--font-machine);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.gauge-label {
+  font-family: var(--font-machine);
+  font-size: 8px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+.gauge-duration {
+  font-family: var(--font-machine);
+  font-size: 8px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+
+.gauge-metrics {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.metric-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-machine);
+  font-size: 10px;
+  width: max-content;
+}
+
+.metric-name {
+  color: var(--ink-2);
+  width: 110px;
+}
+
+.metric-val {
+  color: var(--ink);
+  width: 24px;
+  text-align: right;
+  font-weight: 700;
+}
+
+.metric-bar-bg {
+  width: 80px;
+  height: 2px;
+  background-color: var(--divider);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  transition: width 600ms cubic-bezier(0.4, 0, 0.2, 1), background-color 600ms ease;
+}
+
+.halt-reason {
+  margin-top: 12px;
+  font-family: var(--font-machine);
+  font-size: 9px;
+  color: var(--red);
+  text-align: center;
+  max-width: 180px;
+  line-height: 1.4;
+}

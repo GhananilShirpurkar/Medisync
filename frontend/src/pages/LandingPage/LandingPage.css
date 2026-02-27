@@ -1,0 +1,122 @@
+.landing-page {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-room);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-brand {
+  position: absolute;
+  top: 24px;
+  left: 32px;
+  font-family: "B612 Mono", monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+}
+
+.landing-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.landing-title {
+  font-family: "B612 Mono", monospace;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: var(--ink);
+  margin: 0;
+  margin-bottom: 8px;
+}
+
+.landing-tagline {
+  margin-bottom: 48px;
+}
+
+.landing-tagline-primary {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink-mute);
+  margin: 0;
+  margin-bottom: 4px;
+}
+
+.landing-tagline-secondary {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.landing-buttons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.landing-btn {
+  cursor: pointer;
+  background: transparent;
+  padding: 12px 28px;
+  font-family: "B612 Mono", monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  transition: all 200ms ease;
+  opacity: 0;
+}
+
+.landing-btn.visible {
+  opacity: 1;
+  transition:
+    opacity 500ms ease,
+    background 200ms ease,
+    color 200ms ease,
+    border-color 200ms ease;
+}
+
+.landing-btn.visible.delay {
+  transition-delay: 150ms, 0ms, 0ms, 0ms; /* Opacity delay, rest instant */
+}
+
+/* Clear delay after initial entrance so hover transitions work instantly */
+.landing-btn.visible.delay:hover {
+  transition-delay: 0ms;
+}
+
+.landing-btn-customer {
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  color: var(--ink);
+}
+
+.landing-btn-customer:hover {
+  background-color: var(--ink);
+  color: var(--bg-room);
+}
+
+.landing-btn-admin {
+  border: 1px solid var(--divider);
+  border-radius: 0;
+  color: var(--ink-faint);
+}
+
+.landing-btn-admin:hover {
+  border-color: var(--ink-mute);
+  color: var(--ink);
+}
+
+.landing-footer {
+  font-family: "B612 Mono", monospace;
+  font-size: 8px;
+  color: var(--ink-ghost);
+}

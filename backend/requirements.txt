@@ -1,0 +1,56 @@
+# Core Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+pydantic==2.10.0
+
+# Agent Orchestration
+langgraph
+langchain
+langchain-google-genai
+google-genai==0.8.0
+
+# Observability (Optional)
+langfuse==2.53.3
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.14.0
+psycopg2-binary==2.9.10  # PostgreSQL adapter for Supabase
+
+# Image Processing
+opencv-python==4.13.0.92
+
+pillow==12.1.1
+
+# PyTorch (CPU-only)
+# ⚠️  CRITICAL: Install torch BEFORE running this file!
+# Run: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# DO NOT include torch in this file or it will pull CUDA (2-3GB bloat)
+
+# OCR (Offline-First)
+# Dependencies for EasyOCR (torch must be installed first)
+scipy==1.17.0
+scikit-image==0.26.0
+python-bidi==0.6.7
+shapely==2.1.2
+pyclipper==1.4.0
+opencv-python-headless==4.13.0.92
+easyocr==1.7.2
+
+# Speech-to-Text (Offline-First)
+faster-whisper==1.2.1
+pydub==0.25.1
+
+# Utilities
+pandas==2.2.3
+psutil==6.1.0
+openpyxl==3.1.5
+requests==2.32.3  # For API calls
+twilio==9.3.2
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.2
+sentence-transformers
+groq

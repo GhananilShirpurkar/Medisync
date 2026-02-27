@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600&family=B612+Mono:wght@400;700&display=swap');
+
+:root {
+  --bg-room:          linear-gradient(180deg, #E8F4F8 0%, #DDEEF5 100%);
+  --bg-stage:         transparent;
+  --bg-panel:         #FFFFFF;
+  --bg-warn:          #fffbeb; 
+  --bg-critical:      #fef2f2;
+  --bg-stage-warn:    #fef3c7;
+  --bg-stage-crit:    #fee2e2;
+
+  --ink:              #003366; /* Headers / Primary */
+  --ink-2:            #334455; /* Body */
+  --ink-mute:         #667788; /* Secondary */
+  --ink-faint:        #667788;
+  --ink-ghost:        #CCE0EB;
+
+  --amber:            #FFAA00;
+  --red:              #CC3300;
+  --green:            #00AA44; /* Primary Green */
+  --indigo:           #0066CC; /* Primary Blue */
+  
+  --divider:          #CCE0EB; 
+  --divider-dark:     #0066CC;
+
+  --font-human:       'Plus Jakarta Sans', sans-serif;
+  --font-ai:          'Cormorant Garamond', serif;
+  --font-machine:     'B612 Mono', monospace;
+
+  --stage-shadow:     0 2px 8px rgba(0,102,204,0.08);
+  
+  --gauge-size:       140px;
+  --gauge-stroke-outer: 8px;
+  --gauge-stroke-inner: 3px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg-room);
+  color: var(--ink);
+  transition: background-color 1200ms ease;
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  width: 100vw;
+  font-family: var(--font-human);
+}
+
+html {
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CCE0EB;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0066CC;
+}
+
+/* Page Transition Classes */
+.page-enter {
+  opacity: 0;
+  animation: pageFadeIn 600ms ease forwards;
+}
+
+.page-exit {
+  opacity: 1;
+  animation: pageFadeOut 400ms ease forwards;
+  pointer-events: none;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pageFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

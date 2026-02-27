@@ -1,0 +1,42 @@
+.pending-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.action-approve {
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.action-approve:hover {
+  opacity: 0.7;
+}
+
+.action-reject {
+  font-family: 'B612 Mono', monospace;
+  font-size: 9px;
+  color: var(--red);
+  cursor: pointer;
+  transition: opacity 150ms ease;
+}
+
+.action-reject:hover {
+  opacity: 0.7;
+}
+
+.row-fade-out {
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px !important;
+  color: var(--ink-ghost) !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-style: italic;
+}

@@ -1,0 +1,206 @@
+.agent-log-container {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  padding-right: 4px; /* Reduced from 8px to give more space for text */
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: var(--green) transparent;
+}
+
+.agent-log-container::-webkit-scrollbar {
+  width: 3px;
+}
+
+.agent-log-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agent-log-container::-webkit-scrollbar-thumb {
+  background-color: var(--green);
+  border-radius: 0;
+}
+
+.agent-log-track {
+  display: flex;
+  flex-direction: column;
+  padding-left: 6px; /* Space for the rail to align nicely */
+}
+
+.agent-log-entry {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  /* Fade-in animation from 0 opacity */
+  animation: logFadeIn 400ms ease-out forwards;
+}
+
+.agent-log-entry.is-fusion {
+  margin-top: 4px; /* Extra 4px gap for fusion events to separate them */
+}
+
+.trace-step-enter {
+  animation: logFadeIn 150ms ease-out forwards;
+}
+
+@keyframes logFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.trace-initializing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.trace-init-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  animation: pulse-init 2s ease-in-out infinite;
+}
+
+.trace-init-text {
+  font-family: var(--font-machine);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+
+@keyframes pulse-init {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.log-icon-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 12px;
+  padding-top: 4px; /* Align icon with the first line of text */
+}
+
+/* The vertical rail connecting steps */
+.log-rail {
+  position: absolute;
+  top: 16px; /* Start below the dot */
+  bottom: -4px; /* Extend into the gap for the next element */
+  left: 5px; /* Center horizontally in the 12px col */
+  width: 1px;
+  background-color: var(--divider);
+  z-index: 0;
+}
+
+.agent-log-entry:last-child .log-rail {
+  display: none; /* No rail after the last item */
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white; /* to cover the rail line */
+}
+
+.status-dot.hollow-circle {
+  border: 1px solid var(--ink-ghost);
+}
+
+.status-dot.solid-amber {
+  background-color: var(--amber);
+}
+
+.status-dot.solid-red {
+  background-color: var(--red);
+}
+
+.status-dot.fusion-diamond {
+  background-color: var(--ink-mute);
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+
+.status-dot.complete-check {
+  width: 12px;
+  height: 12px;
+  background-color: transparent;
+  transform: translateX(
+    -3px
+  ); /* Shift left slightly to center over the 6px dot spot */
+}
+
+.status-dot.pulse-anim {
+  animation: statusPulse 2s infinite ease-in-out;
+}
+
+@keyframes statusPulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.log-content-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: 12px;
+}
+
+.log-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.log-agent-name {
+  font-family: var(--font-machine);
+  font-size: 9px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.log-timestamp {
+  font-family: var(--font-machine);
+  font-size: 8px;
+  color: var(--ink-ghost);
+  text-align: right;
+}
+
+.log-step-desc {
+  font-family: var(--font-machine);
+  font-size: 10px;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+
+.agent-detail-line {
+  font-family: var(--font-machine);
+  font-size: 9px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+  padding-left: 4px;
+}
