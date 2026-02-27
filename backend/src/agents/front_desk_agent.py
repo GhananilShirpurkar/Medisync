@@ -15,6 +15,7 @@ from typing import Dict, List, Optional
 from src.services import llm_service
 from src.services.intent_classifier import classify_intent
 from src.prompts.front_desk_prompts import SYSTEM_PROMPT_PHARMACIST
+from src.state import OrderItem
 
 class FrontDeskAgent:
     """
@@ -100,6 +101,31 @@ Respond in JSON format:
         response = llm_service.parse_structured(prompt)
         return response
     
+    def extract_medicine_items(self, message: str) -> List[OrderItem]:
+        """
+        Extract medicine items (name, quantity, dosage) from user message using LLM.
+
+        Uses the structured extraction prompt in llm_service to handle:
+        - "I need 2 paracetamol"       → quantity: 2, dosage: null
+        - "paracetamol 500mg"           → quantity: 1, dosage: "500mg"
+        - "3 strips of ibuprofen 400mg" → quantity: 3, dosage: "400mg"
+
+        Returns:
+            List of OrderItem with extracted medicine_name, quantity, dosage.
+            quantity defaults to 1 if not mentioned.
+        """
+        extraction = llm_service.call_llm_extract(message)
+        items = []
+        for raw in extraction.get("items", []):
+            if not raw.get("medicine_name"):
+                continue
+            items.append(OrderItem(
+                medicine_name=raw["medicine_name"],
+                quantity=int(raw.get("quantity") or 1),
+                dosage=raw.get("dosage") or None,
+            ))
+        return items
+
     def generate_clarifying_question(
         self,
         intent: str,

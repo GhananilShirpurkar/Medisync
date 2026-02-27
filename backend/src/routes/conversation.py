@@ -31,6 +31,11 @@ conversation_service = ConversationService()
 front_desk_agent = FrontDeskAgent()
 db = Database()
 
+# In-memory store for pending order confirmations.
+# Keyed by session_id: {"awaiting_confirmation": bool, "pending_pharmacy_state": dict}
+# Safe for single-process FastAPI; survives for the lifetime of the server process.
+_confirmation_store: dict = {}
+
 from src.agents.identity_agent import IdentityAgent
 identity_agent = IdentityAgent()
 
@@ -191,6 +196,80 @@ async def send_message(request: ConversationRequest):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Session not found"
             )
+
+        # ------------------------------------------------------------------
+        # ORDER CONFIRMATION INTERCEPT
+        # Check before anything else — user is replying YES/NO to a pending order
+        # ------------------------------------------------------------------
+        if _confirmation_store.get(request.session_id, {}).get('awaiting_confirmation'):
+            user_reply = request.message.strip().upper()
+            conversation_service.add_message(
+                session_id=request.session_id,
+                role="user",
+                content=request.message
+            )
+            if user_reply == 'YES':
+                _confirmation_store[request.session_id]['awaiting_confirmation'] = False
+                pending_state_dict = _confirmation_store[request.session_id].get('pending_pharmacy_state')
+                if pending_state_dict:
+                    pending_state = PharmacyState(**pending_state_dict)
+                    result = await agent_graph.ainvoke(pending_state)
+                    final_state = PharmacyState(**result) if isinstance(result, dict) else result
+                    response_message = format_order_confirmation(final_state)
+                else:
+                    response_message = "Something went wrong retrieving your order. Please try again."
+                conversation_service.add_message(
+                    session_id=request.session_id,
+                    role='assistant',
+                    content=response_message,
+                    agent_name='fulfillment'
+                )
+                await trace_manager.emit(
+                    session_id=request.session_id,
+                    agent_name='FRONT_DESK',
+                    step_name='Order confirmed — processing',
+                    action_type='response',
+                    status='completed',
+                    details={'message': response_message}
+                )
+                return ConversationResponse(
+                    session_id=request.session_id,
+                    message=response_message,
+                    intent='purchase',
+                    needs_clarification=False,
+                    next_step='order_complete'
+                )
+            elif user_reply == 'NO':
+                _confirmation_store.pop(request.session_id, None)
+                response_message = "Order cancelled. How else can I help you?"
+                conversation_service.add_message(
+                    session_id=request.session_id,
+                    role='assistant',
+                    content=response_message,
+                    agent_name='front_desk'
+                )
+                return ConversationResponse(
+                    session_id=request.session_id,
+                    message=response_message,
+                    intent='purchase',
+                    needs_clarification=False,
+                    next_step='cancelled'
+                )
+            else:
+                response_message = "Please reply *YES* to confirm your order or *NO* to cancel."
+                conversation_service.add_message(
+                    session_id=request.session_id,
+                    role='assistant',
+                    content=response_message,
+                    agent_name='front_desk'
+                )
+                return ConversationResponse(
+                    session_id=request.session_id,
+                    message=response_message,
+                    intent='purchase',
+                    needs_clarification=True,
+                    next_step='awaiting_confirmation'
+                )
 
         # Trace: Start
         await trace_manager.emit(
@@ -634,15 +713,20 @@ Red Flags Detected:
             )
             
             if recommendations:
-                # NEW: Pipeline Integration - Create PharmacyState and run the graph
-                order_items = [
-                    OrderItem(
+                # Extract quantity/dosage from current message for symptom-based orders
+                extracted = front_desk_agent.extract_medicine_items(request.message)
+                extracted_map = {
+                    item.medicine_name.lower(): item for item in extracted
+                }
+                order_items = []
+                for r in recommendations:
+                    ex = extracted_map.get(r.medicine_name.lower())
+                    order_items.append(OrderItem(
                         medicine_name=r.medicine_name,
-                        dosage=r.dosage,
-                        quantity=1
-                    ) for r in recommendations
-                ]
-                
+                        dosage=ex.dosage if ex else r.dosage,
+                        quantity=ex.quantity if ex else 1,
+                    ))
+
                 state = PharmacyState(
                     user_id=session.get("user_id") or request.session_id,
                     session_id=request.session_id,
@@ -651,35 +735,47 @@ Red Flags Detected:
                     intent=intent,
                     extracted_items=order_items
                 )
-                # Store patient context for Medical Validator
                 state.trace_metadata["front_desk"] = {"patient_context": patient_context}
-                
-                # Run through full LangGraph pipeline
-                result = await agent_graph.ainvoke(state)
-                final_state = PharmacyState(**result) if isinstance(result, dict) else result
-                response_message = format_order_confirmation(final_state)
-                
+
+                # Build confirmation message (look up price from DB since OrderItem has no unit_price)
+                items_lines = []
+                total = 0.0
+                for item in order_items:
+                    med_data = db.get_medicine(item.medicine_name)
+                    price = med_data.get('price', 0) if med_data else 0
+                    line_total = price * item.quantity
+                    total += line_total
+                    dosage_str = f" {item.dosage}" if item.dosage else ""
+                    items_lines.append(
+                        f"  \u2022 {item.medicine_name}{dosage_str} \u00d7 {item.quantity} \u2014 \u20b9{line_total:.2f}"
+                    )
+                confirmation_message = (
+                    "Please confirm your order:\n\n"
+                    + "\n".join(items_lines)
+                    + f"\n\nTotal: \u20b9{total:.2f}\n\n"
+                    "Reply *YES* to confirm or *NO* to cancel."
+                )
+
+                # Persist pending state and set awaiting flag
+                _confirmation_store[request.session_id] = {
+                    'awaiting_confirmation': True,
+                    'pending_pharmacy_state': state.dict()
+                }
                 conversation_service.add_message(
                     session_id=request.session_id,
                     role="assistant",
-                    content=response_message,
-                    agent_name="orchestrator",
-                    extra_data={
-                        "recommendations": [r.dict() for r in recommendations],
-                        "pipeline_result": final_state.dict(exclude={"trace_metadata"})
-                    }
+                    content=confirmation_message,
+                    agent_name="FRONT_DESK"
                 )
 
-                # Trace: Final response
                 await trace_manager.emit(
                     session_id=request.session_id,
-                    agent_name="ORCHESTRATOR",
-                    step_name="Responding with validated recommendations...",
+                    agent_name="FRONT_DESK",
+                    step_name="Responding with order confirmation...",
                     action_type="response",
-                    status="completed"
+                    status="completed",
+                    details={"message": confirmation_message}
                 )
-                
-                # Trace: Complete API Gateway
                 await trace_manager.emit(
                     session_id=request.session_id,
                     agent_name="API Gateway",
@@ -690,12 +786,12 @@ Red Flags Detected:
 
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=response_message,
+                    message=confirmation_message,
                     intent=intent,
                     recommendations=recommendations,
-                    needs_clarification=False,
+                    needs_clarification=True,
                     patient_context=patient_context,
-                    next_step="add_to_cart",
+                    next_step="awaiting_confirmation",
                     severity_assessment=severity_assessment
                 )
             else:
@@ -879,15 +975,22 @@ Red Flags Detected:
                             response_message += f"Alternative: {medicine['generic_equivalent']}"
                 
                 if not is_info_query and not is_fuzzy_match:
-                    # NEW: Pipeline Integration for direct purchases
+                    # Extract quantity/dosage from user message
+                    extracted = front_desk_agent.extract_medicine_items(request.message)
+                    qty = 1
+                    dosage_val = None
+                    if extracted:
+                        qty = extracted[0].quantity
+                        dosage_val = extracted[0].dosage
+
                     order_items = [
                         OrderItem(
                             medicine_name=medicine["name"],
-                            dosage=None, # Will be inferred by validator
-                            quantity=1
+                            dosage=dosage_val,
+                            quantity=qty
                         )
                     ]
-                    
+
                     state = PharmacyState(
                         user_id=session.get("user_id") or request.session_id,
                         session_id=request.session_id,
@@ -897,21 +1000,29 @@ Red Flags Detected:
                         extracted_items=order_items
                     )
                     state.trace_metadata["front_desk"] = {"patient_context": patient_context}
-                    
-                    # Run through full LangGraph pipeline
-                    result = await agent_graph.ainvoke(state)
-                    final_state = PharmacyState(**result) if isinstance(result, dict) else result
-                    response_message = format_order_confirmation(final_state)
-                    
+
+                    # Build confirmation message (look up price from DB)
+                    price = medicine.get('price', 0)
+                    line_total = price * qty
+                    dosage_str = f" {dosage_val}" if dosage_val else ""
+                    items_text = f"  \u2022 {medicine['name']}{dosage_str} \u00d7 {qty} \u2014 \u20b9{line_total:.2f}"
+                    confirmation_message = (
+                        f"Please confirm your order:\n\n{items_text}\n\n"
+                        f"Total: \u20b9{line_total:.2f}\n\n"
+                        "Reply *YES* to confirm or *NO* to cancel."
+                    )
+
+                    # Persist pending state and set awaiting flag
+                    _confirmation_store[request.session_id] = {
+                        'awaiting_confirmation': True,
+                        'pending_pharmacy_state': state.dict()
+                    }
+                    response_message = confirmation_message
                     conversation_service.add_message(
                         session_id=request.session_id,
                         role="assistant",
                         content=response_message,
-                        agent_name="orchestrator",
-                        extra_data={
-                            "medicine": medicine,
-                            "pipeline_result": final_state.dict(exclude={"trace_metadata"})
-                        }
+                        agent_name="FRONT_DESK"
                     )
                 else:
                     # For info queries or fuzzy matches, stay conversational/seek clarification
@@ -921,8 +1032,8 @@ Red Flags Detected:
                         content=response_message,
                         agent_name="inventory",
                         extra_data={
-                            "medicine": medicine, 
-                            "fuzzy_match": is_fuzzy_match, 
+                            "medicine": medicine,
+                            "fuzzy_match": is_fuzzy_match,
                             "info_query": is_info_query,
                             "recommendations": recommendations_list
                         }
@@ -931,12 +1042,12 @@ Red Flags Detected:
                 # Trace: Final response
                 await trace_manager.emit(
                     session_id=request.session_id,
-                    agent_name="ORCHESTRATOR",
+                    agent_name="FRONT_DESK" if (not is_info_query and not is_fuzzy_match) else "ORCHESTRATOR",
                     step_name="Responding with medicine details...",
                     action_type="response",
                     status="completed"
                 )
-                
+
                 # Trace: Complete API Gateway
                 await trace_manager.emit(
                     session_id=request.session_id,
@@ -951,9 +1062,9 @@ Red Flags Detected:
                     message=response_message,
                     intent=intent,
                     recommendations=[recommendation],
-                    needs_clarification=is_fuzzy_match and not is_info_query,
+                    needs_clarification=True if (not is_info_query and not is_fuzzy_match) else (is_fuzzy_match and not is_info_query),
                     patient_context=patient_context,
-                    next_step="add_to_cart" if not is_fuzzy_match else "confirm_medicine"
+                    next_step="awaiting_confirmation" if (not is_info_query and not is_fuzzy_match) else ("add_to_cart" if not is_fuzzy_match else "confirm_medicine")
                 )
             else:
                 response_message = f"I couldn't find '{medicine_name}' in our inventory. Could you check the spelling or try a different medicine?"

@@ -5,12 +5,13 @@
 
 # Configuration
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_PATH="$PROJECT_ROOT/.venv"
 BACKEND_DIR="$PROJECT_ROOT/backend"
+VENV_PATH="$BACKEND_DIR/.venv"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
-# ── FIXED: hardcoded subdomain — never changes between restarts ──
-SUBDOMAIN="medisync-koanoir"
+# ── FIXED: dynamically generate subdomain to avoid localtunnel server locks ──
+RANDOM_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
+SUBDOMAIN="medisync-koanoir-$RANDOM_SUFFIX"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -124,6 +125,7 @@ if [ ! -z "$stale" ]; then
 fi
 
 BACKEND_LOG="/tmp/medisync_backend.log"
+rm -f "$BACKEND_LOG" # ── FIXED: clear stale log to prevent false pass ──
 uvicorn main:app --reload --host 0.0.0.0 --port 8000 > "$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 
@@ -153,6 +155,7 @@ echo -e "${BLUE}→ Starting Frontend Server...${NC}"
 cd "$FRONTEND_DIR"
 
 FRONTEND_LOG="/tmp/medisync_frontend.log"
+rm -f "$FRONTEND_LOG" # ── FIXED: clear stale log to prevent false pass ──
 npm run dev > "$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
 
@@ -180,6 +183,14 @@ fi
 
 # Start Tunnel
 echo -e "\n${BLUE}[5/5] Starting Public Tunnel for WhatsApp...${NC}"
+
+# Kill any stale localtunnel processes to ensure our subdomain isn't blocked
+stale_tunnel=$(pgrep -f "localtunnel.*$SUBDOMAIN" || true)
+if [ ! -z "$stale_tunnel" ]; then
+    echo -e "${YELLOW}  → Killing stale localtunnel process (PID: $stale_tunnel)...${NC}"
+    pkill -f "localtunnel.*$SUBDOMAIN" 2>/dev/null; sleep 1
+fi
+
 TUNNEL_LOG="/tmp/medisync_tunnel.log"
 
 # ── FIXED: bypass localtunnel confirmation page automatically ──
@@ -202,7 +213,7 @@ if [ ! -z "$TUNNEL_URL" ]; then
     # ── FIXED: bypass localtunnel browser confirmation by pre-hitting with correct header ──
     echo -e "${YELLOW}  Bypassing tunnel confirmation page...${NC}"
     sleep 2
-    curl -s -o /dev/null "$TUNNEL_URL" -H "Bypass-Tunnel-Reminder: true" || true
+    curl --max-time 10 -s -o /dev/null "$TUNNEL_URL" -H "Bypass-Tunnel-Reminder: true" || true
 
     echo -e "${YELLOW}  Registering WhatsApp Webhook...${NC}"
     cd "$BACKEND_DIR"
