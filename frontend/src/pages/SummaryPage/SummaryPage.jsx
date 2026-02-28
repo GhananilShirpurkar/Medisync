@@ -108,8 +108,6 @@ const SummaryPage = () => {
         phone 
     } = pipelineState;
 
-    if (!orderSummary) return null;
-
     // --- DATA PROCESSING (V3) ---
 
     const complaint = messages.find(m => m.sender === 'user')?.content || '"paracetamol"';
@@ -161,6 +159,8 @@ const SummaryPage = () => {
         const date = new Date();
         return `${date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}`;
     }, []);
+
+    if (!orderSummary) return null;
 
     return (
         <div className="summary-v3-container">
