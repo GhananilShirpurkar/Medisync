@@ -38,6 +38,13 @@ class Medicine(Base):
     strength = Column(String(50))  # 500mg, 10ml, etc.
     active_ingredients = Column(Text)  # Comma-separated list of active ingredients
     
+    # NEW: ATC Classification (Anatomical Therapeutic Chemical)
+    atc_code = Column(String(7), index=True)
+    atc_level_1 = Column(String(1))  # Anatomical main group
+    atc_level_2 = Column(String(3))  # Therapeutic subgroup
+    atc_level_3 = Column(String(4))  # Pharmacological subgroup
+    atc_level_4 = Column(String(5))  # Chemical subgroup
+    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -141,6 +148,56 @@ class Patient(Base):
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class DrugCombination(Base):
+    """Evidence-based fixed-dose combinations and synergistic pairs."""
+    __tablename__ = "drug_combinations"
+    
+    id = Column(String(36), primary_key=True, index=True)  # UUID
+    primary_atc = Column(String(7), index=True, nullable=False)
+    secondary_atc = Column(String(7), index=True, nullable=False)
+    indication = Column(String(100), index=True, nullable=False)
+    
+    synergy_score = Column(Float)  # 0.0 to 1.0
+    evidence_level = Column(String(1))  # A=RCT, B=Cohort, C=Expert
+    guideline_source = Column(String(50))
+    rationale = Column(Text)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ContraindicationRule(Base):
+    """Structured rules for avoiding certain medicines in specific conditions."""
+    __tablename__ = "contraindication_rules"
+    
+    id = Column(String(36), primary_key=True, index=True)  # UUID
+    condition_name = Column(String(50), index=True, nullable=False)
+    forbidden_atc_pattern = Column(String(10), nullable=False)  # e.g., 'M01A'
+    severity = Column(String(10))  # 'absolute', 'relative'
+    alternative_atc_suggestion = Column(String(7))
+    evidence_reference = Column(Text)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ReasoningLog(Base):
+    """Audit trail for clinical reasoning agent's multi-turn logic."""
+    __tablename__ = "reasoning_logs"
+    
+    id = Column(String(36), primary_key=True, index=True)  # UUID
+    session_id = Column(String(100), ForeignKey("conversation_sessions.session_id"), index=True)
+    turn_number = Column(Integer)
+    
+    clinical_context = Column(JSON)
+    recommendation = Column(JSON)
+    contraindications_checked = Column(JSON)
+    interactions_checked = Column(JSON)
+    
+    llm_prompt = Column(Text)
+    llm_response = Column(Text)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 # For future: Proactive intelligence

@@ -120,6 +120,30 @@ export const pipelineStore = {
         nextState.currentPage = 'SUMMARY';
         break;
 
+      case 'UPDATE_ORDER_ITEM':
+        if (nextState.orderSummary && nextState.orderSummary.items) {
+            const index = nextState.orderSummary.items.findIndex(i => i.name === payload.oldName);
+            if (index !== -1) {
+                const updatedItems = [...nextState.orderSummary.items];
+                updatedItems[index] = {
+                    ...updatedItems[index],
+                    name: payload.newName,
+                    price: payload.price,
+                    stockStatus: 'In Stock',
+                    available: true,
+                    substitute: null, // Clear substitute info once replaced
+                    isReplaced: true,
+                    originalName: payload.oldName
+                };
+                nextState.orderSummary = {
+                    ...nextState.orderSummary,
+                    items: updatedItems,
+                    totalPrice: updatedItems.reduce((sum, i) => sum + (i.price || 0), 0)
+                };
+            }
+        }
+        break;
+
       case 'USER_MESSAGE_SENT':
         if (typeof payload === 'object' && payload !== null) {
           nextState.messages = [...nextState.messages, { sender: 'user', ...payload }];

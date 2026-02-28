@@ -73,18 +73,17 @@ class Database:
         """
         print(f"DATABASE: Getting medicine: {name}")
         with get_db_context() as db:
+            print(f"DEBUG: get_medicine searching for: '{name}'")
             # Try exact match first
             medicine = db.query(Medicine).filter(
                 Medicine.name.ilike(name)
             ).first()
             
             if medicine:
-                print(f"DATABASE: Found exact match: {medicine.name}, stock: {medicine.stock}")
                 return {
-                    "id": medicine.id,
+                    "medicine_id": medicine.id,
                     "name": medicine.name,
                     "category": medicine.category,
-                    "manufacturer": medicine.manufacturer,
                     "price": medicine.price,
                     "stock": medicine.stock,
                     "requires_prescription": medicine.requires_prescription,

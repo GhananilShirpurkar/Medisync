@@ -150,7 +150,11 @@ def inventory_agent(state: PharmacyState) -> PharmacyState:
         reasoning_trace.append(f"\n🔍 Finding equivalent replacement for {len(alternatives_needed)} item(s)")
         
         for medicine_name in alternatives_needed:
-            replacement = find_equivalent_replacement(medicine_name, db)
+            replacement = find_equivalent_replacement(
+                medicine_name=medicine_name, 
+                db=db, 
+                patient_context=state.clinical_context
+            )
             state.replacement_pending.append(replacement.model_dump())
             
             if replacement.replacement_found:
@@ -234,7 +238,7 @@ def inventory_agent(state: PharmacyState) -> PharmacyState:
 def find_equivalent_replacement(
     medicine_name: str,
     db: Database,
-    patient_allergies: Optional[List[str]] = None,
+    patient_context: Optional['ClinicalContext'] = None,
 ) -> ReplacementResponse:
     """
     Find ONE safe, clinically equivalent replacement for an out-of-stock medicine.
@@ -257,7 +261,11 @@ def find_equivalent_replacement(
     Returns:
         ReplacementResponse — always exactly one object, never a list.
     """
-    allergies = [a.lower().strip() for a in (patient_allergies or [])]
+    from src.clinical_models import ClinicalContext
+    
+    if not patient_context:
+        patient_context = ClinicalContext()
+
 
     def _no_replacement(reason: str) -> ReplacementResponse:
         return ReplacementResponse(
@@ -290,106 +298,93 @@ def find_equivalent_replacement(
     # ── Query same-category candidates in stock ─────────────────────────────
     from src.db_config import get_db_context
     from src.models import Medicine  # SQLAlchemy model
+    from src.services.atc_service import ATCService
+    from src.services.contraindication_service import ContraindicationService
 
     with get_db_context() as session:
+        # Get all in-stock medicines
         candidates = session.query(Medicine).filter(
-            Medicine.category == original_category,
             Medicine.name != medicine_name,
             Medicine.stock > 0,
+            Medicine.atc_code.isnot(None) # Only evaluate ones with ATC codes
         ).all()
 
         if not candidates:
-            return _no_replacement(
-                f"No in-stock medicines found in category '{original_category}'."
-            )
+            return _no_replacement("No in-stock medicines with ATC codes available for comparison.")
 
         # ── Score each candidate ────────────────────────────────────────────
-        best_candidate = None
-        best_confidence = ""   # tracks ranking: high > medium > low
-        best_reasoning = ""
+        valid_suggestions = []
 
         for cand in candidates:
-            # Gate 1: category already enforced by query — double-check
-            if (cand.category or "").lower() != original_category.lower():
-                continue
+            # Gate 1: Check Contraindications using the structured service
+            violations = ContraindicationService.check_contraindications(cand.atc_code, patient_context)
+            if any(v.get("severity") == "absolute" for v in violations):
+                continue  # Skip absolutely contraindicated candidates
+                
+            has_relative_warning = any(v.get("severity") == "relative" for v in violations)
 
-            # Gate 2: contraindication / allergy filter
-            if allergies:
-                cand_contraindications = [
-                    c.strip().lower()
-                    for c in (cand.contraindications or "").split(",")
-                    if c.strip()
-                ]
-                if any(allergy in cand_contraindications for allergy in allergies):
-                    continue  # skip — contraindicated for this patient
-
-            # ── Determine confidence ────────────────────────────────────────
-            cand_ingredients: List[str] = [
-                i.strip().lower()
-                for i in (cand.active_ingredients or "").split(",")
-                if i.strip()
-            ]
-            cand_generic: str = (cand.generic_equivalent or "").strip().lower()
-
-            if (
-                original_ingredients
-                and cand_ingredients
-                and bool(set(original_ingredients) & set(cand_ingredients))
-            ):
-                confidence = "high"
-                shared = set(original_ingredients) & set(cand_ingredients)
-                reasoning = (
-                    f"Same category ({original_category}), "
-                    f"same active ingredient ({', '.join(shared)}), "
-                    f"no contraindications."
-                )
-            elif original_generic and cand_generic and original_generic == cand_generic:
-                confidence = "medium"
-                reasoning = (
-                    f"Same category ({original_category}), "
-                    f"same generic equivalent ({cand_generic}), "
-                    f"no contraindications."
-                )
+            # ── Determine confidence using ATC Hierarchy ────────────────────────
+            if original.get("atc_code") and cand.atc_code:
+                if ATCService.are_same_molecule(original["atc_code"], cand.atc_code):
+                    confidence = "high" if not has_relative_warning else "medium"
+                    reasoning = f"Same active chemical substance ({cand.atc_code[:7]})."
+                elif ATCService.are_same_class(original["atc_code"], cand.atc_code):
+                    confidence = "medium"
+                    reasoning = f"Same pharmacological class ({cand.atc_code[:5]})."
+                elif original_category and (cand.category or "").lower() == original_category.lower():
+                    confidence = "low"
+                    reasoning = f"Same therapeutic category ({original_category})."
+                else:
+                    continue # Not equivalent at all
             else:
-                confidence = "low"
-                reasoning = (
-                    f"Same category ({original_category}) only — "
-                    f"active ingredient match unavailable. Pharmacist review required."
-                )
+                # Fallback to category if no ATC
+                if original_category and (cand.category or "").lower() == original_category.lower():
+                    confidence = "low"
+                    reasoning = f"Same category ({original_category}), ATC code missing."
+                else:
+                    continue
+                    
+            if has_relative_warning:
+                reasoning += " (Note: Has relative contraindication warning)."
 
-            # Keep the highest-confidence candidate found so far
-            rank = {"high": 3, "medium": 2, "low": 1}
-            if best_candidate is None or rank[confidence] > rank[best_confidence]:
-                best_candidate = cand
-                best_confidence = confidence
-                best_reasoning = reasoning
+            cand_price: float = cand.price or 0.0
+            price_diff_pct = (
+                ((cand_price - original_price) / original_price * 100)
+                if original_price > 0 else 0.0
+            )
 
-            # Short-circuit: can't do better than high
-            if best_confidence == "high":
-                break
+            from src.agents.replacement_models import ReplacementOption
+            valid_suggestions.append(ReplacementOption(
+                name=cand.name,
+                price=cand_price,
+                confidence=confidence,
+                reasoning=reasoning,
+                price_difference_percent=round(price_diff_pct, 2),
+                requires_pharmacist_override=(confidence != "high" or has_relative_warning)
+            ))
 
-        if best_candidate is None:
+        if not valid_suggestions:
             return _no_replacement(
                 f"All in-category candidates were contraindicated for this patient "
                 f"or no candidates passed safety checks."
             )
 
-        # ── Build response ──────────────────────────────────────────────────
-        cand_price: float = best_candidate.price or 0.0
-        price_diff_pct = (
-            ((cand_price - original_price) / original_price * 100)
-            if original_price > 0 else 0.0
-        )
+        # Sort suggestions: rank by confidence (high > medium > low), then price_diff (lower is better)
+        rank = {"high": 3, "medium": 2, "low": 1}
+        valid_suggestions.sort(key=lambda x: (rank[x.confidence], -x.price_difference_percent), reverse=True)
+
+        best_pick = valid_suggestions[0]
 
         return ReplacementResponse(
             replacement_found=True,
             original=medicine_name,
-            suggested=best_candidate.name,
-            suggested_price=cand_price,
-            confidence=best_confidence,
-            reasoning=best_reasoning,
-            price_difference_percent=round(price_diff_pct, 2),
-            requires_pharmacist_override=(best_confidence != "high"),
+            suggested=best_pick.name,
+            suggested_price=best_pick.price,
+            confidence=best_pick.confidence,
+            reasoning=best_pick.reasoning,
+            price_difference_percent=best_pick.price_difference_percent,
+            requires_pharmacist_override=best_pick.requires_pharmacist_override,
+            suggestions=valid_suggestions[:5]  # Limit to top 5 options
         )
 
 
@@ -471,9 +466,9 @@ def extract_base_name(medicine_name: str) -> str:
     Extract base medicine name (remove dosage, brand info).
     
     Examples:
-    - "Paracetamol 500mg" → "Paracetamol"
-    - "Crocin (Paracetamol)" → "Paracetamol"
-    - "Amoxicillin 250mg Capsules" → "Amoxicillin"
+    - "Paracetamol 500mg" -> "Paracetamol"
+    - "Crocin (Paracetamol)" -> "Paracetamol"
+    - "Amoxicillin 250mg Capsules" -> "Amoxicillin"
     
     Args:
         medicine_name: Full medicine name
@@ -538,7 +533,7 @@ INVENTORY CHECK REPORT
 {'='*60}
 
 Status: {summary['status'].upper().replace('_', ' ')}
-Availability: {summary['available_items']}/{summary['total_items']} items ({summary['availability_score']*100:.0f}%)
+Availability: {summary['available_items']}/{summary['total_items']} items ({int(summary['availability_score'] * 100)}%)
 
 """
     

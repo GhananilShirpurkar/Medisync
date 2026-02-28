@@ -1,5 +1,7 @@
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
+from datetime import datetime
+from src.clinical_models import ClinicalContext
 
 
 # ============================================================
@@ -70,10 +72,14 @@ class PharmacyState(BaseModel):
     # Safety & Validation (Pharmacist)
     # --------------------------------------------------------
     prescription_uploaded: bool = False
-    prescription_verified: bool = False
-    safety_issues: List[str] = Field(default_factory=list)
-    pharmacist_decision: Optional[str] = None   # approved | rejected | needs_review
-
+    validation_status: str = "pending"  # pending | valid | invalid | needs_review
+    safety_flags: List[str] = Field(default_factory=list)
+    
+    # NEW: Multi-turn clinical context accumulator
+    clinical_context: ClinicalContext = Field(default_factory=ClinicalContext)
+    turn_count: int = 0
+    reasoning_history: List[Dict] = Field(default_factory=list)
+    
     # --------------------------------------------------------
     # Proactive Intelligence (future agents)
     # --------------------------------------------------------

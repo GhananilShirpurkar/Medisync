@@ -90,7 +90,8 @@ class InventoryService:
                         "name": replacement.suggested,
                         "price": replacement.suggested_price,
                         "confidence": replacement.confidence,
-                        "reasoning": replacement.reasoning
+                        "reasoning": replacement.reasoning,
+                        "suggestions": [s.model_dump() for s in replacement.suggestions]
                     } if replacement.replacement_found else None,
                     "substitute_confidence": replacement.confidence if replacement.replacement_found else None,
                     "substitute_reasoning": replacement.reasoning if replacement.replacement_found else None

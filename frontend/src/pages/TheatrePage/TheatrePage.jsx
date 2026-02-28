@@ -197,30 +197,55 @@ const TheatrePage = () => {
     </>
   );
 
+  const [expandedReplacementId, setExpandedReplacementId] = useState(null);
+
+  const handleChooseReplacement = (oldName, replacement) => {
+    pipelineStore.dispatch('UPDATE_ORDER_ITEM', {
+      oldName: oldName,
+      newName: replacement.name,
+      price: replacement.price
+    });
+    setExpandedReplacementId(null);
+  };
+
   const ordersPanelContent = (
     <>
       <div className="metadata-header" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--divider)', paddingBottom: '0.5rem' }}>
         CURRENT ORDERS
       </div>
       <div style={{ overflowY: 'auto', flex: 1, padding: '1rem 0' }}>
-        {pipelineState.pendingOrderSummary && pipelineState.pendingOrderSummary.items && pipelineState.pendingOrderSummary.items.length > 0 ? (
-          pipelineState.pendingOrderSummary.items.map((item, i) => {
+        {pipelineState.orderSummary && pipelineState.orderSummary.items && pipelineState.orderSummary.items.length > 0 ? (
+          pipelineState.orderSummary.items.map((item, i) => {
             const isOutOfStock = item.stockStatus !== 'In Stock';
+            const available = item.available !== false && !isOutOfStock;
             const hasWarnings = item.warnings && item.warnings.length > 0;
-            const requiresConsultation = isOutOfStock && (!item.substitute || item.substitute.warnings?.length > 0);
+            const hasSuggestions = item.substitute && item.substitute.suggestions && item.substitute.suggestions.length > 0;
+            const requiresConsultation = isOutOfStock && !hasSuggestions;
 
             return (
-               <div key={i} style={{ padding: '12px', border: `1px solid ${requiresConsultation ? 'var(--red)' : hasWarnings ? 'var(--amber)' : 'var(--divider)'}`, borderRadius: '8px', marginBottom: '12px', background: isOutOfStock ? 'var(--bg-panel)' : 'transparent' }}>
+               <div key={i} style={{ 
+                 padding: '12px', 
+                 border: `1px solid ${available ? 'var(--green)' : requiresConsultation ? 'var(--red)' : hasWarnings ? 'var(--amber)' : 'var(--divider)'}`, 
+                 borderRadius: '8px', 
+                 marginBottom: '12px', 
+                 background: isOutOfStock ? 'rgba(255,255,255,0.03)' : (available ? 'rgba(72, 187, 120, 0.05)' : 'transparent'),
+                 boxShadow: available ? '0 0 10px rgba(72, 187, 120, 0.1)' : 'none',
+                 position: 'relative'
+               }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                   <div style={{ fontWeight: 'bold', color: isOutOfStock ? 'var(--ink-mute)' : 'var(--ink-1)', textDecoration: isOutOfStock ? 'line-through' : 'none' }}>
-                     {item.name}
+                   <div style={{ 
+                     fontWeight: 'bold', 
+                     color: available ? 'var(--green)' : (isOutOfStock ? 'var(--ink-mute)' : 'var(--ink-1)'), 
+                     textDecoration: isOutOfStock ? 'line-through' : 'none' 
+                   }}>
+                     {item.name} {item.isReplaced && <span style={{ fontSize: '10px', verticalAlign: 'middle', background: 'var(--indigo)', color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '4px' }}>REPLACED</span>}
                    </div>
-                   <div style={{ color: isOutOfStock ? 'var(--red)' : 'var(--green)', fontFamily: 'var(--font-machine)', fontSize: '11px' }}>
-                     {item.stockStatus}
+                   <div style={{ color: available ? 'var(--green)' : 'var(--red)', fontFamily: 'var(--font-machine)', fontSize: '11px', fontWeight: 'bold' }}>
+                     {available ? '✓ AVAILABLE' : item.stockStatus}
                    </div>
                  </div>
                  
-                 <div style={{ marginTop: '8px', fontFamily: 'var(--font-machine)', fontSize: '12px', color: 'var(--ink-2)' }}>
+                 <div style={{ marginTop: '8px', fontFamily: 'var(--font-machine)', fontSize: '12px', color: available ? 'var(--green)' : 'var(--ink-2)' }}>
                    Price: ₹{item.price}
                  </div>
 
@@ -233,11 +258,37 @@ const TheatrePage = () => {
                    </div>
                  )}
 
-                  {isOutOfStock && item.substitute && item.substitute.name && !requiresConsultation && (
-                    <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(102, 126, 234, 0.1)', borderLeft: '2px solid var(--indigo)', fontSize: '12px' }}>
-                      <div style={{ color: 'var(--indigo)', fontFamily: 'var(--font-machine)', fontSize: '11px', marginBottom: '4px' }}>⇄ SUBSTITUTE SUGGESTED</div>
-                      <div style={{ color: 'var(--ink-1)' }}>{item.substitute.name} (₹{item.substitute.price})</div>
-                      <div style={{ color: 'var(--ink-mute)', marginTop: '4px' }}>{item.substitute_reasoning || 'Awaiting user confirmation in chat...'}</div>
+                  {isOutOfStock && hasSuggestions && (
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                         <div style={{ color: 'var(--indigo)', fontFamily: 'var(--font-machine)', fontSize: '11px' }}>⇄ ALTERNATIVES AVAILABLE</div>
+                         <button 
+                           onClick={() => setExpandedReplacementId(expandedReplacementId === i ? null : i)}
+                           style={{ background: 'var(--indigo)', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                         >
+                           {expandedReplacementId === i ? 'HIDE' : 'SHOW REPLACEMENTS'}
+                         </button>
+                      </div>
+
+                      {expandedReplacementId === i && (
+                        <div className="replacement-list" style={{ background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '6px' }}>
+                          {item.substitute.suggestions.map((option, optIdx) => (
+                            <div key={optIdx} style={{ padding: '8px', borderBottom: optIdx < item.substitute.suggestions.length - 1 ? '1px solid var(--divider)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                               <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: '12px', color: 'var(--ink-1)', fontWeight: 'bold' }}>{option.name}</div>
+                                  <div style={{ fontSize: '11px', color: 'var(--indigo)' }}>₹{option.price} • {option.confidence.toUpperCase()} confidence</div>
+                                  <div style={{ fontSize: '10px', color: 'var(--ink-mute)', marginTop: '2px' }}>{option.reasoning}</div>
+                               </div>
+                               <button 
+                                 onClick={() => handleChooseReplacement(item.name, option)}
+                                 style={{ background: 'var(--green)', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                               >
+                                 CHOOSE
+                               </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -255,10 +306,10 @@ const TheatrePage = () => {
         )}
       </div>
       
-      {pipelineState.pendingOrderSummary && (
+      {pipelineState.orderSummary && (
         <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-machine)' }}>
            <span>TOTAL:</span>
-           <span style={{ color: 'var(--green)' }}>₹{pipelineState.pendingOrderSummary.totalPrice}</span>
+           <span style={{ color: 'var(--green)', fontWeight: 'bold', fontSize: '1.2rem' }}>₹{pipelineState.orderSummary.totalPrice}</span>
         </div>
       )}
 
@@ -266,16 +317,16 @@ const TheatrePage = () => {
         className="trigger-button" 
         style={{ 
            marginTop: 'auto', 
-           background: (pipelineState.checkoutReady && !pipelineState.pendingOrderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || i.substitute.warnings?.length > 0))) ? 'var(--indigo)' : 'var(--bg-room)', 
-           color: (pipelineState.checkoutReady && !pipelineState.pendingOrderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || i.substitute.warnings?.length > 0))) ? 'white' : 'var(--ink-mute)', 
+           background: (pipelineState.checkoutReady && !pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length))) ? 'var(--indigo)' : 'var(--bg-room)', 
+           color: (pipelineState.checkoutReady && !pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length))) ? 'white' : 'var(--ink-mute)', 
            border: pipelineState.checkoutReady ? 'none' : '1px solid var(--divider)' 
         }}
-        disabled={!pipelineState.checkoutReady || pipelineState.pendingOrderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || i.substitute.warnings?.length > 0))}
+        disabled={!pipelineState.checkoutReady || pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length))}
         onClick={() => {
-           pipelineStore.dispatch('order_created', {});
+           pipelineStore.dispatch('order_created', { orderSummary: pipelineState.orderSummary });
         }}
       >
-        {pipelineState.pendingOrderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || i.substitute.warnings?.length > 0)) ? 'CONSULTATION REQUIRED' : 'PROCEED TO SUMMARY'}
+        {pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length)) ? 'REPLACEMENTS NEEDED or CONSULTATION' : 'PROCEED TO SUMMARY'}
       </button>
     </>
   );
