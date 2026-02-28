@@ -53,6 +53,17 @@ def init_db():
     Call this on application startup.
     """
     Base.metadata.create_all(bind=engine)
+    # Raw migration: add refill_confirmed if it doesn't exist (SQLite safe)
+    try:
+        with engine.connect() as conn:
+            conn.execute(
+                __import__("sqlalchemy").text(
+                    "ALTER TABLE refill_predictions ADD COLUMN refill_confirmed BOOLEAN DEFAULT FALSE"
+                )
+            )
+            conn.commit()
+    except Exception:
+        pass  # Column already exists — safe to ignore
     print(f"✅ Database initialized: {DATABASE_URL}")
 
 

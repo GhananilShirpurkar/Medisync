@@ -15,10 +15,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import logging
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.state import PharmacyState
 from src.graph import agent_graph
 from src.db_config import init_db, get_db_type, get_db_context
 from utils.tracing import check_tracing
+from src.agents.proactive_intelligence_agent import run_batch_analysis
 
 # Import API routes
 from src.routes.prescriptions import router as prescriptions_router
@@ -74,6 +76,30 @@ def startup_event():
             })
         semantic_search_service.index_medicines(med_dicts)
         logger.info(f"🧠 Indexed {len(med_dicts)} medicines for semantic search")
+
+# ------------------------------------------------------------------
+# PROACTIVE INTELLIGENCE SCHEDULER
+# ------------------------------------------------------------------
+_scheduler = AsyncIOScheduler()
+
+@app.on_event("startup")
+async def start_proactive_scheduler():
+    """Start the proactive refill prediction scheduler."""
+    _scheduler.add_job(
+        run_batch_analysis,
+        'interval',
+        seconds=60,
+        id='proactive_refill_job',
+        replace_existing=True
+    )
+    _scheduler.start()
+    logger.info("✅ Proactive Intelligence Scheduler started — running every 60 seconds")
+
+@app.on_event("shutdown")
+async def stop_proactive_scheduler():
+    """Gracefully stop the scheduler."""
+    _scheduler.shutdown(wait=False)
+    logger.info("⏹️  Proactive Intelligence Scheduler stopped")
 
 # ------------------------------------------------------------------
 # CORS (Frontend ↔ Backend bridge)

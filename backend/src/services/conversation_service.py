@@ -143,11 +143,11 @@ class ConversationService:
     def update_phase(self, session_id: str, phase: str) -> bool:
         """
         Update the conversation phase.
-        
+
         Args:
             session_id: Session identifier
             phase: New conversation phase
-            
+
         Returns:
             True if successful
         """
@@ -155,15 +155,42 @@ class ConversationService:
             session = db.query(ConversationSession).filter(
                 ConversationSession.session_id == session_id
             ).first()
-            
+
             if not session:
                 return False
-            
+
             session.conversation_phase = phase
             session.updated_at = datetime.utcnow()
             db.commit()
-            
+
             return True
+
+    def transition_phase(self, session_id: str, new_phase: str) -> bool:
+        """
+        Transition conversation to a new phase with structured logging.
+
+        Valid phases (state machine):
+            collecting_items → replacement_suggested → awaiting_confirmation
+            → fulfillment_executing → completed
+
+        Also accepts: cancelled, intake, clarifying, recommending, ordering
+
+        Args:
+            session_id: Session identifier.
+            new_phase:  Target phase string.
+
+        Returns:
+            True if the transition was persisted, False if session not found.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        result = self.update_phase(session_id, new_phase)
+        if result:
+            logger.info(
+                "Phase transition for session=%s → %s", session_id, new_phase
+            )
+        return result
     
     def update_last_medicine(self, session_id: str, medicine_name: str) -> bool:
         """

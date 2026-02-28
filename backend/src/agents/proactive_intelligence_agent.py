@@ -366,29 +366,29 @@ class ProactiveIntelligenceAgent:
             db.commit()
             return True
     
-    def trigger_refill_conversation(
+    async def trigger_refill_conversation(
         self,
         user_id: str,
         prediction: Dict[str, Any]
     ) -> Optional[str]:
         """
-        Trigger a proactive refill conversation.
-        
+        Trigger a proactive refill conversation and send a WhatsApp notification.
+
         Args:
-            user_id: User identifier
-            prediction: Refill prediction
-            
+            user_id: User identifier (PID)
+            prediction: Refill prediction dict
+
         Returns:
             Session ID if conversation created, None otherwise
         """
         # Create new conversation session
         session_id = self.conversation_service.create_session(user_id)
-        
+
         # Generate refill message
         medicine_name = prediction["medicine_name"]
         days_until = prediction["days_until_depletion"]
         urgency = prediction["urgency"]
-        
+
         if urgency == "overdue":
             message = f"⚠️ Your {medicine_name} supply may have run out. Would you like to reorder?"
         elif urgency == "urgent":
@@ -397,8 +397,8 @@ class ProactiveIntelligenceAgent:
             message = f"📅 Your {medicine_name} will run out in {days_until} days. Would you like to order a refill?"
         else:
             message = f"💊 Reminder: You may need to refill {medicine_name} soon."
-        
-        # Add proactive message
+
+        # Add proactive message to conversation
         self.conversation_service.add_message(
             session_id=session_id,
             role="assistant",
@@ -409,14 +409,50 @@ class ProactiveIntelligenceAgent:
                 "trigger_type": "refill_reminder"
             }
         )
-        
+
         # Update session intent
         self.conversation_service.update_session(
             session_id=session_id,
             intent="refill"
         )
-        
+
+        # ------------------------------------------------------------------
+        # Send WhatsApp notification
+        # ------------------------------------------------------------------
+        try:
+            from src.services.whatsapp_service import whatsapp_service
+            from src.models import Patient, RefillPrediction as RefillPredictionModel
+
+            # Look up patient phone by PID
+            with get_db_context() as db:
+                patient = db.query(Patient).filter(Patient.user_id == user_id).first()
+                phone = patient.phone if patient else None
+
+            if phone:
+                wa_msg = (
+                    f"MediSync 💊\n\n"
+                    f"{message}\n\n"
+                    f"Reply *YES* to reorder automatically.\n"
+                    f"Reply *NO* to dismiss this reminder.\n\n"
+                    f"\u2014 MediSync Pharmacy"
+                )
+                # send_message is synchronous (Twilio SDK)
+                whatsapp_service.send_message(phone, wa_msg)
+
+                # Mark reminder as sent
+                with get_db_context() as db:
+                    pred_row = db.query(RefillPredictionModel).filter(
+                        RefillPredictionModel.user_id == user_id,
+                        RefillPredictionModel.medicine_name == medicine_name
+                    ).first()
+                    if pred_row:
+                        pred_row.reminder_sent = True
+                        db.commit()
+        except Exception as e:
+            print(f"⚠️  WhatsApp refill notification failed for {user_id}: {e}")
+
         return session_id
+
     
     def generate_admin_alert(
         self,
@@ -510,7 +546,7 @@ class ProactiveIntelligenceAgent:
         
         for pred in predictions:
             if pred["should_notify"]:
-                session_id = self.trigger_refill_conversation(user_id, pred)
+                session_id = await self.trigger_refill_conversation(user_id, pred)
                 if session_id:
                     conversations_triggered.append({
                         "session_id": session_id,

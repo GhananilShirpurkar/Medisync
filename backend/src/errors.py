@@ -127,15 +127,34 @@ class InventoryError(DomainError):
 class FulfillmentError(DomainError):
     """
     Order fulfillment errors.
-    
+
     Examples:
     - Order creation failed
     - Payment processing failed
     - Delivery address invalid
     """
-    
+
     severity = "error"
     recoverable = True  # Can retry or modify order
+
+
+class ConfirmationRequiredError(DomainError):
+    """
+    Fulfillment attempted without explicit patient confirmation.
+
+    This is a hard-gate error raised by fulfillment_agent when
+    state.confirmation_confirmed is False. It is always recoverable
+    (the patient simply needs to say YES).
+    """
+
+    severity = "warning"
+    recoverable = True
+
+    def __init__(self, session_id: str = ""):
+        super().__init__(
+            message="Fulfillment blocked: explicit YES confirmation not recorded in state.",
+            details={"session_id": session_id}
+        )
 
 
 # ------------------------------------------------------------------

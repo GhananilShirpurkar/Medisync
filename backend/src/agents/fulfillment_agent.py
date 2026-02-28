@@ -26,7 +26,8 @@ from src.errors import (
     FulfillmentError,
     TransactionError,
     OutOfStockError,
-    DatabaseError
+    DatabaseError,
+    ConfirmationRequiredError,
 )
 from src.events.event_bus import get_event_bus
 from src.events.event_types import OrderCreatedEvent, OrderFailedEvent
@@ -69,11 +70,18 @@ async def fulfillment_agent(state: PharmacyState) -> PharmacyState:
     - No stock: Do not create order
     """
     
+    # Step 0: HARD CONFIRMATION GATE
+    # fulfillment_agent must NEVER execute without an explicit YES from the patient.
+    # The confirmation_confirmed flag is set True only by the /confirm endpoint
+    # or the YES handler in send_message — never pre-set by any other agent.
+    if not state.confirmation_confirmed:
+        raise ConfirmationRequiredError(session_id=state.session_id or "")
+
     # Initialize reasoning trace
     reasoning_trace = []
     db = Database()
     event_bus = get_event_bus()
-    
+
     # Step 1: Check prerequisites
     if not state.extracted_items:
         reasoning_trace.append("❌ No items to fulfill")

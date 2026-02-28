@@ -23,6 +23,8 @@ from src.services.speech_service import transcribe_audio_from_bytes
 from src.state import PharmacyState, OrderItem
 from src.graph import agent_graph
 from src.agents.fulfillment_agent import format_order_confirmation
+from src.services.confirmation_store import confirmation_store
+from src.errors import ConfirmationRequiredError
 
 router = APIRouter(prefix="/conversation", tags=["conversation"])
 
@@ -30,11 +32,6 @@ router = APIRouter(prefix="/conversation", tags=["conversation"])
 conversation_service = ConversationService()
 front_desk_agent = FrontDeskAgent()
 db = Database()
-
-# In-memory store for pending order confirmations.
-# Keyed by session_id: {"awaiting_confirmation": bool, "pending_pharmacy_state": dict}
-# Safe for single-process FastAPI; survives for the lifetime of the server process.
-_confirmation_store: dict = {}
 
 from src.agents.identity_agent import IdentityAgent
 identity_agent = IdentityAgent()
@@ -134,6 +131,22 @@ class ConversationHistoryResponse(BaseModel):
     updated_at: str
 
 
+class ConfirmOrderRequest(BaseModel):
+    """Request to confirm or cancel a pending order."""
+    session_id: str = Field(..., description="Session identifier")
+    confirmation_token: str = Field(..., description="Token issued when gate was opened")
+    user_response: str = Field(..., description="Must be 'YES' or 'NO'")
+
+
+class ConfirmOrderResponse(BaseModel):
+    """Response from the /confirm endpoint."""
+    session_id: str
+    status: str                          # confirmed | cancelled | expired | invalid
+    message: str
+    order_id: Optional[str] = None
+    requires_pharmacist_override: bool = False
+
+
 # ------------------------------------------------------------------
 # ENDPOINTS
 # ------------------------------------------------------------------
@@ -201,7 +214,8 @@ async def send_message(request: ConversationRequest):
         # ORDER CONFIRMATION INTERCEPT
         # Check before anything else — user is replying YES/NO to a pending order
         # ------------------------------------------------------------------
-        if _confirmation_store.get(request.session_id, {}).get('awaiting_confirmation'):
+        if confirmation_store.is_pending(request.session_id):
+            pending = confirmation_store.get_pending(request.session_id)
             user_reply = request.message.strip().upper()
             conversation_service.add_message(
                 session_id=request.session_id,
@@ -209,15 +223,29 @@ async def send_message(request: ConversationRequest):
                 content=request.message
             )
             if user_reply == 'YES':
-                _confirmation_store[request.session_id]['awaiting_confirmation'] = False
-                pending_state_dict = _confirmation_store[request.session_id].get('pending_pharmacy_state')
-                if pending_state_dict:
-                    pending_state = PharmacyState(**pending_state_dict)
-                    result = await agent_graph.ainvoke(pending_state)
-                    final_state = PharmacyState(**result) if isinstance(result, dict) else result
-                    response_message = format_order_confirmation(final_state)
+                # Consume atomically — prevents double execution
+                entry = confirmation_store.consume(
+                    request.session_id, pending["token"]
+                )
+                if entry:
+                    pending_state = PharmacyState(**entry["pending_pharmacy_state"])
+                    # Set the confirmation flag so fulfillment_agent passes the gate
+                    pending_state.confirmation_confirmed = True
+                    pending_state.conversation_phase = "fulfillment_executing"
+                    conversation_service.transition_phase(
+                        request.session_id, "fulfillment_executing"
+                    )
+                    try:
+                        result = await agent_graph.ainvoke(pending_state)
+                        final_state = PharmacyState(**result) if isinstance(result, dict) else result
+                        response_message = format_order_confirmation(final_state)
+                        conversation_service.transition_phase(
+                            request.session_id, "completed"
+                        )
+                    except ConfirmationRequiredError:
+                        response_message = "Order could not be processed. Please try again."
                 else:
-                    response_message = "Something went wrong retrieving your order. Please try again."
+                    response_message = "Order already processed or expired."
                 conversation_service.add_message(
                     session_id=request.session_id,
                     role='assistant',
@@ -240,7 +268,10 @@ async def send_message(request: ConversationRequest):
                     next_step='order_complete'
                 )
             elif user_reply == 'NO':
-                _confirmation_store.pop(request.session_id, None)
+                confirmation_store.cancel(request.session_id)
+                conversation_service.transition_phase(
+                    request.session_id, "collecting_items"
+                )
                 response_message = "Order cancelled. How else can I help you?"
                 conversation_service.add_message(
                     session_id=request.session_id,
@@ -737,7 +768,28 @@ Red Flags Detected:
                 )
                 state.trace_metadata["front_desk"] = {"patient_context": patient_context}
 
-                # Build confirmation message (look up price from DB since OrderItem has no unit_price)
+                # -- Build replacement context summary (Block 3→4 injection) --
+                replacement_info = None
+                replacement_lines = []
+                has_replacement = False
+                for rep in state.replacement_pending:
+                    if rep.get("replacement_found"):
+                        has_replacement = True
+                        override_note = " ⚠️ Requires pharmacist review." if rep.get("requires_pharmacist_override") else ""
+                        replacement_lines.append(
+                            f"⚠️ *{rep['original']}* unavailable.\n"
+                            f"   Suggested replacement: *{rep['suggested']}*"
+                            f" ({rep['reasoning']}).{override_note}"
+                        )
+                        replacement_info = rep   # pass to store for audit
+
+                if has_replacement:
+                    state.conversation_phase = "replacement_suggested"
+                    conversation_service.transition_phase(
+                        request.session_id, "replacement_suggested"
+                    )
+
+                # Build confirmation message
                 items_lines = []
                 total = 0.0
                 for item in order_items:
@@ -749,18 +801,31 @@ Red Flags Detected:
                     items_lines.append(
                         f"  \u2022 {item.medicine_name}{dosage_str} \u00d7 {item.quantity} \u2014 \u20b9{line_total:.2f}"
                     )
+
+                header = ""
+                if replacement_lines:
+                    header = "\n".join(replacement_lines) + "\n\n"
+
                 confirmation_message = (
-                    "Please confirm your order:\n\n"
+                    header
+                    + "Please confirm your order:\n\n"
                     + "\n".join(items_lines)
                     + f"\n\nTotal: \u20b9{total:.2f}\n\n"
                     "Reply *YES* to confirm or *NO* to cancel."
                 )
 
-                # Persist pending state and set awaiting flag
-                _confirmation_store[request.session_id] = {
-                    'awaiting_confirmation': True,
-                    'pending_pharmacy_state': state.dict()
-                }
+                # Open the confirmation gate
+                state.conversation_phase = "awaiting_confirmation"
+                token = confirmation_store.create(
+                    session_id=request.session_id,
+                    state_dict=state.model_dump(),
+                    replacement_info=replacement_info,
+                )
+                state.confirmation_token = token
+                conversation_service.transition_phase(
+                    request.session_id, "awaiting_confirmation"
+                )
+
                 conversation_service.add_message(
                     session_id=request.session_id,
                     role="assistant",
@@ -1206,6 +1271,142 @@ Red Flags Detected:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Conversation error: {str(e)}"
+        )
+
+
+# ------------------------------------------------------------------
+# CONFIRMATION GATE ENDPOINT
+# ------------------------------------------------------------------
+
+@router.post("/confirm", response_model=ConfirmOrderResponse)
+async def confirm_order(request: ConfirmOrderRequest):
+    """
+    Explicit YES/NO confirmation gate for pending orders.
+
+    This endpoint is the canonical trigger for fulfillment. It:
+    - Validates the session + idempotency token
+    - Enforces the 5-minute TTL
+    - On YES: transitions state → fulfillment_executing → completed
+    - On NO:  transitions state → collecting_items
+    - Idempotent: second YES with same token returns order_id without re-executing
+
+    The fulfillment_agent hard gate (ConfirmationRequiredError) ensures
+    that even a direct graph invocation cannot bypass this step.
+    """
+    from src.services.observability_service import trace_manager
+
+    # Validate session
+    session = conversation_service.get_session(request.session_id)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+
+    user_response = request.user_response.strip().upper()
+    if user_response not in ("YES", "NO"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="user_response must be 'YES' or 'NO'"
+        )
+
+    if user_response == "NO":
+        confirmation_store.cancel(request.session_id)
+        conversation_service.transition_phase(request.session_id, "collecting_items")
+        conversation_service.add_message(
+            session_id=request.session_id,
+            role="assistant",
+            content="Order cancelled. How else can I help you?",
+            agent_name="front_desk"
+        )
+        return ConfirmOrderResponse(
+            session_id=request.session_id,
+            status="cancelled",
+            message="Order cancelled. How else can I help you?"
+        )
+
+    # --- YES path ---
+    # Try to consume (atomic: first call succeeds, subsequent calls return None)
+    entry = confirmation_store.consume(request.session_id, request.confirmation_token)
+
+    if entry is None:
+        # Either expired or token mismatch
+        pending = confirmation_store.get_pending(request.session_id)
+        if pending is None:
+            # Truly expired
+            return ConfirmOrderResponse(
+                session_id=request.session_id,
+                status="expired",
+                message="Confirmation link has expired (5-minute limit). Please start a new order."
+            )
+        else:
+            # Token mismatch
+            return ConfirmOrderResponse(
+                session_id=request.session_id,
+                status="invalid",
+                message="Invalid confirmation token. Please use the token provided with your order summary."
+            )
+
+    # Hydrate state and set the confirmation flag
+    pending_state = PharmacyState(**entry["pending_pharmacy_state"])
+    pending_state.confirmation_confirmed = True
+    pending_state.conversation_phase = "fulfillment_executing"
+
+    conversation_service.transition_phase(request.session_id, "fulfillment_executing")
+
+    replacement_info = entry.get("replacement_info") or {}
+    requires_override = bool(replacement_info.get("requires_pharmacist_override", False))
+
+    await trace_manager.emit(
+        session_id=request.session_id,
+        agent_name="ORCHESTRATOR",
+        step_name="Order confirmed — executing fulfillment",
+        action_type="event",
+        status="started",
+        details={"token": request.confirmation_token}
+    )
+
+    try:
+        result = await agent_graph.ainvoke(pending_state)
+        final_state = PharmacyState(**result) if isinstance(result, dict) else result
+        response_message = format_order_confirmation(final_state)
+        conversation_service.transition_phase(request.session_id, "completed")
+
+        conversation_service.add_message(
+            session_id=request.session_id,
+            role="assistant",
+            content=response_message,
+            agent_name="fulfillment"
+        )
+
+        await trace_manager.emit(
+            session_id=request.session_id,
+            agent_name="ORCHESTRATOR",
+            step_name="Fulfillment complete",
+            action_type="response",
+            status="completed",
+            details={"order_id": final_state.order_id}
+        )
+
+        return ConfirmOrderResponse(
+            session_id=request.session_id,
+            status="confirmed",
+            message=response_message,
+            order_id=final_state.order_id,
+            requires_pharmacist_override=requires_override
+        )
+
+    except ConfirmationRequiredError:
+        # Should never happen — state.confirmation_confirmed was just set True
+        return ConfirmOrderResponse(
+            session_id=request.session_id,
+            status="invalid",
+            message="Internal error: confirmation gate raised unexpectedly. Please contact support."
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Fulfillment failed: {str(e)}"
         )
 
 

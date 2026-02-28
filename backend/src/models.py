@@ -156,6 +156,7 @@ class RefillPrediction(Base):
     predicted_depletion_date = Column(DateTime)
     confidence = Column(Float)
     reminder_sent = Column(Boolean, default=False)
+    refill_confirmed = Column(Boolean, default=False)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)

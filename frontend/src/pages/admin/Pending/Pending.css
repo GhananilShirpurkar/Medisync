@@ -4,7 +4,7 @@
 }
 
 .action-approve {
-  font-family: 'B612 Mono', monospace;
+  font-family: "B612 Mono", monospace;
   font-size: 9px;
   color: var(--green);
   cursor: pointer;
@@ -16,7 +16,7 @@
 }
 
 .action-reject {
-  font-family: 'B612 Mono', monospace;
+  font-family: "B612 Mono", monospace;
   font-size: 9px;
   color: var(--red);
   cursor: pointer;
@@ -37,6 +37,39 @@
   text-align: center;
   padding: 48px !important;
   color: var(--ink-ghost) !important;
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-family: "Plus Jakarta Sans", sans-serif !important;
   font-style: italic;
+}
+
+/* ── Tab bar ────────────────────────────────────────────────────── */
+.pending-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+}
+
+.pending-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 20px;
+  font-family: "B612 Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint, #888);
+  cursor: pointer;
+  transition:
+    color 150ms,
+    border-color 150ms;
+  margin-bottom: -1px;
+}
+
+.pending-tab:hover {
+  color: var(--ink, #fff);
+}
+
+.pending-tab.active {
+  color: var(--ink, #fff);
+  border-bottom-color: var(--accent, #60a5fa);
 }

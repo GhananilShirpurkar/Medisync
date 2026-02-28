@@ -2,14 +2,17 @@ from typing import Dict, Any
 import os
 import httpx
 import logging
-from src.state import PharmacyState
+from src.state import PharmacyState, OrderItem
 from src.vision_agent import vision_agent, pharmacist_agent, front_desk_agent
 from src.agents import fulfillment_agent
 from src.agents.medical_validator_agent import medical_validation_agent
 from src.agents.identity_agent import IdentityAgent
 from src.services.whatsapp_service import whatsapp_service
 from src.internal_events import event_manager, PATIENT_IDENTIFIED
-from src.database import Database  # BUG 1 FIX: was missing, self.db was never defined
+from src.database import Database
+from src.db_config import get_db_context
+from src.models import RefillPrediction
+from src.graph import agent_graph
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +58,41 @@ class WhatsAppPipeline:
                     await whatsapp_service.send_message(phone, welcome_msg)
                     return
 
-            # 2. Process through Agents
+            # 2. Check for pending refill confirmation (YES → auto-place order)
+            if text.strip().upper() == 'YES' and pid:
+                with get_db_context() as db:
+                    pending_refill = db.query(RefillPrediction).filter(
+                        RefillPrediction.user_id == pid,
+                        RefillPrediction.reminder_sent == True,
+                        RefillPrediction.refill_confirmed == False
+                    ).order_by(RefillPrediction.predicted_depletion_date.asc()).first()
+
+                    if pending_refill:
+                        refill_state = PharmacyState(
+                            user_id=pid,
+                            whatsapp_phone=phone,
+                            user_message=f"refill {pending_refill.medicine_name}",
+                            extracted_items=[OrderItem(
+                                medicine_name=pending_refill.medicine_name,
+                                quantity=1
+                            )]
+                        )
+                        result = await agent_graph.ainvoke(refill_state)
+                        final_state = PharmacyState(**result) if isinstance(result, dict) else result
+
+                        pending_refill.refill_confirmed = True
+                        db.commit()
+
+                        await whatsapp_service.send_message(
+                            phone,
+                            f"✅ *Refill order placed!*\n\n"
+                            f"Order ID: `{final_state.order_id}`\n"
+                            f"Medicine: {pending_refill.medicine_name}\n\n"
+                            f"Please collect at the counter.\n\u2014 MediSync"
+                        )
+                        return  # Handled — skip normal pipeline
+
+            # 3. Process through Agents
             state = PharmacyState(
                 user_id=pid,
                 whatsapp_phone=phone,

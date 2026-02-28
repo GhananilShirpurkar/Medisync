@@ -81,6 +81,23 @@ class PharmacyState(BaseModel):
     predicted_depletion_date: Optional[str] = None
 
     # --------------------------------------------------------
+    # Replacement Engine (Inventory Agent)
+    # --------------------------------------------------------
+    replacement_pending: List[Dict[str, Any]] = Field(default_factory=list)
+    # Each entry is a ReplacementResponse-shaped dict keyed by original medicine name.
+
+    # --------------------------------------------------------
+    # Confirmation Gate (State Machine)
+    # --------------------------------------------------------
+    conversation_phase: str = "collecting_items"
+    # collecting_items | replacement_suggested | awaiting_confirmation
+    # | fulfillment_executing | completed
+
+    confirmation_token: Optional[str] = None        # UUID4 — set when gate opens
+    confirmation_expires_at: Optional[str] = None   # ISO-8601 UTC
+    confirmation_confirmed: bool = False             # True only after explicit YES
+
+    # --------------------------------------------------------
     # Fulfillment & Notifications
     # --------------------------------------------------------
     order_id: Optional[str] = None

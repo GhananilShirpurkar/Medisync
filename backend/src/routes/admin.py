@@ -5,7 +5,8 @@ from typing import List, Dict, Optional
 from pydantic import BaseModel
 
 import src.db_config
-from src.models import Order, Medicine, Patient, OrderItem
+from src.db_config import get_db_context
+from src.models import Order, Medicine, Patient, OrderItem, RefillPrediction
 from src.database import Database
 
 router = APIRouter(tags=["admin"])
@@ -172,3 +173,76 @@ def order_action(order_id: str, req: OrderActionRequest):
             
         db.commit()
         return {"status": "success", "new_status": order.status}
+
+
+# ------------------------------------------------------------------
+# REFILL ALERTS
+# ------------------------------------------------------------------
+
+@router.get("/refill-alerts")
+def get_refill_alerts():
+    """Return all unsent refill predictions sorted by urgency."""
+    with get_db_context() as db:
+        predictions = db.query(RefillPrediction).filter(
+            RefillPrediction.reminder_sent == False
+        ).order_by(RefillPrediction.predicted_depletion_date.asc()).all()
+
+        now = datetime.now()
+        alerts = []
+        for p in predictions:
+            if not p.predicted_depletion_date:
+                continue
+            days_left = (p.predicted_depletion_date - now).days
+            if days_left <= 3:
+                urgency = "urgent"
+            elif days_left <= 7:
+                urgency = "soon"
+            else:
+                urgency = "normal"
+            alerts.append({
+                "user_id": p.user_id,
+                "medicine_name": p.medicine_name,
+                "predicted_depletion_date": p.predicted_depletion_date.isoformat(),
+                "days_until_depletion": days_left,
+                "confidence": p.confidence,
+                "urgency": urgency,
+                "reminder_sent": p.reminder_sent,
+                "refill_confirmed": getattr(p, 'refill_confirmed', False),
+            })
+
+        return {
+            "alerts": alerts,
+            "total": len(alerts),
+            "urgent_count": sum(1 for a in alerts if a["urgency"] == "urgent")
+        }
+
+
+class SendRefillAlertRequest(BaseModel):
+    user_id: str
+    medicine_name: str
+
+
+@router.post("/send-refill-alert")
+async def send_refill_alert(req: SendRefillAlertRequest):
+    """Manually trigger a WhatsApp refill reminder for a specific patient/medicine."""
+    from src.agents.proactive_intelligence_agent import ProactiveIntelligenceAgent
+    try:
+        agent = ProactiveIntelligenceAgent()
+        predictions = agent.generate_refill_predictions(req.user_id)
+        target = next((p for p in predictions if p["medicine_name"].lower() == req.medicine_name.lower()), None)
+
+        if not target:
+            # Build a minimal prediction so we can still send the WhatsApp
+            target = {
+                "medicine_name": req.medicine_name,
+                "days_until_depletion": 0,
+                "urgency": "urgent",
+                "should_notify": True,
+                "confidence": 0.5,
+                "predicted_depletion_date": datetime.now().isoformat()
+            }
+
+        await agent.trigger_refill_conversation(req.user_id, target)
+        return {"status": "sent", "user_id": req.user_id, "medicine_name": req.medicine_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

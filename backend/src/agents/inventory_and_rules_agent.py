@@ -16,6 +16,7 @@ from datetime import datetime
 
 from src.state import PharmacyState, OrderItem
 from src.database import Database
+from src.agents.replacement_models import ReplacementResponse
 from src.services.observability_service import trace_agent
 
 
@@ -146,21 +147,27 @@ def inventory_agent(state: PharmacyState) -> PharmacyState:
     alternatives = []
     
     if alternatives_needed:
-        reasoning_trace.append(f"\n🔍 Finding alternatives for {len(alternatives_needed)} item(s)")
+        reasoning_trace.append(f"\n🔍 Finding equivalent replacement for {len(alternatives_needed)} item(s)")
         
         for medicine_name in alternatives_needed:
-            suggested_alternatives = find_alternatives(medicine_name, db)
+            replacement = find_equivalent_replacement(medicine_name, db)
+            state.replacement_pending.append(replacement.model_dump())
             
-            if suggested_alternatives:
+            if replacement.replacement_found:
                 alternatives.append({
                     "original": medicine_name,
-                    "alternatives": suggested_alternatives
+                    "alternatives": [{
+                        "name": replacement.suggested,
+                        "confidence": replacement.confidence,
+                        "reasoning": replacement.reasoning,
+                        "price_difference_percent": replacement.price_difference_percent,
+                        "requires_pharmacist_override": replacement.requires_pharmacist_override,
+                    }]
                 })
-                
-                alt_names = [alt["name"] for alt in suggested_alternatives]
-                reasoning_trace.append(f"  ✓ {medicine_name} → {', '.join(alt_names[:3])}")
+                override_tag = " ⚠️ (pharmacist override required)" if replacement.requires_pharmacist_override else ""
+                reasoning_trace.append(f"  ✓ {medicine_name} → {replacement.suggested} [{replacement.confidence}]{override_tag}")
             else:
-                reasoning_trace.append(f"  ⚠️  {medicine_name} → No alternatives found")
+                reasoning_trace.append(f"  ⚠️  {medicine_name} → {replacement.reasoning}")
     
     # Step 4: Calculate availability score
     total_items = len(state.extracted_items)
@@ -224,56 +231,165 @@ def inventory_agent(state: PharmacyState) -> PharmacyState:
 # ------------------------------------------------------------------
 # HELPER FUNCTIONS
 # ------------------------------------------------------------------
-def find_alternatives(medicine_name: str, db: Database) -> List[Dict[str, Any]]:
+def find_equivalent_replacement(
+    medicine_name: str,
+    db: Database,
+    patient_allergies: Optional[List[str]] = None,
+) -> ReplacementResponse:
     """
-    Find alternative medicines for a given medicine.
-    
-    Strategy:
-    1. Look for generic versions (same active ingredient)
-    2. Look for same category medicines
-    3. Look for similar names (fuzzy matching)
-    
+    Find ONE safe, clinically equivalent replacement for an out-of-stock medicine.
+
+    Safety gates (applied in order, any failure eliminates a candidate):
+      1. Hard gate  — candidate must share the *exact* therapeutic category.
+      2. Allergy gate — candidate contraindications must not overlap with
+                        patient_allergies (skipped when list is None / empty).
+
+    Confidence scoring (first matching rule wins):
+      high   → same active_ingredients (non-empty overlap) + same category
+      medium → same generic_equivalent value + same category
+      low    → same category only
+
     Args:
-        medicine_name: Name of medicine to find alternatives for
-        db: Database instance
-        
+        medicine_name: Name of the out-of-stock medicine.
+        db: Database instance.
+        patient_allergies: Optional list of allergy strings from patient profile.
+
     Returns:
-        List of alternative medicine dictionaries
+        ReplacementResponse — always exactly one object, never a list.
     """
-    alternatives = []
-    
-    # Get the original medicine info
-    original = db.get_medicine(medicine_name)
-    
-    # Strategy 1: Find medicines in same category (if original found)
-    if original and original.get("category"):
-        category_alternatives = find_by_category(
-            original["category"],
-            exclude_name=medicine_name,
-            db=db
+    allergies = [a.lower().strip() for a in (patient_allergies or [])]
+
+    def _no_replacement(reason: str) -> ReplacementResponse:
+        return ReplacementResponse(
+            replacement_found=False,
+            original=medicine_name,
+            suggested=None,
+            confidence="low",
+            reasoning=reason,
+            price_difference_percent=0.0,
+            requires_pharmacist_override=True,
         )
-        alternatives.extend(category_alternatives)
-    
-    # Strategy 2: Find by similar name (generic versions)
-    # Extract base name (e.g., "Paracetamol" from "Paracetamol 500mg")
-    base_name = extract_base_name(medicine_name)
-    if base_name != medicine_name:
-        similar_alternatives = find_by_similar_name(base_name, db)
-        alternatives.extend(similar_alternatives)
-    
-    # Remove duplicates and sort by availability and price
-    seen = set()
-    unique_alternatives = []
-    
-    for alt in alternatives:
-        if alt["name"] not in seen and alt["stock"] > 0:
-            seen.add(alt["name"])
-            unique_alternatives.append(alt)
-    
-    # Sort by stock (descending) then price (ascending)
-    unique_alternatives.sort(key=lambda x: (-x["stock"], x["price"]))
-    
-    return unique_alternatives[:5]  # Return top 5 alternatives
+
+    # ── Fetch original ──────────────────────────────────────────────────────
+    original = db.get_medicine(medicine_name)
+    if not original:
+        return _no_replacement("Original medicine not found in inventory — cannot determine category.")
+
+    original_category: Optional[str] = original.get("category")
+    if not original_category:
+        return _no_replacement("Original medicine has no category assigned — cross-category guard cannot operate.")
+
+    original_ingredients: List[str] = [
+        i.strip().lower()
+        for i in (original.get("active_ingredients") or "").split(",")
+        if i.strip()
+    ]
+    original_generic: str = (original.get("generic_equivalent") or "").strip().lower()
+    original_price: float = original.get("price") or 0.0
+
+    # ── Query same-category candidates in stock ─────────────────────────────
+    from src.db_config import get_db_context
+    from src.models import Medicine  # SQLAlchemy model
+
+    with get_db_context() as session:
+        candidates = session.query(Medicine).filter(
+            Medicine.category == original_category,
+            Medicine.name != medicine_name,
+            Medicine.stock > 0,
+        ).all()
+
+        if not candidates:
+            return _no_replacement(
+                f"No in-stock medicines found in category '{original_category}'."
+            )
+
+        # ── Score each candidate ────────────────────────────────────────────
+        best_candidate = None
+        best_confidence = ""   # tracks ranking: high > medium > low
+        best_reasoning = ""
+
+        for cand in candidates:
+            # Gate 1: category already enforced by query — double-check
+            if (cand.category or "").lower() != original_category.lower():
+                continue
+
+            # Gate 2: contraindication / allergy filter
+            if allergies:
+                cand_contraindications = [
+                    c.strip().lower()
+                    for c in (cand.contraindications or "").split(",")
+                    if c.strip()
+                ]
+                if any(allergy in cand_contraindications for allergy in allergies):
+                    continue  # skip — contraindicated for this patient
+
+            # ── Determine confidence ────────────────────────────────────────
+            cand_ingredients: List[str] = [
+                i.strip().lower()
+                for i in (cand.active_ingredients or "").split(",")
+                if i.strip()
+            ]
+            cand_generic: str = (cand.generic_equivalent or "").strip().lower()
+
+            if (
+                original_ingredients
+                and cand_ingredients
+                and bool(set(original_ingredients) & set(cand_ingredients))
+            ):
+                confidence = "high"
+                shared = set(original_ingredients) & set(cand_ingredients)
+                reasoning = (
+                    f"Same category ({original_category}), "
+                    f"same active ingredient ({', '.join(shared)}), "
+                    f"no contraindications."
+                )
+            elif original_generic and cand_generic and original_generic == cand_generic:
+                confidence = "medium"
+                reasoning = (
+                    f"Same category ({original_category}), "
+                    f"same generic equivalent ({cand_generic}), "
+                    f"no contraindications."
+                )
+            else:
+                confidence = "low"
+                reasoning = (
+                    f"Same category ({original_category}) only — "
+                    f"active ingredient match unavailable. Pharmacist review required."
+                )
+
+            # Keep the highest-confidence candidate found so far
+            rank = {"high": 3, "medium": 2, "low": 1}
+            if best_candidate is None or rank[confidence] > rank[best_confidence]:
+                best_candidate = cand
+                best_confidence = confidence
+                best_reasoning = reasoning
+
+            # Short-circuit: can't do better than high
+            if best_confidence == "high":
+                break
+
+        if best_candidate is None:
+            return _no_replacement(
+                f"All in-category candidates were contraindicated for this patient "
+                f"or no candidates passed safety checks."
+            )
+
+        # ── Build response ──────────────────────────────────────────────────
+        cand_price: float = best_candidate.price or 0.0
+        price_diff_pct = (
+            ((cand_price - original_price) / original_price * 100)
+            if original_price > 0 else 0.0
+        )
+
+        return ReplacementResponse(
+            replacement_found=True,
+            original=medicine_name,
+            suggested=best_candidate.name,
+            confidence=best_confidence,
+            reasoning=best_reasoning,
+            price_difference_percent=round(price_diff_pct, 2),
+            requires_pharmacist_override=(best_confidence != "high"),
+        )
 
 
 def find_by_category(category: str, exclude_name: str, db: Database) -> List[Dict[str, Any]]:
