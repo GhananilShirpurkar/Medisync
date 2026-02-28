@@ -64,9 +64,12 @@ class SemanticSearchService:
         if not self.enabled or not medicines:
             return
 
-        if self.embeddings_matrix is not None and len(self.medicine_names) > 0:
+        if self.embeddings_matrix is not None and len(self.medicine_names) == len(medicines):
             logger.info(f"⏭️ Skipping semantic indexing; {len(self.medicine_names)} embeddings already loaded from cache.")
             return
+
+        if len(self.medicine_names) > 0 and len(self.medicine_names) != len(medicines):
+            logger.info(f"🔄 Cache mismatch (cached {len(self.medicine_names)}, actual {len(medicines)}). Rebuilding index...")
 
         logger.info(f"🧠 Indexing {len(medicines)} medicines for semantic search...")
         

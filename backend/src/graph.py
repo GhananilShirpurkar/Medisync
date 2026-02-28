@@ -48,7 +48,7 @@ def route_after_validation(state: PharmacyState) -> Literal["inventory", "end"]:
         event = OrderRejectedEvent(
             user_id=state.user_id or "anonymous",
             reason="prescription_rejected",
-            details={"safety_issues": state.safety_issues}
+            details={"safety_flags": state.safety_flags}
         )
         event_bus.publish(event)
         return "end"

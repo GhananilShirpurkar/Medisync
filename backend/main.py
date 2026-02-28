@@ -13,6 +13,7 @@ Responsibilities:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+import os
 import logging
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -84,7 +85,7 @@ _scheduler = AsyncIOScheduler()
 
 @app.on_event("startup")
 async def start_proactive_scheduler():
-    """Start the proactive refill prediction scheduler."""
+    """Start the proactive refill prediction scheduler and confirmation cleanup."""
     _scheduler.add_job(
         run_batch_analysis,
         'interval',
@@ -92,8 +93,18 @@ async def start_proactive_scheduler():
         id='proactive_refill_job',
         replace_existing=True
     )
+    # Fix 7: Periodic cleanup of expired confirmation entries
+    from src.services.confirmation_store import confirmation_store
+    _scheduler.add_job(
+        confirmation_store.cleanup_expired,
+        'interval',
+        seconds=300,
+        id='confirmation_cleanup_job',
+        replace_existing=True
+    )
     _scheduler.start()
     logger.info("✅ Proactive Intelligence Scheduler started — running every 60 seconds")
+    logger.info("✅ Confirmation cleanup scheduled — running every 5 minutes")
 
 @app.on_event("shutdown")
 async def stop_proactive_scheduler():
@@ -110,6 +121,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:5174",
         "http://localhost:3000",
+        os.getenv("TUNNEL_URL", ""),
+        "https://medisync-koanoir.loca.lt",
     ],
     allow_credentials=True,
     allow_methods=["*"],

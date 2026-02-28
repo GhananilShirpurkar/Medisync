@@ -144,6 +144,15 @@ class ConfirmationStore:
             return None
         return entry
 
+    def cleanup_expired(self) -> None:
+        """Bulk-remove all expired entries. Called periodically by scheduler."""
+        now = time.time()
+        expired = [k for k, v in self._store.items() if now > v.get("expires_at", 0)]
+        for k in expired:
+            self._store.pop(k, None)
+        if expired:
+            logger.info("Cleaned up %d expired confirmation(s)", len(expired))
+
 
 # ---------------------------------------------------------------------------
 # Module-level singleton — import this everywhere

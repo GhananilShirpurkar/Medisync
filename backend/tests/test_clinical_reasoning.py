@@ -53,7 +53,7 @@ def test_atc_same_class():
     assert ATCService.are_same_class("A10BA02", "A10BB01") is False
 
 
-def test_contraindication_safe():
+def test_contraindication_safe(test_db):
     """Test that a patient with no contraindications passes."""
     context = ClinicalContext(
         comorbidities=["Mild Hypertension"],
@@ -66,7 +66,7 @@ def test_contraindication_safe():
     assert len(violations) == 0
 
 
-def test_contraindication_comorbidity_ulcer():
+def test_contraindication_comorbidity_ulcer(test_db):
     """Test that peptic ulcer blocks NSAIDs."""
     context = ClinicalContext(
         comorbidities=["peptic_ulcer"],
@@ -83,7 +83,7 @@ def test_contraindication_comorbidity_ulcer():
     assert violations[0]["condition"] == "peptic_ulcer"
 
 
-def test_contraindication_comorbidity_asthma():
+def test_contraindication_comorbidity_asthma(test_db):
     """Test that asthma blocks Ibuprofen (M01AE01)."""
     context = ClinicalContext(
         comorbidities=["asthma"],
@@ -99,7 +99,7 @@ def test_contraindication_comorbidity_asthma():
     assert violations[0]["severity"] == "relative"
 
 
-def test_interaction_service():
+def test_interaction_service(test_db):
     """Test basic drug-drug interaction checking."""
     from src.db_config import get_db_context
     from src.models import Medicine

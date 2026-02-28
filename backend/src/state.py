@@ -25,6 +25,7 @@ class OrderItem(BaseModel):
     # Filled later by downstream agents
     requires_prescription: Optional[bool] = None
     in_stock: Optional[bool] = None
+    price: Optional[float] = None
 
 
 # ============================================================
@@ -56,8 +57,7 @@ class PharmacyState(BaseModel):
     # --------------------------------------------------------
     # Conversation Phase (Pre-Order Orchestration)
     # --------------------------------------------------------
-    conversation_phase: Optional[str] = "intake"
-    # intake | clarifying | recommending | ordering | info_query | completed
+    # (conversation_phase is defined under Confirmation Gate below)
 
     clarified_symptoms: Optional[str] = None
     last_medicine_discussed: Optional[str] = None
@@ -74,6 +74,8 @@ class PharmacyState(BaseModel):
     prescription_uploaded: bool = False
     validation_status: str = "pending"  # pending | valid | invalid | needs_review
     safety_flags: List[str] = Field(default_factory=list)
+    pharmacist_decision: Optional[str] = None  # approved | rejected | needs_review
+    safety_issues: List[str] = Field(default_factory=list)
     
     # NEW: Multi-turn clinical context accumulator
     clinical_context: ClinicalContext = Field(default_factory=ClinicalContext)
@@ -96,8 +98,9 @@ class PharmacyState(BaseModel):
     # Confirmation Gate (State Machine)
     # --------------------------------------------------------
     conversation_phase: str = "collecting_items"
-    # collecting_items | replacement_suggested | awaiting_confirmation
-    # | fulfillment_executing | completed
+    # intake | clarifying | recommending | ordering | collecting_items
+    # | replacement_suggested | awaiting_confirmation
+    # | fulfillment_executing | info_query | completed
 
     confirmation_token: Optional[str] = None        # UUID4 — set when gate opens
     confirmation_expires_at: Optional[str] = None   # ISO-8601 UTC

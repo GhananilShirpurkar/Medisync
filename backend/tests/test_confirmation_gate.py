@@ -187,7 +187,7 @@ def test_fulfillment_blocked_without_confirmation():
     )
 
     try:
-        asyncio.get_event_loop().run_until_complete(fulfillment_agent(state))
+        fulfillment_agent(state)
         assert False, "Expected ConfirmationRequiredError was not raised"
     except ConfirmationRequiredError as e:
         assert "confirmation" in e.message.lower()
@@ -212,7 +212,7 @@ def test_fulfillment_gate_passes_with_confirmation():
         pharmacist_decision="approved",
     )
 
-    result = asyncio.get_event_loop().run_until_complete(fulfillment_agent(state))
+    result = fulfillment_agent(state)
     # Should return state with order_status="failed" due to no items — NOT raise ConfirmationRequiredError
     assert result.order_status == "failed"
     print("✅ fulfillment_gate_passes_with_confirmation passed")
@@ -344,7 +344,7 @@ def test_replacement_message_pharmacist_note_for_low_confidence():
 # SECTION 6: Category constraint regression (from replacement engine)
 # ===========================================================================
 
-def test_category_constraint_regression():
+def test_category_constraint_regression(test_db):
     """Cross-category replacement must remain rejected (regression guard)."""
     from src.agents.inventory_and_rules_agent import find_equivalent_replacement
     from src.database import Database

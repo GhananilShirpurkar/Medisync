@@ -22,7 +22,7 @@ from src.models import SymptomMedicineMapping, Medicine
 from src.services.speech_service import transcribe_audio_from_bytes
 from src.state import PharmacyState, OrderItem
 from src.graph import agent_graph
-from src.agents.fulfillment_agent import format_order_confirmation
+from src.agents.fulfillment_agent import format_order_confirmation, fulfillment_agent
 from src.services.confirmation_store import confirmation_store
 from src.errors import ConfirmationRequiredError
 
@@ -236,8 +236,9 @@ async def send_message(request: ConversationRequest):
                         request.session_id, "fulfillment_executing"
                     )
                     try:
-                        result = await agent_graph.ainvoke(pending_state)
-                        final_state = PharmacyState(**result) if isinstance(result, dict) else result
+                        final_state = fulfillment_agent(pending_state)
+                        import traceback
+                        logger.error(f"FULFILLMENT TRACEBACK: {traceback.format_exc()}")
                         response_message = format_order_confirmation(final_state)
                         conversation_service.transition_phase(
                             request.session_id, "completed"
@@ -498,10 +499,23 @@ async def send_message(request: ConversationRequest):
         intent = intent_result.get("intent", "symptom")
         
         # Inherit previous intent if the user is answering a clarifying question
-        # (e.g. they say "20" or "mild", which gets classified as 'unknown' or 'generic_help' or weakly as another intent)
+        # (e.g. they say "20" or "for last 5 days", which misclassifies as 'refill' or 'generic_help')
         previous_intent = session.get("intent")
-        if previous_intent == "symptom":
-            if intent in ["unknown", "greeting", "generic_help"] or intent_result.get("confidence", 1.0) < 0.5:
+        if previous_intent == "symptom" and intent != "symptom":
+            # Check if the last assistant message was a symptom-related question
+            last_assistant = next(
+                (m for m in reversed(messages) if m.get("role") == "assistant"), None
+            )
+            symptom_flow_keywords = [
+                "how long", "duration", "severity", "symptoms",
+                "experiencing", "feeling", "describe", "pain",
+                "sorry to hear", "tell me more"
+            ]
+            is_symptom_followup = last_assistant and any(
+                kw in (last_assistant.get("content", "")).lower()
+                for kw in symptom_flow_keywords
+            )
+            if is_symptom_followup or intent in ["unknown", "greeting", "generic_help", "refill"] or intent_result.get("confidence", 1.0) < 0.5:
                 print(f"DEBUG: Inheriting previous intent: {previous_intent} (was {intent} with confidence {intent_result.get('confidence')})")
                 intent = previous_intent
         
@@ -730,12 +744,15 @@ Red Flags Detected:
             # Get full conversation history to extract all symptoms mentioned
             all_messages = conversation_service.get_messages(request.session_id)
             
-            # Combine all user messages to find symptoms
-            combined_symptoms = " ".join([
-                msg.get("content", "") 
-                for msg in all_messages 
+            # Combine recent, relevant user messages — filter out noise
+            noise_words = {"yes", "no", "ok", "okay", "hello", "hi", "hey", "thanks", "thank you"}
+            user_msgs = [
+                msg.get("content", "") for msg in all_messages
                 if msg.get("role") == "user"
-            ])
+                and len(msg.get("content", "").strip()) > 3
+                and msg.get("content", "").strip().lower() not in noise_words
+            ]
+            combined_symptoms = " ".join(user_msgs[-3:])[:500]  # Last 3 relevant, truncated
             
             # Find medicines for symptoms
             recommendations = await _get_symptom_recommendations(
@@ -744,10 +761,12 @@ Red Flags Detected:
             )
             
             if recommendations:
-                # Extract quantity/dosage from current message for symptom-based orders
-                extracted = front_desk_agent.extract_medicine_items(request.message)
-                extracted_map = {
-                    item.medicine_name.lower(): item for item in extracted
+                # Only extract medicine items when user named specific medicines (not symptoms)
+                extracted_map = {}
+                if intent != "symptom":
+                    extracted = front_desk_agent.extract_medicine_items(request.message)
+                    extracted_map = {
+                        item.medicine_name.lower(): item for item in extracted
                 }
                 order_items = []
                 for r in recommendations:
@@ -1372,8 +1391,7 @@ async def confirm_order(request: ConfirmOrderRequest):
     )
 
     try:
-        result = await agent_graph.ainvoke(pending_state)
-        final_state = PharmacyState(**result) if isinstance(result, dict) else result
+        final_state = fulfillment_agent(pending_state)
         response_message = format_order_confirmation(final_state)
         conversation_service.transition_phase(request.session_id, "completed")
 
@@ -1568,8 +1586,20 @@ async def voice_input(
         # ── Intent Inheritance (same as text route) ──────────────────
         # If user was discussing symptoms and now says something vague, keep the symptom flow
         previous_intent = session.get("intent")
-        if previous_intent == "symptom":
-            if intent in ["unknown", "greeting", "generic_help"] or intent_result.get("confidence", 1.0) < 0.5:
+        if previous_intent == "symptom" and intent != "symptom":
+            last_assistant = next(
+                (m for m in reversed(messages) if m.get("role") == "assistant"), None
+            )
+            symptom_flow_keywords = [
+                "how long", "duration", "severity", "symptoms",
+                "experiencing", "feeling", "describe", "pain",
+                "sorry to hear", "tell me more"
+            ]
+            is_symptom_followup = last_assistant and any(
+                kw in (last_assistant.get("content", "")).lower()
+                for kw in symptom_flow_keywords
+            )
+            if is_symptom_followup or intent in ["unknown", "greeting", "generic_help", "refill"] or intent_result.get("confidence", 1.0) < 0.5:
                 print(f"🧠 Voice: inheriting previous intent '{previous_intent}' (was '{intent}')")
                 intent = previous_intent
         
@@ -1703,12 +1733,16 @@ async def voice_input(
         if intent == "symptom":
             # Use ALL user messages for symptom matching (not just current transcription)
             all_messages = conversation_service.get_messages(session_id)
-            combined_symptoms = " ".join([
-                msg.get("content", "") 
-                for msg in all_messages 
+            # Filter relevant symptom messages to remove conversational noise
+            user_msgs = [
+                msg.get("content", "") for msg in messages
                 if msg.get("role") == "user"
-            ])
+                and len(msg.get("content", "").strip()) > 3
+                and msg.get("content", "").strip().lower() not in ("yes", "no", "ok", "hello", "hi", "hey")
+            ]
+            combined_symptoms = " ".join(user_msgs[-3:])  # Last 3 relevant messages only
             
+            # Truncate to prevent token overflow (Fix 8)       
             recommendations = await _get_symptom_recommendations(
                 combined_symptoms,
                 patient_context
@@ -2205,100 +2239,103 @@ Symptoms:"""
     recommendations: List[MedicineRecommendation] = []
     seen_medicines: set = set()
 
-    # ── Pass 1: Keyword matching via SymptomMedicineMapping ────────────
+    # ── Pass 1: Semantic Search (Primary) ──────────────────────────────
     try:
-        with get_db_context() as db_session:
-            mappings = db_session.query(SymptomMedicineMapping).all()
-
-            for mapping in mappings:
-                symptom_normalized = mapping.symptom.replace(" ", "")
-                if mapping.symptom in message_lower or symptom_normalized in message_normalized:
-                    medicine = db_session.query(Medicine).filter(
-                        Medicine.id == mapping.medicine_id
-                    ).first()
-
-                    if medicine:
-                        if medicine.name not in seen_medicines:
-                            seen_medicines.add(medicine.name)
-                            recommendations.append(
-                                MedicineRecommendation(
-                                    medicine_name=medicine.name,
-                                    price=medicine.price,
-                                    dosage=None,
-                                    stock=medicine.stock,
-                                    requires_prescription=medicine.requires_prescription,
-                                    indications=medicine.indications,
-                                    generic_equivalent=medicine.generic_equivalent,
-                                    in_stock=medicine.stock > 0,
-                                )
-                            )
-                            if len(recommendations) >= 3:
-                                break
-
-        print(f"SYMPTOM RECS: Pass 1 (keyword) found {len(recommendations)} result(s)")
-    except Exception as e:
-        print(f"SYMPTOM RECS: Pass 1 (keyword) failed ({e}) — falling through to semantic pass")
-
-    # ── Pass 2: Semantic fallback ──────────────────────────────────────
-    if len(recommendations) < 2:
-        try:
-            from src.services.semantic_search_service import semantic_search_service
-            from src.db_config import get_db_context
+        from src.services.semantic_search_service import semantic_search_service
+        from src.db_config import get_db_context
+        
+        if semantic_search_service.enabled:
+            # 0.35 is a good baseline for SentenceTransformers
+            individual_symptoms = [s.strip() for s in message.split(',')] if ',' in message else [message]
             
-            if semantic_search_service.enabled:
-                # 0.30 is a good baseline for SentenceTransformers capturing natural intent
-                individual_symptoms = [s.strip() for s in message.split(',')] if ',' in message else [message]
-                
-                for symp in individual_symptoms:
-                    if not symp or symp == "unknown": continue
-                        
-                    semantic_results = semantic_search_service.search(
-                        symp, top_k=5, threshold=0.30 
-                    )
+            for symp in individual_symptoms:
+                if not symp or symp == "unknown": continue
                     
-                    if semantic_results:
-                        added = 0
-                        with get_db_context() as db_session:
-                            for med_name, score in semantic_results:
-                                if med_name in seen_medicines:
-                                    continue
-                                    
-                                # Use ilike for a more forgiving match since the index might have slight differences
-                                medicine = db_session.query(Medicine).filter(
-                                    Medicine.name.ilike(f"%{med_name}%"),
-                                    Medicine.stock > 0,
-                                    Medicine.requires_prescription == False
-                                ).first()
+                semantic_results = semantic_search_service.search(
+                    symp, top_k=5, threshold=0.35
+                )
+                
+                if semantic_results:
+                    added = 0
+                    with get_db_context() as db_session:
+                        for med_name, score in semantic_results:
+                            if med_name in seen_medicines:
+                                continue
                                 
-                                if medicine:
-                                    seen_medicines.add(medicine.name)
-                                    recommendations.append(
-                                        MedicineRecommendation(
-                                            medicine_name=medicine.name,
-                                            price=medicine.price,
-                                            dosage=None,
-                                            stock=medicine.stock,
-                                            requires_prescription=medicine.requires_prescription,
-                                            indications=medicine.indications,
-                                            generic_equivalent=medicine.generic_equivalent,
-                                            in_stock=medicine.stock > 0,
-                                        )
+                            medicine = db_session.query(Medicine).filter(
+                                Medicine.name.ilike(f"%{med_name}%"),
+                                Medicine.stock > 0
+                            ).first()
+                            
+                            if medicine:
+                                seen_medicines.add(medicine.name)
+                                recommendations.append(
+                                    MedicineRecommendation(
+                                        medicine_name=medicine.name,
+                                        price=medicine.price,
+                                        dosage=None,
+                                        stock=medicine.stock,
+                                        requires_prescription=medicine.requires_prescription,
+                                        indications=medicine.indications,
+                                        generic_equivalent=medicine.generic_equivalent,
+                                        in_stock=medicine.stock > 0,
                                     )
-                                    added += 1
-                                    if len(recommendations) >= 3:
-                                        break
-                        best_score = semantic_results[0][1] if semantic_results else 0.0
-                        print(
-                            f"SYMPTOM RECS: Pass 2 (semantic) for '{symp}' added {added} result(s) "
-                            f"(best score={best_score:.3f})"
-                        )
-                        if len(recommendations) >= 3:
-                            break
+                                )
+                                added += 1
+                                if len(recommendations) >= 3:
+                                    break
+                    best_score = semantic_results[0][1] if semantic_results else 0.0
+                    print(
+                        f"SYMPTOM RECS: Pass 1 (semantic) for '{symp}' added {added} result(s) "
+                        f"(best score={best_score:.3f})"
+                    )
+                    if len(recommendations) >= 3:
+                        break
 
+    except Exception as e:
+        print(f"SYMPTOM RECS: Semantic pass failed: {e}")
+
+    # ── Pass 2: Keyword matching fallback (Noisy table) ────────────────
+    if len(recommendations) < 3:
+        try:
+            with get_db_context() as db_session:
+                import re
+                mappings = db_session.query(SymptomMedicineMapping).all()
+
+                for mapping in mappings:
+                    symptom_normalized = mapping.symptom.replace(" ", "")
+                    # Use strictly word boundaries to prevent generic substring matches 
+                    pattern = r'\b' + re.escape(mapping.symptom) + r'\b'
+                    
+                    if re.search(pattern, message_lower):
+                        medicine = db_session.query(Medicine).filter(
+                            Medicine.id == mapping.medicine_id,
+                            Medicine.stock > 0
+                        ).first()
+
+                        if medicine:
+                            if medicine.name not in seen_medicines:
+                                seen_medicines.add(medicine.name)
+                                recommendations.append(
+                                    MedicineRecommendation(
+                                        medicine_name=medicine.name,
+                                        price=medicine.price,
+                                        dosage=None,
+                                        stock=medicine.stock,
+                                        requires_prescription=medicine.requires_prescription,
+                                        indications=medicine.indications,
+                                        generic_equivalent=medicine.generic_equivalent,
+                                        in_stock=medicine.stock > 0,
+                                    )
+                                )
+                                if len(recommendations) >= 3:
+                                    break
+
+            print(f"SYMPTOM RECS: Pass 2 (keyword fallback) found total {len(recommendations)} result(s)")
         except Exception as e:
-            print(f"SYMPTOM RECS: Semantic pass failed: {e}")
+            print(f"SYMPTOM RECS: Pass 2 (keyword fallback) failed: {e}")
 
-    return recommendations
+    return recommendations[:3]
 
 
 def _format_recommendations_message(recommendations: List[MedicineRecommendation]) -> str:

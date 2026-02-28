@@ -169,8 +169,8 @@ Respond in JSON format:
             # Cap at 5 user turns to accommodate elderly patients providing more context
             # If we've reached the limit, force a recommendation.
             # (Note: turn_count here is the number of user messages in this session)
-            if turn_count > 5:
-                return None
+            if turn_count > 2:
+                return None  # Force recommendation after 2 clarifying turns
             # Otherwise, we proceed to LLM clarification below
 
         # ── All other intents: skip LLM ───────────────────────────────────

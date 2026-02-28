@@ -31,6 +31,7 @@ def test_successful_fulfillment(test_db):
         user_id="test_user_001",
         pharmacist_decision="approved",
         prescription_verified=True,
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=2, in_stock=True),
             OrderItem(medicine_name="Vitamin C", dosage="1000mg", quantity=1, in_stock=True)
@@ -61,7 +62,7 @@ def test_successful_fulfillment(test_db):
     return result
 
 
-def test_rejected_order():
+def test_rejected_order(test_db):
     """Test order rejected by pharmacist."""
     print("\n" + "="*60)
     print("TEST 2: REJECTED ORDER")
@@ -73,6 +74,7 @@ def test_rejected_order():
         pharmacist_decision="rejected",
         prescription_verified=False,
         safety_issues=["Expired prescription"],
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=1, in_stock=True)
         ]
@@ -93,7 +95,7 @@ def test_rejected_order():
     return result
 
 
-def test_no_inventory():
+def test_no_inventory(test_db):
     """Test when no items are available."""
     print("\n" + "="*60)
     print("TEST 3: NO INVENTORY")
@@ -103,6 +105,7 @@ def test_no_inventory():
     state = PharmacyState(
         user_id="test_user_003",
         pharmacist_decision="approved",
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=1, in_stock=False)
         ]
@@ -140,6 +143,7 @@ def test_partial_fulfillment(test_db):
     state = PharmacyState(
         user_id="test_user_004",
         pharmacist_decision="approved",
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=1, in_stock=True),
             OrderItem(medicine_name="NonExistent", dosage="100mg", quantity=1, in_stock=False)
@@ -180,6 +184,7 @@ def test_pending_review(test_db):
         user_id="test_user_005",
         pharmacist_decision="needs_review",
         safety_issues=["Controlled substance detected"],
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=1, in_stock=True)
         ]
@@ -207,7 +212,7 @@ def test_pending_review(test_db):
     return result
 
 
-def test_no_items():
+def test_no_items(test_db):
     """Test with no items to fulfill."""
     print("\n" + "="*60)
     print("TEST 6: NO ITEMS")
@@ -217,6 +222,7 @@ def test_no_items():
     state = PharmacyState(
         user_id="test_user_006",
         pharmacist_decision="approved",
+        confirmation_confirmed=True,
         extracted_items=[]
     )
     
@@ -234,7 +240,7 @@ def test_no_items():
     return result
 
 
-def test_fulfillment_report():
+def test_fulfillment_report(test_db):
     """Test fulfillment report formatting."""
     print("\n" + "="*60)
     print("TEST 7: FULFILLMENT REPORT")
@@ -244,6 +250,7 @@ def test_fulfillment_report():
     state = PharmacyState(
         user_id="test_user_007",
         pharmacist_decision="approved",
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=1, in_stock=True)
         ]
@@ -278,6 +285,7 @@ def test_order_confirmation(test_db):
     state = PharmacyState(
         user_id="test_user_008",
         pharmacist_decision="approved",
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=2, in_stock=True)
         ]
@@ -323,6 +331,7 @@ def test_stock_decrement(test_db):
     state = PharmacyState(
         user_id="test_user_009",
         pharmacist_decision="approved",
+        confirmation_confirmed=True,
         extracted_items=[
             OrderItem(medicine_name="Paracetamol", dosage="500mg", quantity=2, in_stock=True)
         ]
