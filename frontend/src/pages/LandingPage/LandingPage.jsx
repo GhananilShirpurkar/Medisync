@@ -27,7 +27,7 @@ const LandingPage = () => {
         <div className="landing-buttons">
           <button 
             className={`landing-btn landing-btn-customer ${showButtons ? 'visible' : ''}`}
-            onClick={() => navigate('/app')}
+            onClick={() => navigate('/chat')}
           >
             [ PATIENT CONSULTATION ]
           </button>

@@ -1,45 +1,246 @@
+/* ══════════════════════════════════════════════
+   TheatrePage — Premium Clinical UI
+   Glass panels + Blue accent + Modern data display
+   ══════════════════════════════════════════════ */
+
+/* ── Design Tokens (Light Premium) ──────────── */
+:root {
+  --rx-void:        #F0F7FF;
+  --rx-depth:       #F8FAFF;
+  --rx-panel:       rgba(255, 255, 255, 0.6);
+  --rx-card:        rgba(255, 255, 255, 0.7);
+  --rx-border:      rgba(0, 102, 255, 0.06);
+  --rx-border-mid:  rgba(0, 102, 255, 0.1);
+
+  --rx-teal:        #0066FF;
+  --rx-teal-dim:    rgba(0, 102, 255, 0.06);
+  --rx-teal-glow:   rgba(0, 102, 255, 0.15);
+
+  --rx-amber:       #F59E0B;
+  --rx-amber-dim:   rgba(245, 158, 11, 0.08);
+  --rx-amber-soft:  rgba(245, 158, 11, 0.06);
+  --rx-green:       #10B981;
+  --rx-green-dim:   rgba(16, 185, 129, 0.08);
+  --rx-green-soft:  rgba(16, 185, 129, 0.06);
+  --rx-red:         #EF4444;
+  --rx-red-dim:     rgba(239, 68, 68, 0.08);
+  --rx-red-soft:    rgba(239, 68, 68, 0.06);
+  --rx-indigo:      #6366F1;
+  --rx-indigo-dim:  rgba(99, 102, 241, 0.08);
+  --rx-indigo-soft: rgba(99, 102, 241, 0.06);
+
+  --rx-ink-1:       #1E293B;
+  --rx-ink-2:       #475569;
+  --rx-ink-3:       #94A3B8;
+  --rx-ink-faint:   #CBD5E1;
+  --rx-ink-mute:    #94A3B8;
+
+  --font-display:   'Inter', sans-serif;
+  --font-ui:        'Inter', sans-serif;
+  --font-data:      'IBM Plex Mono', 'Courier New', monospace;
+
+  --rx-radius:      10px;
+  --rx-radius-lg:   14px;
+  --rx-r:           10px;
+
+  --shadow-teal:    0 4px 16px rgba(0, 102, 255, 0.12);
+  --shadow-panel:   0 4px 20px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-card:    0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+/* ── Patient / System Zone Panels ───────────── */
 .fixed-patient-zone,
 .fixed-system-zone {
-  border: 1px solid var(--divider);
-  border-radius: 0 !important;
-  background-color: var(--bg-room) !important;
-  padding: 1rem;
-  font-family: var(--font-machine);
-  font-size: 11px;
+  position: relative;
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 102, 255, 0.06) !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.1rem;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+  transition: all 0.25s ease;
 }
 
-.trigger-button {
-  border-radius: 0 !important;
-  border: 1px solid var(--divider) !important;
-  background: var(--bg-room) !important;
+.fixed-patient-zone::before,
+.fixed-system-zone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #0066FF, transparent);
+  opacity: 0.2;
+  border-radius: 12px 12px 0 0;
 }
 
-.trigger-button:hover {
-  background: var(--divider) !important;
+.fixed-patient-zone:hover,
+.fixed-system-zone:hover {
+  border-color: rgba(0, 102, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
 }
 
+/* ── Metadata Header ─────────────────────────── */
+.metadata-header {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #0066FF !important;
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metadata-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 102, 255, 0.12), transparent);
+  margin-left: 6px;
+}
+
+/* ── Patient Meta Row ────────────────────────── */
 .patient-meta-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 4px;
+  align-items: center;
+  margin-bottom: 6px;
+  color: var(--rx-ink-2);
+  font-size: 12px;
+  letter-spacing: 0.02em;
 }
 
+/* ── Session Timer ───────────────────────────── */
 .session-timer {
-  color: var(--amber);
-  margin-top: 4px;
-  font-weight: bold;
+  color: var(--rx-amber) !important;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  background: var(--rx-amber-dim);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(245, 158, 11, 0.15);
 }
 
-.agent-logs-header {
-  font-family: var(--font-machine);
-  font-size: 11px;
-  color: var(--ink-faint);
-  margin-bottom: 1rem;
-  letter-spacing: 0.1em;
+/* ── Status Badges ───────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #E2E8F0;
+  color: var(--rx-ink-2);
+  background: rgba(255, 255, 255, 0.5);
+  user-select: none;
+  font-weight: 600;
 }
 
-.metadata-header {
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+.status-badge.toggle:hover {
+  background: rgba(0, 102, 255, 0.06);
+  border-color: rgba(0, 102, 255, 0.2);
+  color: #0066FF;
+  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.08);
 }
+
+/* ── Agent Logs Header ───────────────────────── */
+.agent-logs-header {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--rx-ink-3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 102, 255, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-logs-header::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px #10B981;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #10B981; }
+  50%       { opacity: 0.3; box-shadow: none; }
+}
+
+/* ── Trigger / Action Buttons ────────────────── */
+.trigger-button {
+  width: 100%;
+  font-family: var(--font-ui) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px !important;
+  border: 1px solid #E2E8F0 !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  color: var(--rx-ink-2) !important;
+  box-shadow: var(--shadow-card);
+}
+
+.trigger-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 102, 255, 0.04), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.trigger-button:hover:not(:disabled) {
+  background: #0066FF !important;
+  border-color: #0066FF !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 102, 255, 0.2) !important;
+}
+
+.trigger-button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.trigger-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.trigger-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Entrance Animations ─────────────────────── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fixed-patient-zone { animation: fadeSlideIn 0.4s ease 0.05s both; }
+.fixed-system-zone  { animation: fadeSlideIn 0.4s ease 0.12s both; }

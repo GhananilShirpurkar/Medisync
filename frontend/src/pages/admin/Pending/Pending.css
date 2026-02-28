@@ -1,75 +1,56 @@
+.pending-table {
+  margin-top: 32px;
+}
+
 .pending-actions {
   display: flex;
   gap: 16px;
+  align-items: center;
+}
+
+.action-approve,
+.action-reject {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
 }
 
 .action-approve {
-  font-family: "B612 Mono", monospace;
-  font-size: 9px;
-  color: var(--green);
-  cursor: pointer;
-  transition: opacity 150ms ease;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #d1fae5;
 }
 
 .action-approve:hover {
-  opacity: 0.7;
+  background: #d1fae5;
+  transform: translateY(-1px);
 }
 
 .action-reject {
-  font-family: "B612 Mono", monospace;
-  font-size: 9px;
-  color: var(--red);
-  cursor: pointer;
-  transition: opacity 150ms ease;
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
 }
 
 .action-reject:hover {
-  opacity: 0.7;
+  background: #fee2e2;
+  transform: translateY(-1px);
 }
 
 .row-fade-out {
   opacity: 0;
-  transition: opacity 300ms ease;
-  pointer-events: none;
+  transform: translateX(20px);
+  transition: all 0.3s ease;
 }
 
 .empty-state {
   text-align: center;
-  padding: 48px !important;
-  color: var(--ink-ghost) !important;
-  font-family: "Plus Jakarta Sans", sans-serif !important;
-  font-style: italic;
-}
-
-/* ── Tab bar ────────────────────────────────────────────────────── */
-.pending-tabs {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-}
-
-.pending-tab {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 8px 20px;
-  font-family: "B612 Mono", monospace;
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--ink-faint, #888);
-  cursor: pointer;
-  transition:
-    color 150ms,
-    border-color 150ms;
-  margin-bottom: -1px;
-}
-
-.pending-tab:hover {
-  color: var(--ink, #fff);
-}
-
-.pending-tab.active {
-  color: var(--ink, #fff);
-  border-bottom-color: var(--accent, #60a5fa);
+  padding: 60px 0 !important;
+  color: #94a3b8;
+  font-size: 18px;
+  font-weight: 500;
 }

@@ -4,6 +4,7 @@ import { pipelineStore } from './state/pipelineStore';
 import IdentityPage from './pages/IdentityPage/IdentityPage';
 import TheatrePage from './pages/TheatrePage/TheatrePage';
 import SummaryPage from './pages/SummaryPage/SummaryPage';
+import ChatInterface from './pages/ChatInterface/ChatInterface';
 
 // New Pages
 import LandingPage from './pages/LandingPage/LandingPage';
@@ -16,7 +17,6 @@ import Customers from './pages/admin/Customers/Customers';
 import Orders from './pages/admin/Orders/Orders';
 import Pending from './pages/admin/Pending/Pending';
 
-// The original App logic extracted into a sub-component for isolation
 const CustomerApp = () => {
   const [pipelineState, setPipelineState] = useState(pipelineStore.get());
   const [displayedPage, setDisplayedPage] = useState(pipelineState.currentPage);
@@ -59,10 +59,10 @@ const CustomerApp = () => {
 
   const renderPage = () => {
     switch (displayedPage) {
-      case 'IDENTITY': return <IdentityPage />;
+      case 'IDENTITY': return <ChatInterface />;
       case 'THEATRE': return <TheatrePage />;
       case 'SUMMARY': return <SummaryPage />;
-      default: return <IdentityPage />;
+      default: return <ChatInterface />;
     }
   };
 
@@ -78,6 +78,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/chat" element={<ChatInterface />} />
       <Route path="/app/*" element={<CustomerApp />} />
       <Route path="/admin" element={<AdminRouter />} />
       <Route path="/admin/login" element={<AdminLogin />} />

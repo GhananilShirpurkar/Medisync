@@ -477,7 +477,10 @@ async def send_message(request: ConversationRequest):
             # Already a returning user, skip emitting Scan trace entirely to keep UI clean
             pass
 
-        # Step 1: Classify intent
+        import asyncio
+        loop = asyncio.get_event_loop()
+        
+        # Step 1 & 2 Parallelized: Classify intent & Extract context
         await trace_manager.emit(
             session_id=request.session_id,
             agent_name="Front Desk Agent",
@@ -486,10 +489,20 @@ async def send_message(request: ConversationRequest):
             status="started"
         )
 
-        intent_result = front_desk_agent.classify_intent(
-            message=request.message,
-            conversation_history=messages
+        intent_future = loop.run_in_executor(
+            None,
+            front_desk_agent.classify_intent,
+            request.message,
+            messages
         )
+        context_future = loop.run_in_executor(
+            None,
+            front_desk_agent.extract_patient_context,
+            request.message,
+            messages
+        )
+
+        intent_result, patient_context = await asyncio.gather(intent_future, context_future)
 
         await trace_manager.emit(
             session_id=request.session_id,
@@ -528,12 +541,6 @@ async def send_message(request: ConversationRequest):
         if intent == "prescription_upload":
             client_action = "OPEN_CAMERA"
         
-        # Step 2: Extract patient context
-        print("DEBUG: calling extract_patient_context...")
-        patient_context = front_desk_agent.extract_patient_context(
-            message=request.message,
-            conversation_history=messages
-        )
         print(f"DEBUG: context extracted: {patient_context}")
         
         # Update session with intent and context

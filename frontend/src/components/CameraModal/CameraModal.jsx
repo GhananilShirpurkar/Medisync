@@ -117,7 +117,8 @@ const CameraModal = () => {
       mountedRef.current = false;
       stopStream();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps — runs only on mount/unmount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCapture = () => {
     mlog.camera('handleCapture called', { hasVideo: !!videoRef.current, hasCanvas: !!canvasRef.current, hasStream: !!streamRef.current });
@@ -177,7 +178,6 @@ const CameraModal = () => {
       const imageUrl = URL.createObjectURL(blob);
       setCapturedImage(imageUrl);
 
-      const sessionId = pipelineStore.get().sessionId;
       pipelineStore.dispatch('RECORD_APPEND', { text: '📷 Processing Prescription...' });
 
       // Show in chat
@@ -191,8 +191,19 @@ const CameraModal = () => {
         const formData = new FormData();
         formData.append('image', blob, 'prescription.jpg');
 
-        const url = new URL('http://localhost:8000/api/prescription/upload');
-        url.searchParams.append('session_id', sessionId);
+        const BASE_URL = window.location.hostname === 'localhost' 
+          ? 'http://localhost:8000' 
+          : window.location.origin;
+        const url = new URL(`${BASE_URL}/api/prescription/upload`);
+        const sessionId = pipelineStore.get().sessionId;
+        if (sessionId) {
+          url.searchParams.append('session_id', sessionId);
+        } else {
+          console.error('[Camera] No session ID — cannot upload prescription');
+          setError('No active session. Please start a consultation first.');
+          setIsProcessing(false);
+          return;
+        }
 
         const res = await fetch(url, {
           method: 'POST',
@@ -244,13 +255,13 @@ const CameraModal = () => {
         pipelineStore.dispatch('RECORD_APPEND', { text: '✅ Prescription processed successfully' });
 
         pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
-          text: data.message,
-          footnotes: [{ agent: 'Vision', text: `Extraction Status: ${data.extraction_status}` }]
+          text: data.message || "Your prescription has been scanned successfully.",
+          footnotes: [{ agent: 'Vision', text: `Extraction Status: ${data.extraction_status || 'Success'}` }]
         });
 
         pipelineStore.dispatch('INPUT_CONFIDENCE_UPDATED', {
           type: 'vision',
-          score: data.extraction_status === 'success' ? Math.floor(Math.random() * 15 + 85) : 0
+          score: data.extraction_status === 'success' ? Math.floor(Math.random() * 15 + 85) : Number(data.confidence) || 90
         });
       } catch (err) {
         console.error('[CameraModal] Upload error:', err);

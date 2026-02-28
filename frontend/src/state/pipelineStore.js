@@ -98,6 +98,9 @@ export const pipelineStore = {
         if (payload.patientContext) {
           nextState.patientContext = payload.patientContext;
         }
+        if (payload.recommendations && payload.recommendations.length > 0) {
+          nextState.lastRecommendations = payload.recommendations;
+        }
         nextState.currentPage = 'THEATRE';
         break;
 
@@ -173,7 +176,7 @@ export const pipelineStore = {
         }
         break;
 
-      case 'TRACE_APPEND':
+      case 'TRACE_APPEND': {
         if (!payload) break;
         nextState.traceSteps = [...nextState.traceSteps, payload];
         
@@ -198,6 +201,7 @@ export const pipelineStore = {
           }
         }
         break;
+      }
 
       case 'SHELF_CARD_READY':
         nextState.shelfCards = { ...nextState.shelfCards, [payload.type]: payload.card };

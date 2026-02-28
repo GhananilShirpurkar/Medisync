@@ -43,7 +43,8 @@ class VisionAgent:
         try:
             from google import genai
             self.genai = genai
-            self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+            vision_api_key = os.getenv('GEMINI_VISION_API_KEY') or os.getenv('GEMINI_API_KEY')
+            self.client = genai.Client(api_key=vision_api_key)
         except ImportError:
             self.genai = None
             self.client = None

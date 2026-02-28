@@ -34,7 +34,6 @@ const VoiceCallModal = () => {
   const callStartRef = useRef(null);
   const bargeInStartRef = useRef(null);
   const ambientNoiseRef = useRef(10);    // calibrated ambient noise level
-  const recordStartRef = useRef(null);   // when current recording started
 
   // Imperatively sync callPhaseRef whenever we change phase
   const setPhase = useCallback((phase) => {
@@ -243,7 +242,10 @@ const VoiceCallModal = () => {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'call_recording.webm');
 
-      const url = new URL('http://localhost:8000/api/conversation/voice');
+      const BASE_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:8000'
+        : window.location.origin;
+      const url = new URL(`${BASE_URL}/api/conversation/voice`);
       url.searchParams.append('session_id', sessionId);
 
       const res = await fetch(url, { method: 'POST', body: formData });
@@ -258,9 +260,11 @@ const VoiceCallModal = () => {
 
       if (!mountedRef.current) return;
 
-      // FIX BUG 5: Validate transcription data
+      // FIX BUG 5: Validate transcription data gracefully
       if (!data.transcription || data.transcription.trim() === '') {
-        throw new Error('Empty transcription received');
+        setPhase('listening');
+        speakAndContinue("I didn't catch that. Please try again.");
+        return;
       }
 
       setTranscript(data.transcription || '...');

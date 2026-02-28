@@ -1,1 +1,48 @@
-/* Uses global admin-table CSS */
+.admin-search-bar {
+  margin-bottom: 24px;
+}
+
+.admin-search-bar input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  background: transparent;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 8px 0;
+  outline: none;
+  transition: border-bottom-color 200ms ease;
+}
+
+.admin-search-bar input:focus {
+  border-bottom-color: var(--ink);
+}
+
+.admin-search-bar input::placeholder {
+  color: var(--ink-ghost);
+}
+
+/* Stock specific styles */
+.stock-critical {
+  color: #ef4444;
+  /* Protera Red */
+}
+
+.stock-warn {
+  color: #f59e0b;
+  /* Protera Amber */
+}
+
+.stock-good {
+  color: #10b981;
+  /* Protera Green */
+}
+
+.stock-label {
+  font-family: 'B612 Mono', monospace;
+  font-size: 8px;
+  margin-left: 6px;
+  display: inline-block;
+  vertical-align: middle;
+}

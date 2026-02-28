@@ -78,6 +78,17 @@ def startup_event():
         semantic_search_service.index_medicines(med_dicts)
         logger.info(f"🧠 Indexed {len(med_dicts)} medicines for semantic search")
 
+@app.on_event("startup")
+async def prewarm_models():
+    import asyncio
+    from src.services.intent_classifier import get_intent_classifier
+    
+    loop = asyncio.get_event_loop()
+    
+    # Load sentence-transformers in thread pool (blocking operation)
+    await loop.run_in_executor(None, get_intent_classifier)
+    logger.info("✅ Intent classifier pre-warmed and resident")
+
 # ------------------------------------------------------------------
 # PROACTIVE INTELLIGENCE SCHEDULER
 # ------------------------------------------------------------------
@@ -89,7 +100,7 @@ async def start_proactive_scheduler():
     _scheduler.add_job(
         run_batch_analysis,
         'interval',
-        seconds=60,
+        minutes=5,
         id='proactive_refill_job',
         replace_existing=True
     )
@@ -209,6 +220,12 @@ def health_check():
         "version": "1.0.0"
     }
 
+@app.post("/api/admin/trigger-refill-check")
+async def trigger_refill_check():
+    import asyncio
+    from src.agents.proactive_intelligence_agent import run_batch_analysis
+    asyncio.create_task(run_batch_analysis())
+    return {"status": "triggered", "message": "Proactive refill analysis started in background"}
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):

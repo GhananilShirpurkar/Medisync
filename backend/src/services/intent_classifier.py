@@ -10,6 +10,7 @@ Also provides semantic medicine name extraction from free-form user messages.
 from typing import Dict, List, Optional, Tuple
 from sentence_transformers import SentenceTransformer
 import numpy as np
+import threading
 
 
 class IntentClassifier:
@@ -338,13 +339,16 @@ class IntentClassifier:
 
 # Global instance (lazy loaded)
 _classifier = None
+_classifier_lock = threading.Lock()
 
 
 def get_intent_classifier() -> IntentClassifier:
     """Get or create global intent classifier instance."""
     global _classifier
     if _classifier is None:
-        _classifier = IntentClassifier()
+        with _classifier_lock:
+            if _classifier is None:
+                _classifier = IntentClassifier()
     return _classifier
 
 

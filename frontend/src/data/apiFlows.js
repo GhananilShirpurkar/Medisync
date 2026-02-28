@@ -33,13 +33,8 @@ const initWebSocket = (sessionId) => {
       const traceEvent = JSON.parse(event.data);
       console.log("[WS TRACE]:", traceEvent);
       
-      let cssType = 'info';
-      if (traceEvent.type === 'thinking') cssType = 'think';
-      else if (traceEvent.type === 'tool_use') cssType = 'tool';
-      else if (traceEvent.type === 'decision' || traceEvent.type === 'response') cssType = 'result';
-      else if (traceEvent.type === 'error') cssType = 'critical result';
-      else if (traceEvent.status === 'completed') cssType = 'done';
-      else cssType = traceEvent.type || 'info';
+      // We can map these if needed later, but right now we push the raw traceEvent
+      // to the store without transforming it to a mapped CSS class locally.
 
       // Dispatch to pipelineStore
       // The new AgentLog component expects the raw shape of the trace event
@@ -205,7 +200,8 @@ export const runConsultationFlowAPI = async (userMessage) => {
       pipelineStore.dispatch('intent_classified', { 
         intent: data.intent, 
         entities: data.patient_context ? Object.keys(data.patient_context) : [],
-        patientContext: data.patient_context || null
+        patientContext: data.patient_context || null,
+        recommendations: data.recommendations || []
       });
     }
 
@@ -258,6 +254,28 @@ export const runConsultationFlowAPI = async (userMessage) => {
         });
       }, 500);
     }
+
+    // FIX 3: Trigger CHECKOUT_READY after YES confirmation
+    if (data.order_id || (data.next_step === 'order_complete' && data.message?.includes('Order'))) {
+      pipelineStore.dispatch('CHECKOUT_READY', {
+        orderSummary: {
+          pid: pipelineStore.get().pid,
+          orderId: data.order_id || `ORD-${Date.now()}`,
+          complaint: pipelineStore.get().lastUserMessage || '',
+          validation: { status: 'Approved', severity: 0 },
+          items: (pipelineStore.get().lastRecommendations || []).map(r => ({
+            name: r.medicine_name || r.name,
+            stockStatus: (r.in_stock || r.stock > 0 || r.available) ? 'In Stock' : 'Out of Stock',
+            price: r.price || 0,
+            warnings: [],
+            substitute: null
+          })),
+          substitutions: [],
+          totalPrice: (pipelineStore.get().lastRecommendations || []).reduce((sum, r) => sum + (r.price || 0), 0)
+        }
+      });
+    }
+
   } catch (error) {
     console.error("Failed consultation flow", error);
     pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
@@ -322,7 +340,8 @@ export const runVoiceFlowAPI = async (audioBlob) => {
       pipelineStore.dispatch('intent_classified', { 
         intent: data.intent, 
         entities: data.patient_context ? Object.keys(data.patient_context) : [],
-        patientContext: data.patient_context || null
+        patientContext: data.patient_context || null,
+        recommendations: data.recommendations || []
       });
     }
 

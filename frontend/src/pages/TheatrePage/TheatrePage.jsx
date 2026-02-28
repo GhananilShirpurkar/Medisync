@@ -5,25 +5,21 @@ import TheatreLayout from '../../layouts/TheatreLayout/TheatreLayout';
 import ConsultationStage from '../../components/ConsultationStage/ConsultationStage';
 import ClinicalRecord from '../../components/ClinicalRecord/ClinicalRecord';
 import CameraModal from '../../components/CameraModal/CameraModal';
-import VoiceCallModal from '../../components/VoiceCallModal/VoiceCallModal';
 import AgentLog from '../../components/AgentLog/AgentLog';
 import FusionGauge from '../../components/FusionGauge/FusionGauge';
+import './TheatrePage.css';
 
 const TheatrePage = () => {
   const [pipelineState, setPipelineState] = useState(pipelineStore.get());
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
-
   const [sessionTime, setSessionTime] = useState(0);
 
   useEffect(() => {
     const unsubscribe = pipelineStore.subscribe(setPipelineState);
-    
-    // Session Timer
     const timer = setInterval(() => {
       setSessionTime(prev => prev + 1);
     }, 1000);
-
     return () => {
       unsubscribe();
       clearInterval(timer);
@@ -49,27 +45,33 @@ const TheatrePage = () => {
   const leftZone = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
       <div className="fixed-patient-zone" style={{ flexShrink: 0, marginBottom: '1rem' }}>
-        <div className="metadata-header" style={{ color: 'var(--amber)' }}>👤 {pipelineState.pid || 'Anonymous Patient'}</div>
+        <div className="metadata-header">👤 {pipelineState.pid || 'Anonymous Patient'}</div>
         <div className="patient-meta-row">
-          <span>Session: {pipelineState.sessionId ? pipelineState.sessionId.split('-')[0] : 'Pending...'}</span>
+          <span style={{ color: 'var(--rx-ink-3)', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Session</span>
+          <span style={{ color: 'var(--rx-ink-2)' }}>
+            {pipelineState.sessionId ? pipelineState.sessionId.split('-')[0] : '—'}
+          </span>
+        </div>
+        <div className="patient-meta-row" style={{ marginBottom: '12px' }}>
+          <span style={{ color: 'var(--rx-ink-3)', fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Elapsed</span>
           <span className="session-timer">⏱ {formatTime(sessionTime)}</span>
         </div>
-        <div className="metadata-actions" style={{ display: 'flex', gap: '1rem', marginTop: '8px' }}>
-          <span className="status-badge toggle">[End Session]</span> 
-          <span className="status-badge toggle">[Pause]</span>
+        <div className="metadata-actions" style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+          <span className="status-badge toggle">End Session</span>
+          <span className="status-badge toggle">Pause</span>
         </div>
       </div>
-      
+
       <div style={{ flex: '1 1 0%', minHeight: '0', marginBottom: '1rem', display: 'flex', flexDirection: 'column' }}>
         <div className="agent-logs-header">
-          AGENT LOGS
+          Agent Logs
         </div>
         <div style={{ flex: '1 1 0%', minHeight: '0' }}>
           <AgentLog steps={pipelineState.traceSteps.filter(s => s.agent !== 'ORCHESTRATOR')} />
         </div>
       </div>
 
-      <button 
+      <button
         className="trigger-button"
         onClick={() => setIsTimelineOpen(true)}
       >
@@ -77,93 +79,117 @@ const TheatrePage = () => {
       </button>
     </div>
   );
+
   const isSystemActive = pipelineState.messages.length > 0;
   const orchestratorEvents = pipelineState.traceSteps.filter(s => s.agent === 'ORCHESTRATOR');
   const fusionState = orchestratorEvents.length > 0 ? orchestratorEvents[orchestratorEvents.length - 1] : null;
 
   const rightZone = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
-      <div className="fixed-system-zone" style={{ flex: '1 1 0%', display: 'flex', flexDirection: 'column', padding: '1.5rem 1rem', overflowY: 'auto', minHeight: '0' }}>
-        <div className="metadata-header" style={{ marginBottom: '2rem', textAlign: 'center', color: 'var(--ink-1)', flexShrink: 0 }}>FUSION CONFIDENCE</div>
-        
-        {/* Dynamic Fusion Gauge */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
+      <div className="fixed-system-zone" style={{ flex: '1 1 0%', display: 'flex', flexDirection: 'column', padding: '1.25rem 1rem', overflowY: 'auto', minHeight: '0' }}>
+        <div className="metadata-header" style={{ marginBottom: '1.5rem', justifyContent: 'center', flexShrink: 0 }}>
+          Fusion Confidence
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.75rem' }}>
           {fusionState ? (
             <FusionGauge fusionState={fusionState} />
           ) : (
-            <div style={{ textAlign: 'center', color: 'var(--amber)', fontFamily: 'var(--font-machine)', fontSize: '11px', marginBottom: '16px' }}>
-              Awaiting input...
+            <div style={{
+              textAlign: 'center',
+              color: 'var(--rx-ink-3)',
+              fontFamily: 'var(--font-data)',
+              fontSize: '11px',
+              letterSpacing: '0.1em',
+              marginBottom: '16px',
+            }}>
+              Awaiting input…
             </div>
           )}
         </div>
 
-        <div style={{ marginBottom: '2rem', fontFamily: 'var(--font-machine)', fontSize: '12px' }}>
-          <div style={{ marginBottom: '8px', color: 'var(--ink-2)' }}>INPUT BREAKDOWN</div>
-          
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span>🎤 Voice</span> 
-              <span style={{ color: pipelineState.fusionMetrics?.voice ? 'var(--green)' : 'var(--ink-mute)' }}>
-                {pipelineState.fusionMetrics?.voice ? `${pipelineState.fusionMetrics.voice}%` : '--'}
-              </span>
-            </div>
-            <div style={{ height: '4px', background: 'var(--divider)', width: '100%' }}>
-              <div style={{ height: '100%', background: 'var(--green)', width: `${pipelineState.fusionMetrics?.voice || 0}%`, transition: 'width 0.5s' }} />
-            </div>
+        <div style={{ marginBottom: '1.5rem', fontFamily: 'var(--font-data)', fontSize: '12px' }}>
+          <div style={{
+            marginBottom: '10px',
+            color: 'var(--rx-ink-3)',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            fontWeight: 600,
+          }}>
+            Input Breakdown
           </div>
 
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span>📷 Vision</span> 
-              <span style={{ color: pipelineState.fusionMetrics?.vision ? 'var(--amber)' : 'var(--ink-mute)' }}>
-                {pipelineState.fusionMetrics?.vision ? `${pipelineState.fusionMetrics.vision}%` : '--'}
-              </span>
-            </div>
-            <div style={{ height: '4px', background: 'var(--divider)', width: '100%' }}>
-              <div style={{ height: '100%', background: 'var(--amber)', width: `${pipelineState.fusionMetrics?.vision || 0}%`, transition: 'width 0.5s' }} />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <span>⌨️ Text</span> 
-              <span style={{ color: pipelineState.fusionMetrics?.text ? 'var(--green)' : 'var(--ink-mute)' }}>
-                {pipelineState.fusionMetrics?.text ? `${pipelineState.fusionMetrics.text}%` : '--'}
-              </span>
-            </div>
-            <div style={{ height: '4px', background: 'var(--divider)', width: '100%' }}>
-              <div style={{ height: '100%', background: 'var(--green)', width: `${pipelineState.fusionMetrics?.text || 0}%`, transition: 'width 0.5s' }} />
-            </div>
-          </div>
+          {[
+            { icon: '🎤', label: 'Voice',  key: 'voice',  color: 'var(--rx-teal)'  },
+            { icon: '📷', label: 'Vision', key: 'vision', color: 'var(--rx-amber)' },
+            { icon: '⌨️', label: 'Text',   key: 'text',   color: 'var(--rx-green)' },
+          ].map(({ icon, label, key, color }) => {
+            const val = pipelineState.fusionMetrics?.[key];
+            return (
+              <div key={key} style={{ marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--rx-ink-2)' }}>{icon} {label}</span>
+                  <span style={{ color: val ? color : 'var(--rx-ink-mute)', fontWeight: 600 }}>
+                    {val ? `${val}%` : '--'}
+                  </span>
+                </div>
+                <div style={{ height: '3px', background: 'var(--rx-border)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    background: color,
+                    width: `${val || 0}%`,
+                    transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+                    boxShadow: val ? `0 0 6px ${color}` : 'none',
+                    borderRadius: '2px',
+                  }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div style={{ borderTop: '1px dashed var(--divider)', paddingTop: '16px', fontFamily: 'var(--font-machine)', fontSize: '12px' }}>
-          <div style={{ marginBottom: '8px', color: 'var(--ink-2)' }}>SYSTEM HEALTH</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-             <span style={{ color: 'var(--ink-2)' }}>Latency:</span> 
-             <span style={{ color: isSystemActive ? 'var(--amber)' : 'var(--ink-mute)' }}>
-               {isSystemActive ? `${Math.floor(Math.random() * 40 + 80)}ms ✓` : '-- ms'}
-             </span>
+        <div style={{ borderTop: '1px solid var(--rx-border)', paddingTop: '14px', fontFamily: 'var(--font-data)', fontSize: '12px' }}>
+          <div style={{
+            marginBottom: '10px',
+            color: 'var(--rx-ink-3)',
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            fontWeight: 600,
+          }}>
+            System Health
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-             <span style={{ color: 'var(--ink-2)' }}>Model:</span> 
-             <span>LLaMA-3 Med</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ color: 'var(--rx-ink-3)' }}>Latency</span>
+            <span style={{ color: isSystemActive ? 'var(--rx-amber)' : 'var(--rx-ink-mute)', letterSpacing: '0.05em' }}>
+              {isSystemActive ? `${Math.floor(Math.random() * 40 + 80)}ms ✓` : '—'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ color: 'var(--rx-ink-3)' }}>Model</span>
+            <span style={{ color: 'var(--rx-ink-2)' }}>LLaMA-3 Med</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-             <span style={{ color: 'var(--ink-2)' }}>DB:</span> 
-             <span style={{ color: 'var(--green)' }}>Isolated ✓</span>
+            <span style={{ color: 'var(--rx-ink-3)' }}>DB</span>
+            <span style={{ color: 'var(--rx-green)' }}>Isolated ✓</span>
           </div>
         </div>
-        
-        <div style={{ flex: 1 }} /> {/* Spacer */}
 
-        <button 
+        <div style={{ flex: 1 }} />
+
+        <button
           className="trigger-button"
           onClick={() => setIsOrdersOpen(true)}
-          style={{ 
+          style={{
             marginTop: 'auto',
-            background: pipelineState.checkoutReady ? 'var(--indigo)' : 'var(--bg-room)',
-            color: pipelineState.checkoutReady ? 'var(--paper)' : 'var(--ink-2)'
+            ...(pipelineState.checkoutReady ? {
+              background: 'linear-gradient(135deg, #00d4aa, #009e82) !important',
+              border: 'none !important',
+              color: 'var(--rx-void) !important',
+              fontWeight: 700,
+              boxShadow: '0 4px 20px rgba(0,212,170,0.3) !important',
+            } : {}),
           }}
         >
           🛒 Current Orders {pipelineState.checkoutReady && '(1)'}
@@ -173,9 +199,9 @@ const TheatrePage = () => {
   );
 
   const stageContent = (
-    <ConsultationStage 
-      messages={pipelineState.messages} 
-      onSubmit={handleInputSubmit} 
+    <ConsultationStage
+      messages={pipelineState.messages}
+      onSubmit={handleInputSubmit}
       isSettled={pipelineState.sessionSettled}
       checkoutReady={pipelineState.checkoutReady}
       patientContext={pipelineState.patientContext}
@@ -188,8 +214,8 @@ const TheatrePage = () => {
 
   const timelinePanelContent = (
     <>
-      <div className="metadata-header" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--divider)', paddingBottom: '0.5rem' }}>
-        CLINICAL RECORD TIMELINE
+      <div className="metadata-header" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--rx-border)', paddingBottom: '0.6rem' }}>
+        Clinical Record Timeline
       </div>
       <div style={{ overflowY: 'auto', flex: 1 }}>
         <ClinicalRecord entries={pipelineState.recordEntries} />
@@ -197,143 +223,213 @@ const TheatrePage = () => {
     </>
   );
 
-  const [expandedReplacementId, setExpandedReplacementId] = useState(null);
-
-  const handleChooseReplacement = (oldName, replacement) => {
-    pipelineStore.dispatch('UPDATE_ORDER_ITEM', {
-      oldName: oldName,
-      newName: replacement.name,
-      price: replacement.price
-    });
-    setExpandedReplacementId(null);
-  };
-
   const ordersPanelContent = (
     <>
-      <div className="metadata-header" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--divider)', paddingBottom: '0.5rem' }}>
-        CURRENT ORDERS
+      <div className="metadata-header" style={{ marginBottom: '1rem', borderBottom: '1px solid var(--rx-border)', paddingBottom: '0.6rem' }}>
+        Current Orders
       </div>
-      <div style={{ overflowY: 'auto', flex: 1, padding: '1rem 0' }}>
-        {pipelineState.orderSummary && pipelineState.orderSummary.items && pipelineState.orderSummary.items.length > 0 ? (
-          pipelineState.orderSummary.items.map((item, i) => {
+      <div style={{ overflowY: 'auto', flex: 1, padding: '2px 0' }}>
+        {pipelineState.pendingOrderSummary?.items?.length > 0 ? (
+          pipelineState.pendingOrderSummary.items.map((item, i) => {
             const isOutOfStock = item.stockStatus !== 'In Stock';
-            const available = item.available !== false && !isOutOfStock;
             const hasWarnings = item.warnings && item.warnings.length > 0;
-            const hasSuggestions = item.substitute && item.substitute.suggestions && item.substitute.suggestions.length > 0;
-            const requiresConsultation = isOutOfStock && !hasSuggestions;
+            const requiresConsultation = isOutOfStock && (!item.substitute || item.substitute.warnings?.length > 0);
+
+            const borderColor = requiresConsultation
+              ? 'rgba(255,77,106,0.4)'
+              : hasWarnings
+              ? 'rgba(240,165,0,0.3)'
+              : 'var(--rx-border)';
+
+            const bgColor = requiresConsultation
+              ? 'linear-gradient(135deg, var(--rx-red-soft), var(--rx-card))'
+              : hasWarnings
+              ? 'linear-gradient(135deg, var(--rx-amber-soft), var(--rx-card))'
+              : 'var(--rx-card)';
 
             return (
-               <div key={i} style={{ 
-                 padding: '12px', 
-                 border: `1px solid ${available ? 'var(--green)' : requiresConsultation ? 'var(--red)' : hasWarnings ? 'var(--amber)' : 'var(--divider)'}`, 
-                 borderRadius: '8px', 
-                 marginBottom: '12px', 
-                 background: isOutOfStock ? 'rgba(255,255,255,0.03)' : (available ? 'rgba(72, 187, 120, 0.05)' : 'transparent'),
-                 boxShadow: available ? '0 0 10px rgba(72, 187, 120, 0.1)' : 'none',
-                 position: 'relative'
-               }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                   <div style={{ 
-                     fontWeight: 'bold', 
-                     color: available ? 'var(--green)' : (isOutOfStock ? 'var(--ink-mute)' : 'var(--ink-1)'), 
-                     textDecoration: isOutOfStock ? 'line-through' : 'none' 
-                   }}>
-                     {item.name} {item.isReplaced && <span style={{ fontSize: '10px', verticalAlign: 'middle', background: 'var(--indigo)', color: 'white', padding: '2px 4px', borderRadius: '4px', marginLeft: '4px' }}>REPLACED</span>}
-                   </div>
-                   <div style={{ color: available ? 'var(--green)' : 'var(--red)', fontFamily: 'var(--font-machine)', fontSize: '11px', fontWeight: 'bold' }}>
-                     {available ? '✓ AVAILABLE' : item.stockStatus}
-                   </div>
-                 </div>
-                 
-                 <div style={{ marginTop: '8px', fontFamily: 'var(--font-machine)', fontSize: '12px', color: available ? 'var(--green)' : 'var(--ink-2)' }}>
-                   Price: ₹{item.price}
-                 </div>
+              <div key={i} style={{
+                padding: '13px',
+                border: `1px solid ${borderColor}`,
+                borderRadius: 'var(--rx-r)',
+                marginBottom: '10px',
+                background: bgColor,
+                opacity: isOutOfStock ? 0.78 : 1,
+                transition: 'border-color 0.2s ease',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                  <div style={{
+                    fontFamily: 'var(--font-ui)',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    color: isOutOfStock ? 'var(--rx-ink-3)' : 'var(--rx-ink-1)',
+                    textDecoration: isOutOfStock ? 'line-through' : 'none',
+                  }}>
+                    {item.name}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-data)',
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    padding: '2px 7px',
+                    borderRadius: '3px',
+                    color: isOutOfStock ? 'var(--rx-red)' : 'var(--rx-green)',
+                    background: isOutOfStock ? 'var(--rx-red-soft)' : 'var(--rx-green-soft)',
+                    border: `1px solid ${isOutOfStock ? 'rgba(255,77,106,0.2)' : 'rgba(39,212,138,0.2)'}`,
+                  }}>
+                    {item.stockStatus}
+                  </div>
+                </div>
 
-                 {hasWarnings && (
-                   <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 171, 0, 0.1)', borderLeft: '2px solid var(--amber)', color: 'var(--amber)', fontSize: '12px' }}>
-                     <strong style={{ fontFamily: 'var(--font-machine)', fontSize: '11px', display: 'block', marginBottom: '4px' }}>⚠️ WARNINGS:</strong>
-                     <ul style={{ margin: 0, paddingLeft: '16px' }}>
-                       {item.warnings.map((w, wIdx) => <li key={wIdx} style={{ marginBottom: '2px' }}>{w}</li>)}
-                     </ul>
-                   </div>
-                 )}
+                <div style={{
+                  marginTop: '7px',
+                  fontFamily: 'var(--font-data)',
+                  fontSize: '12px',
+                  color: 'var(--rx-green)',
+                  letterSpacing: '0.04em',
+                }}>
+                  ₹{item.price}
+                </div>
 
-                  {isOutOfStock && hasSuggestions && (
-                    <div style={{ marginTop: '12px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                         <div style={{ color: 'var(--indigo)', fontFamily: 'var(--font-machine)', fontSize: '11px' }}>⇄ ALTERNATIVES AVAILABLE</div>
-                         <button 
-                           onClick={() => setExpandedReplacementId(expandedReplacementId === i ? null : i)}
-                           style={{ background: 'var(--indigo)', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
-                         >
-                           {expandedReplacementId === i ? 'HIDE' : 'SHOW REPLACEMENTS'}
-                         </button>
-                      </div>
+                {hasWarnings && (
+                  <div style={{
+                    marginTop: '10px', padding: '8px 10px',
+                    background: 'var(--rx-amber-soft)',
+                    borderLeft: '2px solid var(--rx-amber)',
+                    borderRadius: '0 3px 3px 0',
+                    color: 'var(--rx-amber)', fontSize: '12px',
+                  }}>
+                    <strong style={{
+                      fontFamily: 'var(--font-data)', fontSize: '10px',
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      display: 'block', marginBottom: '4px',
+                    }}>
+                      ⚠ Warnings
+                    </strong>
+                    <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                      {item.warnings.map((w, wIdx) => <li key={wIdx} style={{ marginBottom: '2px' }}>{w}</li>)}
+                    </ul>
+                  </div>
+                )}
 
-                      {expandedReplacementId === i && (
-                        <div className="replacement-list" style={{ background: 'rgba(0,0,0,0.2)', padding: '8px', borderRadius: '6px' }}>
-                          {item.substitute.suggestions.map((option, optIdx) => (
-                            <div key={optIdx} style={{ padding: '8px', borderBottom: optIdx < item.substitute.suggestions.length - 1 ? '1px solid var(--divider)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                               <div style={{ flex: 1 }}>
-                                  <div style={{ fontSize: '12px', color: 'var(--ink-1)', fontWeight: 'bold' }}>{option.name}</div>
-                                  <div style={{ fontSize: '11px', color: 'var(--indigo)' }}>₹{option.price} • {option.confidence.toUpperCase()} confidence</div>
-                                  <div style={{ fontSize: '10px', color: 'var(--ink-mute)', marginTop: '2px' }}>{option.reasoning}</div>
-                               </div>
-                               <button 
-                                 onClick={() => handleChooseReplacement(item.name, option)}
-                                 style={{ background: 'var(--green)', color: 'white', border: 'none', padding: '4px 10px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: 'bold' }}
-                               >
-                                 CHOOSE
-                               </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                {isOutOfStock && item.substitute && !requiresConsultation && (
+                  <div style={{
+                    marginTop: '10px', padding: '8px 10px',
+                    background: 'var(--rx-indigo-soft)',
+                    borderLeft: '2px solid var(--rx-indigo)',
+                    borderRadius: '0 3px 3px 0', fontSize: '12px',
+                  }}>
+                    <div style={{
+                      color: 'var(--rx-indigo)',
+                      fontFamily: 'var(--font-data)', fontSize: '10px',
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      marginBottom: '4px',
+                    }}>
+                      ⇄ Substitute Suggested
                     </div>
-                  )}
-
-                  {requiresConsultation && (
-                    <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 82, 82, 0.1)', borderLeft: '2px solid var(--red)', color: 'var(--red)', fontSize: '12px' }}>
-                      <strong>⛔ UNAVAILABLE</strong>
-                      <p style={{ margin: '4px 0 0 0' }}>{item.message || item.substitute_reasoning || 'Primary and substitutes unavailable or unsafe. Doctor consultation required.'}</p>
+                    <div style={{ color: 'var(--rx-ink-1)' }}>
+                      {item.substitute.name}
+                      <span style={{ color: 'var(--rx-green)', marginLeft: '6px' }}>₹{item.substitute.price}</span>
                     </div>
-                  )}
-               </div>
+                    <div style={{ color: 'var(--rx-ink-3)', marginTop: '4px', fontSize: '11px' }}>
+                      Awaiting confirmation in chat…
+                    </div>
+                  </div>
+                )}
+
+                {requiresConsultation && (
+                  <div style={{
+                    marginTop: '10px', padding: '8px 10px',
+                    background: 'var(--rx-red-soft)',
+                    borderLeft: '2px solid var(--rx-red)',
+                    borderRadius: '0 3px 3px 0',
+                    color: 'var(--rx-red)', fontSize: '12px',
+                  }}>
+                    <strong style={{
+                      fontFamily: 'var(--font-data)', fontSize: '10px',
+                      letterSpacing: '0.12em', textTransform: 'uppercase',
+                      display: 'block', marginBottom: '4px',
+                    }}>
+                      ⛔ Unavailable
+                    </strong>
+                    <p style={{ margin: 0 }}>
+                      Primary and substitutes unavailable or unsafe. Doctor consultation required.
+                    </p>
+                  </div>
+                )}
+              </div>
             );
           })
         ) : (
-          <div style={{ color: 'var(--ink-3)', fontFamily: 'var(--font-machine)', fontSize: '12px' }}>No items in cart yet.</div>
+          <div style={{
+            color: 'var(--rx-ink-3)',
+            fontFamily: 'var(--font-data)',
+            fontSize: '11px',
+            letterSpacing: '0.08em',
+            textAlign: 'center',
+            padding: '24px 0',
+          }}>
+            No items in cart yet.
+          </div>
         )}
       </div>
-      
-      {pipelineState.orderSummary && (
-        <div style={{ borderTop: '1px solid var(--divider)', paddingTop: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-machine)' }}>
-           <span>TOTAL:</span>
-           <span style={{ color: 'var(--green)', fontWeight: 'bold', fontSize: '1.2rem' }}>₹{pipelineState.orderSummary.totalPrice}</span>
+
+      {pipelineState.pendingOrderSummary && (
+        <div style={{
+          borderTop: '1px solid var(--rx-border-mid)',
+          paddingTop: '12px',
+          marginBottom: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontFamily: 'var(--font-data)',
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color: 'var(--rx-ink-2)',
+        }}>
+          <span>Total</span>
+          <span style={{ color: 'var(--rx-green)', fontSize: '15px', letterSpacing: '0.04em' }}>
+            ₹{pipelineState.pendingOrderSummary.totalPrice}
+          </span>
         </div>
       )}
 
-      <button 
-        className="trigger-button" 
-        style={{ 
-           marginTop: 'auto', 
-           background: (pipelineState.checkoutReady && !pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length))) ? 'var(--indigo)' : 'var(--bg-room)', 
-           color: (pipelineState.checkoutReady && !pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length))) ? 'white' : 'var(--ink-mute)', 
-           border: pipelineState.checkoutReady ? 'none' : '1px solid var(--divider)' 
-        }}
-        disabled={!pipelineState.checkoutReady || pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length))}
-        onClick={() => {
-           pipelineStore.dispatch('order_created', { orderSummary: pipelineState.orderSummary });
-        }}
-      >
-        {pipelineState.orderSummary?.items?.some(i => i.stockStatus !== 'In Stock' && (!i.substitute || !i.substitute.suggestions?.length)) ? 'REPLACEMENTS NEEDED or CONSULTATION' : 'PROCEED TO SUMMARY'}
-      </button>
+      {(() => {
+        const hasBlockingItems = pipelineState.pendingOrderSummary?.items?.some(
+          i => i.stockStatus !== 'In Stock' && (!i.substitute || i.substitute.warnings?.length > 0)
+        );
+        const canProceed = pipelineState.checkoutReady && !hasBlockingItems;
+        return (
+          <button
+            className="trigger-button"
+            style={{
+              marginTop: 'auto',
+              ...(canProceed ? {
+                background: 'linear-gradient(135deg, #00d4aa, #009e82) !important',
+                border: 'none !important',
+                color: 'var(--rx-void) !important',
+                fontWeight: 700,
+                boxShadow: '0 4px 20px rgba(0,212,170,0.3) !important',
+              } : {}),
+            }}
+            disabled={!canProceed}
+            onClick={() => pipelineStore.dispatch('order_created', {})}
+          >
+            {hasBlockingItems ? 'Consultation Required' : 'Proceed to Summary'}
+          </button>
+        );
+      })()}
     </>
   );
 
   return (
     <>
-      <TheatreLayout 
+      <TheatreLayout
         leftZone={leftZone}
         rightZone={rightZone}
         stageContent={stageContent}
@@ -344,7 +440,6 @@ const TheatrePage = () => {
         ordersPanelContent={ordersPanelContent}
       />
       {pipelineState.isCameraOpen && <CameraModal />}
-      {pipelineState.isVoiceCallOpen && <VoiceCallModal />}
     </>
   );
 };

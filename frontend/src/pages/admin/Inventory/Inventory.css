@@ -25,15 +25,18 @@
 
 /* Stock specific styles */
 .stock-critical {
-  color: var(--red);
+  color: #ef4444;
+  /* Protera Red */
 }
 
 .stock-warn {
-  color: var(--amber);
+  color: #f59e0b;
+  /* Protera Amber */
 }
 
 .stock-good {
-  color: var(--green);
+  color: #10b981;
+  /* Protera Green */
 }
 
 .stock-label {
