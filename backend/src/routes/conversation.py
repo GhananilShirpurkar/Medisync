@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException, status, UploadFile, File
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import logging
 
 from src.services.conversation_service import ConversationService
 from src.agents.front_desk_agent import FrontDeskAgent
@@ -25,6 +26,9 @@ from src.graph import agent_graph
 from src.agents.fulfillment_agent import format_order_confirmation, fulfillment_agent
 from src.services.confirmation_store import confirmation_store
 from src.errors import ConfirmationRequiredError
+
+# FIX BUG 1: Initialize logger
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/conversation", tags=["conversation"])
 

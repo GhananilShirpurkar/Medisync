@@ -247,10 +247,21 @@ const VoiceCallModal = () => {
       url.searchParams.append('session_id', sessionId);
 
       const res = await fetch(url, { method: 'POST', body: formData });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      
+      // FIX BUG 5: Properly handle HTTP errors
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`HTTP ${res.status}: ${errorText}`);
+      }
+      
       const data = await res.json();
 
       if (!mountedRef.current) return;
+
+      // FIX BUG 5: Validate transcription data
+      if (!data.transcription || data.transcription.trim() === '') {
+        throw new Error('Empty transcription received');
+      }
 
       setTranscript(data.transcription || '...');
       setTurnCount(c => c + 1);
@@ -258,6 +269,20 @@ const VoiceCallModal = () => {
       // Update chat
       pipelineStore.dispatch('USER_MESSAGE_SENT', data.transcription);
       pipelineStore.dispatch('RECORD_APPEND', { text: `🎤 "${data.transcription}"`, type: 'voice' });
+      
+      // FIX BUG 5: Log successful transcription with actual confidence
+      pipelineStore.dispatch('TRACE_APPEND', {
+        agent: 'Whisper Agent',
+        step: 'transcription_completed',
+        type: 'tool_use',
+        status: 'completed',
+        details: { 
+          transcription: data.transcription,
+          confidence: data.transcription_confidence || 0,
+          language: data.language || 'en'
+        },
+        timestamp: new Date().toISOString()
+      });
 
       if (data.intent) {
         pipelineStore.dispatch('intent_classified', {
@@ -277,7 +302,7 @@ const VoiceCallModal = () => {
 
       pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
         text: data.message,
-        footnotes: [{ agent: 'Whisper', text: `Confidence: ${(data.transcription_confidence * 100).toFixed(0)}%` }],
+        footnotes: [{ agent: 'Whisper', text: `Confidence: ${((data.transcription_confidence || 0) * 100).toFixed(0)}%` }],
         severityAssessment: data.severity_assessment
       });
 
@@ -296,9 +321,28 @@ const VoiceCallModal = () => {
 
     } catch (err) {
       mlog.error('VoiceCall processVoiceTurn', err);
+      
+      // FIX BUG 5: Log as error, not completed
+      pipelineStore.dispatch('TRACE_APPEND', {
+        agent: 'Whisper Agent',
+        step: 'transcription_failed',
+        type: 'error',
+        status: 'failed',
+        details: { error: err.message },
+        timestamp: new Date().toISOString()
+      });
+      
       if (mountedRef.current) {
-        setAiResponse('Sorry, let me try again...');
-        setTimeout(() => startListeningRef.current?.(), 1000);
+        // FIX BUG 5: Set empty transcription with confidence 0
+        setTranscript('');
+        setAiResponse('Sorry, I couldn\'t understand that. Please try speaking again.');
+        
+        // Speak error message and retry
+        setTimeout(() => {
+          if (mountedRef.current && callPhaseRef.current !== 'ended') {
+            speakAndContinue('Sorry, I couldn\'t understand that. Please try speaking again.');
+          }
+        }, 500);
       }
     }
   }, [endCall, speakAndContinue]);

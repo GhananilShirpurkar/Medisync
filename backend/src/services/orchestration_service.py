@@ -133,14 +133,90 @@ class OrchestrationService:
             step_name="Thinking: Checking the current stock in our pharmacy...",
             action_type="tool_use",
             status="completed",
-            details={"in_stock": len(inventory_result.get("in_stock", []))}
+            details={"in_stock": len(inventory_result.get("in_stock_items", []))}
         )
         
-        # Step 4: Consolidate results
+        # FIX BUG 4: Step 4: Assess severity for prescription medicines
+        logger.info("Step 4: Severity assessment")
+        severity_assessment = None
+        if medicines:
+            try:
+                from src.agents.severity_scorer import assess_severity
+                
+                # Build context from prescription
+                patient_context = {
+                    "age": prescription_data.get("patient_age"),
+                    "allergies": prescription_data.get("allergies", []),
+                    "existing_conditions": prescription_data.get("conditions", [])
+                }
+                
+                # Combine medicine names and indications for severity check
+                medicine_descriptions = []
+                for med in medicines:
+                    desc = med.get("name", "")
+                    if med.get("indication"):
+                        desc += f" for {med['indication']}"
+                    medicine_descriptions.append(desc)
+                
+                combined_medicines = ", ".join(medicine_descriptions)
+                
+                await trace_manager.emit(
+                    session_id=session_id,
+                    agent_name="Medical Agent",
+                    step_name="Thinking: Evaluating the urgency of prescribed medications...",
+                    action_type="decision",
+                    status="started"
+                )
+                
+                severity_assessment = assess_severity(
+                    symptoms=combined_medicines,
+                    patient_context=patient_context,
+                    conversation_history=[]
+                )
+                
+                await trace_manager.emit(
+                    session_id=session_id,
+                    agent_name="Medical Agent",
+                    step_name="Thinking: Evaluating the urgency of prescribed medications...",
+                    action_type="decision",
+                    status="completed",
+                    details={
+                        "severity": severity_assessment['severity_score'],
+                        "risk": severity_assessment['risk_level']
+                    }
+                )
+                
+                logger.info(f"Severity assessment: {severity_assessment['severity_score']}/10 - {severity_assessment['risk_level']}")
+            except Exception as e:
+                logger.error(f"Severity assessment failed: {e}")
+                # FIX BUG 4: Always return a default assessment, never null
+                severity_assessment = {
+                    "severity_score": 0,
+                    "risk_level": "low",
+                    "red_flags_detected": [],
+                    "recommended_action": "otc",
+                    "confidence": 0.5,
+                    "reasoning": "Default assessment for prescription scan",
+                    "route": "OTC_RECOMMENDATION"
+                }
+        else:
+            # FIX BUG 4: No medicines found, return default low severity
+            severity_assessment = {
+                "severity_score": 0,
+                "risk_level": "low",
+                "red_flags_detected": [],
+                "recommended_action": "otc",
+                "confidence": 1.0,
+                "reasoning": "No medicines detected in prescription",
+                "route": "OTC_RECOMMENDATION"
+            }
+        
+        # Step 5: Consolidate results
         consolidated = {
             "extraction": extraction_result,
             "validation": validation_result,
-            "inventory": inventory_result
+            "inventory": inventory_result,
+            "severity_assessment": severity_assessment  # FIX BUG 4: Always include severity
         }
         
         # Trace: Final response
@@ -242,18 +318,13 @@ class OrchestrationService:
             result = inventory_service.check_availability(items_to_check)
             
             # Map result to expected format
-            availability_info = {
-                "available": result["available_items"] == result["total_items"],
-                "partial": 0 < result["available_items"] < result["total_items"],
-                "in_stock": [],
-                "out_of_stock": [],
-                "alternatives": [], # Flattened list of alternatives for easy specific access if needed
-                "recommendations": result.get("recommendations", [])
-            }
-
+            in_stock_items = []
+            out_of_stock_items = []
+            alternatives_list = []
+            
             for item in result["items"]:
                 if item["available"]:
-                    availability_info["in_stock"].append({
+                    in_stock_items.append({
                         "name": item["medicine"],
                         "stock": item["stock"],
                         "price": item.get("price", 0)
@@ -265,10 +336,22 @@ class OrchestrationService:
                     }
                     if "alternatives" in item:
                         out_entry["alternatives"] = item["alternatives"]
-                        availability_info["alternatives"].extend(item["alternatives"])
+                        alternatives_list.extend(item["alternatives"])
                     
-                    availability_info["out_of_stock"].append(out_entry)
+                    out_of_stock_items.append(out_entry)
             
+            # FIX BUG 3: Ensure in_stock count matches the actual number of in-stock items
+            availability_info = {
+                "available": result["available_items"] == result["total_items"],
+                "partial": 0 < result["available_items"] < result["total_items"],
+                "in_stock": len(in_stock_items),  # FIX BUG 3: Return count, not list
+                "in_stock_items": in_stock_items,  # Keep detailed list separately
+                "out_of_stock": out_of_stock_items,
+                "alternatives": alternatives_list,
+                "recommendations": result.get("recommendations", []),
+                "items": result["items"]  # FIX BUG 3: Include full items for frontend
+            }
+
             return availability_info
             
         except Exception as e:

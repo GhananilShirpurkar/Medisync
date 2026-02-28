@@ -3,19 +3,47 @@ import { pipelineStore } from '../../state/pipelineStore';
 import mlog from '../../services/debugLogger';
 import './CameraModal.css';
 
+// FIX BUG 6: Debounce utility to prevent duplicate trace appends
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
 const CameraModal = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const mountedRef = useRef(true);
+  const cleanupCalledRef = useRef(false); // FIX BUG 6: Track cleanup to prevent multiple calls
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [capturedImage, setCapturedImage] = useState(null);
   const [extractionResult, setExtractionResult] = useState(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
 
+  // FIX BUG 6: Debounced trace append to prevent duplicates
+  const traceAppendDebounced = useCallback(
+    debounce((data) => {
+      pipelineStore.dispatch('TRACE_APPEND', data);
+    }, 100),
+    []
+  );
+
   // Centralized stream cleanup — always uses the ref for reliability
   const stopStream = useCallback(() => {
+    // FIX BUG 6: Prevent multiple cleanup calls
+    if (cleanupCalledRef.current) {
+      mlog.camera('stopStream', { skipped: 'already cleaned up' });
+      return;
+    }
+    
     const hadStream = !!streamRef.current;
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -25,12 +53,14 @@ const CameraModal = () => {
       videoRef.current.srcObject = null;
     }
     setIsCameraReady(false);
+    cleanupCalledRef.current = true;
     mlog.camera('stopStream', { hadStream });
   }, []);
 
   // Start camera — called on mount and on retake
   const startCamera = useCallback(async () => {
     // Always clean up any leftover stream first
+    cleanupCalledRef.current = false; // FIX BUG 6: Reset cleanup flag for new stream
     stopStream();
     setError('');
 
@@ -45,6 +75,7 @@ const CameraModal = () => {
       }
 
       streamRef.current = mediaStream;
+      cleanupCalledRef.current = false; // FIX BUG 6: Stream is active, reset cleanup flag
       mlog.camera('getUserMedia SUCCESS', { tracks: mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label, readyState: t.readyState })) });
 
       if (videoRef.current) {
@@ -55,7 +86,9 @@ const CameraModal = () => {
       console.error('[CameraModal] Error accessing camera:', err);
       mlog.camera('getUserMedia FAILED', { error: err.message });
       setError('Unable to access camera. Please check permissions.');
-      pipelineStore.dispatch('TRACE_APPEND', {
+      
+      // FIX BUG 6: Use debounced trace append
+      traceAppendDebounced({
         agent: 'Vision Agent',
         step: 'camera_error',
         type: 'error',
@@ -64,7 +97,7 @@ const CameraModal = () => {
         timestamp: new Date().toISOString()
       });
     }
-  }, [stopStream]);
+  }, [stopStream, traceAppendDebounced]);
 
   // On mount: start camera + emit trace. On unmount: always stop stream.
   useEffect(() => {

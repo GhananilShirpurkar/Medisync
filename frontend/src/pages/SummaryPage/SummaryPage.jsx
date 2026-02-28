@@ -15,34 +15,50 @@ const SummaryPage = () => {
     const [paymentId, setPaymentId] = useState(null);
     const [qrData, setQrData] = useState(null);
     const [timeLeft, setTimeLeft] = useState(9);
+    const [isInitiating, setIsInitiating] = useState(false); // FIX BUG 2: Prevent double-click
 
     // Phase 1: Initiate Payment
     useEffect(() => {
         const order = pipelineState.orderSummary;
-        if (order && !paymentId) {
+        if (order && !paymentId && !isInitiating) {
             const initiatePayment = async () => {
+                // FIX BUG 2: Prevent concurrent payment initiation
+                if (isInitiating) return;
+                setIsInitiating(true);
+                
                 try {
+                    // FIX BUG 2: Generate idempotency key
+                    const idempotencyKey = `${order.orderId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    
                     const res = await fetch('http://localhost:8000/api/payment/initiate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             order_id: order.orderId,
-                            amount: order.totalPrice
+                            amount: order.totalPrice,
+                            idempotency_key: idempotencyKey  // FIX BUG 2: Send idempotency key
                         })
                     });
+                    
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+                    }
+                    
                     const data = await res.json();
                     if (data.payment_id) {
                         setPaymentId(data.payment_id);
                         setQrData(data.qr_code_data);
-                        mlog.info('Payment initiated', { paymentId: data.payment_id });
+                        mlog.info('Payment initiated', { paymentId: data.payment_id, idempotencyKey });
                     }
                 } catch (err) {
                     mlog.error('Payment initiation failed', { error: err.message });
+                } finally {
+                    setIsInitiating(false);
                 }
             };
             initiatePayment();
         }
-    }, [pipelineState.orderSummary]);
+    }, [pipelineState.orderSummary, paymentId, isInitiating]);
 
     // Phase 2: Poll for status + countdown UI
     useEffect(() => {

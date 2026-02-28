@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from src.services.payment_service import payment_service
 from src.services.observability_service import trace_agent
@@ -10,6 +10,7 @@ router = APIRouter(tags=["Payment"])
 class PaymentInitiateRequest(BaseModel):
     order_id: str
     amount: float
+    idempotency_key: Optional[str] = None  # FIX BUG 2: Add idempotency key
 
 class PaymentStatusResponse(BaseModel):
     payment_id: str
@@ -22,8 +23,14 @@ async def initiate_payment(req: PaymentInitiateRequest, background_tasks: Backgr
     """
     Initiates a mock payment for an order.
     Starts a background task to simulate payment confirmation after 9 seconds.
+    
+    FIX BUG 2: Supports idempotency_key to prevent duplicate payments.
     """
-    result = payment_service.initiate_payment(req.order_id, req.amount)
+    result = payment_service.initiate_payment(
+        req.order_id, 
+        req.amount,
+        req.idempotency_key  # Pass idempotency key
+    )
     
     # Simulate a 9-second mock confirmation in the background
     background_tasks.add_task(payment_service.mock_confirm_payment, result["payment_id"])

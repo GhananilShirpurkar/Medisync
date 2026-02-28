@@ -1,7 +1,7 @@
 import uuid
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 
 from src.database import Database
@@ -16,8 +16,70 @@ logger = logging.getLogger(__name__)
 class PaymentService:
     def __init__(self):
         self.db = Database()
+        # FIX BUG 2: In-memory idempotency cache (60 second TTL)
+        self._idempotency_cache = {}  # {idempotency_key: (payment_id, timestamp)}
 
-    def initiate_payment(self, order_id: str, amount: float) -> Dict[str, Any]:
+    def _cleanup_expired_cache(self):
+        """Remove expired idempotency keys (older than 60 seconds)."""
+        now = datetime.utcnow()
+        expired_keys = [
+            key for key, (_, timestamp) in self._idempotency_cache.items()
+            if (now - timestamp).total_seconds() > 60
+        ]
+        for key in expired_keys:
+            del self._idempotency_cache[key]
+
+    def initiate_payment(self, order_id: str, amount: float, idempotency_key: Optional[str] = None) -> Dict[str, Any]:
+        """
+        FIX BUG 2: Idempotent payment initiation.
+        
+        If idempotency_key is provided and matches an existing payment within 60 seconds,
+        returns the existing payment instead of creating a duplicate.
+        """
+        # Cleanup expired cache entries
+        self._cleanup_expired_cache()
+        
+        # Check idempotency cache
+        if idempotency_key and idempotency_key in self._idempotency_cache:
+            cached_payment_id, _ = self._idempotency_cache[idempotency_key]
+            logger.info(f"Idempotency hit for key {idempotency_key}, returning existing payment {cached_payment_id}")
+            
+            # Return existing payment
+            with get_db_context() as session:
+                existing_payment = session.query(Payment).filter(Payment.id == cached_payment_id).first()
+                if existing_payment:
+                    return {
+                        "payment_id": existing_payment.id,
+                        "qr_code_data": existing_payment.qr_code_data,
+                        "status": existing_payment.status,
+                        "amount": existing_payment.amount,
+                        "order_id": existing_payment.order_id,
+                        "idempotency_key": idempotency_key
+                    }
+        
+        # Check for existing pending/processing payment for this order (database-level check)
+        with get_db_context() as session:
+            existing_payment = session.query(Payment).filter(
+                Payment.order_id == order_id,
+                Payment.status.in_(["pending", "processing"])
+            ).first()
+            
+            if existing_payment:
+                logger.info(f"Found existing pending payment {existing_payment.id} for order {order_id}")
+                # Cache it if we have an idempotency key
+                if idempotency_key:
+                    self._idempotency_cache[idempotency_key] = (existing_payment.id, datetime.utcnow())
+                
+                return {
+                    "payment_id": existing_payment.id,
+                    "qr_code_data": existing_payment.qr_code_data,
+                    "status": existing_payment.status,
+                    "amount": existing_payment.amount,
+                    "order_id": existing_payment.order_id,
+                    "idempotency_key": idempotency_key
+                }
+        
+        # Create new payment
         payment_id = f"pay_{uuid.uuid4().hex[:12]}"
         qr_data = generate_upi_qr_data_uri(amount, order_id)
         
@@ -32,13 +94,19 @@ class PaymentService:
             )
             session.add(new_payment)
             session.commit()
+        
+        # Cache the new payment
+        if idempotency_key:
+            self._idempotency_cache[idempotency_key] = (payment_id, datetime.utcnow())
+            logger.info(f"Cached new payment {payment_id} with idempotency key {idempotency_key}")
             
         return {
             "payment_id": payment_id,
             "qr_code_data": qr_data,
             "status": "pending",
             "amount": amount,
-            "order_id": order_id
+            "order_id": order_id,
+            "idempotency_key": idempotency_key
         }
 
     def get_payment_status(self, payment_id: str) -> Dict[str, Any]:
