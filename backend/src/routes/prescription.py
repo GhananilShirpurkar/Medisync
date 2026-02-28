@@ -88,8 +88,22 @@ async def upload_prescription(
         extraction_status = "success" if result["extraction"]["success"] else "failed"
         
         # Base medicines from extraction
-        extracted_medicines = result["extraction"].get("data", {}).get("medicines", []) if result["extraction"]["success"] else []
+        extracted_data = result["extraction"].get("data", {}) if result["extraction"]["success"] else {}
+        extracted_medicines = extracted_data.get("medicines", [])
         
+        # PERSIST VISION CONTEXT TO SESSION
+        # This ensures name, age, etc. extracted from prescription are remembered
+        if extracted_data:
+            pc_to_save = {
+                "age": extracted_data.get("patient_age"),
+                "allergies": extracted_data.get("allergies", []),
+                "existing_conditions": extracted_data.get("conditions", []),
+                "patient_name": extracted_data.get("patient_name")
+            }
+            conversation_service.update_session(session_id, patient_context=pc_to_save)
+            if extracted_data.get("patient_name"):
+                conversation_service.update_session(session_id, user_id=extracted_data.get("patient_name"))
+
         # Enrich medicines with inventory data for the frontend
         inventory_items = {
             item["medicine"].lower(): item 

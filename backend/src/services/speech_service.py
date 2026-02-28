@@ -6,11 +6,14 @@ Zero cloud billing | Sequential processing
 """
 
 import os
+import threading
+import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv(".env")
+logger = logging.getLogger(__name__)
 
 # Check if faster-whisper is available
 try:
@@ -41,20 +44,23 @@ WHISPER_PROMPT = (
 # RESIDENT MODEL SINGLETON
 # ------------------------------------------------------------------
 _whisper_model = None
+_whisper_lock = threading.Lock()
 
 def _get_whisper_model():
     """Load Whisper model once and keep it resident for fast inference."""
     global _whisper_model
     if _whisper_model is None:
-        if not WHISPER_AVAILABLE:
-            return None
-        print(f"🎤 Loading Whisper '{WHISPER_MODEL_SIZE}' model (one-time, stays resident)...")
-        _whisper_model = WhisperModel(
-            WHISPER_MODEL_SIZE,
-            device="cpu",
-            compute_type="int8"  # Quantized for faster CPU inference
-        )
-        print(f"✅ Whisper '{WHISPER_MODEL_SIZE}' model loaded and resident in memory")
+        with _whisper_lock:
+            if _whisper_model is None:
+                if not WHISPER_AVAILABLE:
+                    return None
+                print(f"🎤 Loading Whisper '{WHISPER_MODEL_SIZE}' model (one-time, stays resident)...")
+                _whisper_model = WhisperModel(
+                    WHISPER_MODEL_SIZE,
+                    device="cpu",
+                    compute_type="int8"  # Quantized for faster CPU inference
+                )
+                print(f"✅ Whisper '{WHISPER_MODEL_SIZE}' model loaded and resident in memory")
     return _whisper_model
 
 

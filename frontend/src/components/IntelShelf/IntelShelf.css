@@ -1,17 +1,88 @@
 .intel-shelf-container {
   height: 100%;
-  padding: 2rem;
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
+  position: relative;
+  background: 
+    linear-gradient(180deg, 
+      rgba(10, 10, 12, 0.3) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgba(10, 10, 12, 0.2) 100%
+    );
+  overflow: hidden;
+}
+
+/* Subtle scanline effect */
+.intel-shelf-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 136, 0.02) 2px,
+    rgba(0, 255, 136, 0.02) 4px
+  );
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Corner brackets */
+.intel-shelf-container::after {
+  content: '';
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-top: 1px solid rgba(0, 255, 136, 0.2);
+  border-right: 1px solid rgba(0, 255, 136, 0.2);
+  pointer-events: none;
 }
 
 .intel-shelf-header {
   font-family: var(--font-machine);
-  font-size: 9px;
+  font-size: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.25em;
   color: var(--ink-faint);
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.intel-shelf-header::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: rgba(0, 255, 136, 0.6);
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+  animation: headerPulse 3s ease-in-out infinite;
+}
+
+@keyframes headerPulse {
+  0%, 100% { opacity: 0.6; box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
+  50% { opacity: 1; box-shadow: 0 0 16px rgba(0, 255, 136, 0.6); }
+}
+
+.intel-shelf-header span {
+  position: relative;
+}
+
+.intel-shelf-header span::after {
+  content: '// ONLINE';
+  margin-left: auto;
+  color: rgba(0, 255, 136, 0.6);
+  font-size: 7px;
+  letter-spacing: 0.2em;
 }
 
 .intel-shelf-content {
@@ -19,46 +90,284 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 1;
+  padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 136, 0.2) transparent;
+}
+
+.intel-shelf-content::-webkit-scrollbar {
+  width: 3px;
+}
+
+.intel-shelf-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.intel-shelf-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, 
+    transparent 0%,
+    rgba(0, 255, 136, 0.3) 50%,
+    transparent 100%
+  );
+  border-radius: 2px;
+}
+
+/* Slot dividers */
+.intel-shelf-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0.5rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(0, 255, 136, 0.1) 20%,
+    rgba(0, 255, 136, 0.1) 80%,
+    transparent 100%
+  );
 }
 
 .shelf-slot {
   width: 100%;
+  position: relative;
+  transition: all 300ms ease;
+}
+
+.shelf-slot:has(.shelf-ghost-outline) {
+  animation: slotPulse 4s ease-in-out infinite;
+}
+
+@keyframes slotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.95; }
+}
+
+.shelf-slot:has(.thermal-card) {
+  animation: cardArrival 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cardArrival {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Slot connectors */
+.shelf-slot:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: -0.625rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 1.25rem;
+  background: linear-gradient(180deg, 
+    rgba(0, 255, 136, 0.1) 0%,
+    transparent 100%
+  );
+  opacity: 0.5;
 }
 
 .shelf-ghost-outline {
-  border: 1px dashed var(--divider-dark);
-  padding: 1rem 1.25rem;
+  border: 1px dashed rgba(0, 255, 136, 0.15);
+  padding: 1.25rem 1.5rem;
   min-height: 100px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  opacity: 0.5;
+  opacity: 0.4;
+  position: relative;
+  overflow: hidden;
+  transition: all 400ms ease;
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 255, 136, 0.02) 0%, 
+      transparent 50%,
+      rgba(0, 255, 136, 0.01) 100%
+    );
+  border-radius: 2px;
+}
+
+.shelf-ghost-outline:hover {
+  opacity: 0.7;
+  border-color: rgba(0, 255, 136, 0.25);
+  background: 
+    linear-gradient(135deg, 
+      rgba(0, 255, 136, 0.04) 0%, 
+      transparent 50%,
+      rgba(0, 255, 136, 0.02) 100%
+    );
+}
+
+/* Scanning animation for ghost slots */
+.shelf-ghost-outline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent,
+    rgba(0, 255, 136, 0.3),
+    transparent
+  );
+  animation: ghostScan 3s ease-in-out infinite;
+}
+
+@keyframes ghostScan {
+  0% { left: -100%; opacity: 0; }
+  50% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
 }
 
 .ghost-title {
   font-family: var(--font-machine);
   font-size: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-ghost);
+  letter-spacing: 0.15em;
+  color: rgba(0, 255, 136, 0.4);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghost-title::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
 }
 
 .ghost-waiting {
   font-family: var(--font-machine);
-  font-size: 8px;
+  font-size: 7px;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: var(--ink-ghost);
+  letter-spacing: 0.25em;
+  color: rgba(0, 255, 136, 0.3);
   align-self: flex-end;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghost-waiting::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: waitingBlink 2s ease-in-out infinite;
+}
+
+@keyframes waitingBlink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 .intel-shelf-footer {
   font-family: var(--font-machine);
-  font-size: 8px;
+  font-size: 7px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-ghost);
+  letter-spacing: 0.15em;
+  color: rgba(0, 255, 136, 0.3);
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.intel-shelf-footer::before {
+  content: '';
+  position: absolute;
+  top: 0.75rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    rgba(0, 255, 136, 0.1) 0%,
+    transparent 50%,
+    rgba(0, 255, 136, 0.1) 100%
+  );
+}
+
+.intel-shelf-footer span {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.intel-shelf-footer span::after {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0, 255, 136, 0.3), transparent);
+}
+
+/* Status indicators for different slot states */
+.shelf-slot[data-type="triage"]:has(.thermal-card) .thermal-card {
+  border-left: 2px solid #ff6b6b;
+}
+
+.shelf-slot[data-type="medical"]:has(.thermal-card) .thermal-card {
+  border-left: 2px solid #4ecdc4;
+}
+
+.shelf-slot[data-type="inventory"]:has(.thermal-card) .thermal-card {
+  border-left: 2px solid #ffe66d;
+}
+
+.shelf-slot[data-type="fulfillment"]:has(.thermal-card) .thermal-card {
+  border-left: 2px solid #95e1d3;
+}
+
+/* Empty fulfillment slot - hidden but maintains layout */
+.shelf-slot:empty {
+  display: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .intel-shelf-header::before,
+  .shelf-ghost-outline::before,
+  .ghost-waiting::before,
+  .shelf-slot:has(.shelf-ghost-outline) {
+    animation: none;
+  }
+  
+  .shelf-slot:has(.thermal-card) {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .intel-shelf-container {
+    background: white;
+  }
+  
+  .intel-shelf-container::before,
+  .intel-shelf-container::after {
+    display: none;
+  }
+  
+  .shelf-ghost-outline {
+    border: 1px dashed #ccc;
+    opacity: 0.5;
+  }
 }

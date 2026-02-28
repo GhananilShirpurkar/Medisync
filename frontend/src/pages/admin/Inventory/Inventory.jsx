@@ -1,31 +1,106 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { adminService } from '../../../services/adminService';
+import { useAdminRealtime } from '../../../hooks/useAdminRealtime';
 import './Inventory.css';
-
-const mockInventory = [
-  { id: 1, name: 'Paracetamol 500mg', category: 'Analgesic', stock: 145, price: '$0.05', status: 'ACTIVE' },
-  { id: 2, name: 'Ibuprofen 400mg', category: 'NSAID', stock: 89, price: '$0.12', status: 'ACTIVE' },
-  { id: 3, name: 'Amoxicillin 500mg', category: 'Antibiotic', stock: 8, price: '$0.45', status: 'ACTIVE' },
-  { id: 4, name: 'Lisinopril 10mg', category: 'Antihypertensive', stock: 24, price: '$0.18', status: 'ACTIVE' },
-  { id: 5, name: 'Metformin 850mg', category: 'Antidiabetic', stock: 210, price: '$0.08', status: 'ACTIVE' },
-  { id: 6, name: 'Atorvastatin 20mg', category: 'Statin', stock: 56, price: '$0.30', status: 'ACTIVE' },
-  { id: 7, name: 'Levothyroxine 50mcg', category: 'Thyroid Hormone', stock: 15, price: '$0.22', status: 'ACTIVE' },
-  { id: 8, name: 'Omeprazole 20mg', category: 'PPI', stock: 112, price: '$0.25', status: 'ACTIVE' },
-  { id: 9, name: 'Amlodipine 5mg', category: 'Antihypertensive', stock: 94, price: '$0.15', status: 'ACTIVE' },
-  { id: 10, name: 'Azithromycin 250mg', category: 'Antibiotic', stock: 4, price: '$1.20', status: 'ACTIVE' },
-  { id: 11, name: 'Losartan 50mg', category: 'Antihypertensive', stock: 43, price: '$0.28', status: 'ACTIVE' },
-  { id: 12, name: 'Albuterol Inhaler', category: 'Bronchodilator', stock: 32, price: '$24.50', status: 'ACTIVE' },
-  { id: 13, name: 'Gabapentin 300mg', category: 'Anticonvulsant', stock: 78, price: '$0.35', status: 'ACTIVE' },
-  { id: 14, name: 'Hydrochlorothiazide 25mg', category: 'Diuretic', stock: 120, price: '$0.10', status: 'ACTIVE' },
-  { id: 15, name: 'Sertraline 50mg', category: 'Antidepressant', stock: 65, price: '$0.40', status: 'ACTIVE' },
-  { id: 16, name: 'Montelukast 10mg', category: 'Leukotriene Receptor Antagonist', stock: 48, price: '$0.55', status: 'ACTIVE' },
-  { id: 17, name: 'Fluticasone Nasal Spray', category: 'Corticosteroid', stock: 12, price: '$18.00', status: 'ACTIVE' },
-  { id: 18, name: 'Citalopram 20mg', category: 'SSRIs', stock: 0, price: '$0.32', status: 'OUT OF STOCK' },
-  { id: 19, name: 'Pravastatin 40mg', category: 'Statin', stock: 27, price: '$0.28', status: 'ACTIVE' },
-  { id: 20, name: 'Lorazepam 1mg', category: 'Benzodiazepine', stock: 18, price: '$0.45', status: 'ACTIVE' }
-];
+import { useAdminContext } from '../../../context/AdminContext';
 
 const Inventory = () => {
-  const filteredInventory = mockInventory;
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { searchQuery } = useAdminContext();
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    category: '',
+    price: 0,
+    stock: 0,
+    requires_prescription: false
+  });
+
+  const filteredInventory = inventory.filter(item => 
+    (item.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (item.category?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+  );
+
+  const fetchInventory = useCallback(async () => {
+    try {
+      const data = await adminService.getInventory();
+      setInventory(data);
+    } catch (err) {
+      console.error("Failed to fetch inventory:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
+
+  const handleRealtimeEvent = useCallback((event) => {
+    if (event.type === 'STOCK_UPDATED') {
+      fetchInventory();
+    }
+  }, [fetchInventory]);
+
+  useAdminRealtime(handleRealtimeEvent);
+
+  const handleOpenModal = (item = null) => {
+    if (item) {
+      setEditingItem(item);
+      setFormData({
+        name: item.name,
+        category: item.category,
+        price: parseFloat(item.price.replace('$', '')),
+        stock: item.stock,
+        requires_prescription: item.requires_prescription || false
+      });
+    } else {
+      setEditingItem(null);
+      setFormData({
+        name: '',
+        category: '',
+        price: 0,
+        stock: 0,
+        requires_prescription: false
+      });
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingItem) {
+        await adminService.updateMedicine(editingItem.id, formData);
+      } else {
+        await adminService.addMedicine(formData);
+      }
+      handleCloseModal();
+      fetchInventory();
+    } catch (err) {
+      alert("Failed to save medicine: " + err.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this medicine?")) {
+      try {
+        await adminService.deleteMedicine(id);
+        fetchInventory();
+      } catch (err) {
+        alert("Failed to delete medicine: " + err.message);
+      }
+    }
+  };
 
   const renderStock = (stock) => {
     if (stock < 10) {
@@ -36,9 +111,19 @@ const Inventory = () => {
     return <span className="stock-good">{stock}</span>;
   };
 
+  if (loading) {
+    return <div className="admin-inventory protera-theme">Loading...</div>;
+  }
+
   return (
     <div className="admin-inventory protera-theme">
       <div className="protera-main-column">
+        <div className="inventory-header-actions">
+           <button className="protera-btn protera-btn-primary" onClick={() => handleOpenModal()}>
+             + Add New Medicine
+           </button>
+        </div>
+
         <div className="protera-table-card">
           <h3 className="card-title">Medicine Stock</h3>
 
@@ -50,6 +135,7 @@ const Inventory = () => {
                 <th>STOCK</th>
                 <th>UNIT PRICE</th>
                 <th>STATUS</th>
+                <th>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -64,12 +150,84 @@ const Inventory = () => {
                       <span className="risk-dot"></span> {item.status}
                     </span>
                   </td>
+                  <td className="table-actions">
+                    <button className="action-link edit" onClick={() => handleOpenModal(item)}>Edit</button>
+                    <button className="action-link delete" onClick={() => handleDelete(item.id)}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal">
+            <div className="modal-header">
+              <h3>{editingItem ? 'Edit Medicine' : 'Add New Medicine'}</h3>
+              <button className="close-btn" onClick={handleCloseModal}>×</button>
+            </div>
+            <form onSubmit={handleSubmit} className="admin-form">
+              <div className="form-group">
+                <label>Medicine Name</label>
+                <input 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label>Category</label>
+                <input 
+                  type="text" 
+                  value={formData.category} 
+                  onChange={(e) => setFormData({...formData, category: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Price ($)</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    value={formData.price} 
+                    onChange={(e) => setFormData({...formData, price: parseFloat(e.target.value)})} 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Stock</label>
+                  <input 
+                    type="number" 
+                    value={formData.stock} 
+                    onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value)})} 
+                    required 
+                  />
+                </div>
+              </div>
+              <div className="form-group checkbox-group">
+                <label>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.requires_prescription} 
+                    onChange={(e) => setFormData({...formData, requires_prescription: e.target.checked})} 
+                  />
+                  Requires Prescription
+                </label>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="protera-btn protera-btn-outline" onClick={handleCloseModal}>Cancel</button>
+                <button type="submit" className="protera-btn protera-btn-primary">
+                  {editingItem ? 'Update Medicine' : 'Add Medicine'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

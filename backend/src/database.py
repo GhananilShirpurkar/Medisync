@@ -621,3 +621,48 @@ def calculate_similarity(str1: str, str2: str) -> float:
     return similarity
 
 
+    def add_medicine(self, data: Dict) -> int:
+        """Add a new medicine to the database."""
+        with get_db_context() as db:
+            medicine = Medicine(
+                name=data['name'],
+                category=data.get('category'),
+                manufacturer=data.get('manufacturer'),
+                price=data['price'],
+                stock=data.get('stock', 0),
+                requires_prescription=data.get('requires_prescription', False),
+                description=data.get('description'),
+                indications=data.get('indications'),
+                generic_equivalent=data.get('generic_equivalent'),
+                dosage_form=data.get('dosage_form'),
+                strength=data.get('strength'),
+                active_ingredients=data.get('active_ingredients')
+            )
+            db.add(medicine)
+            db.commit()
+            db.refresh(medicine)
+            return medicine.id
+
+    def update_medicine(self, med_id: int, data: Dict) -> bool:
+        """Update an existing medicine."""
+        with get_db_context() as db:
+            medicine = db.query(Medicine).filter(Medicine.id == med_id).first()
+            if not medicine:
+                return False
+            
+            for key, value in data.items():
+                if hasattr(medicine, key):
+                    setattr(medicine, key, value)
+            
+            db.commit()
+            return True
+
+    def delete_medicine(self, med_id: int) -> bool:
+        """Delete a medicine from the database."""
+        with get_db_context() as db:
+            medicine = db.query(Medicine).filter(Medicine.id == med_id).first()
+            if not medicine:
+                return False
+            db.delete(medicine)
+            db.commit()
+            return True

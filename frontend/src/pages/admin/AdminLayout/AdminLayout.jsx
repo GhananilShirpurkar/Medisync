@@ -8,10 +8,12 @@ import { adminLogout, adminState } from '../../../state/adminStore';
 import logoImage from '../../../assets/logo.jpeg';
 import './AdminLayout.css';
 
+import { useAdminContext } from '../../../context/AdminContext';
+
 const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { searchQuery, setSearchQuery } = useAdminContext();
 
   const handleLogout = () => {
     adminLogout();

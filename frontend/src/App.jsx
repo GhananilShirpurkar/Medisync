@@ -73,6 +73,8 @@ const CustomerApp = () => {
   );
 };
 
+import { AdminProvider } from './context/AdminContext';
+
 // Main App Router
 const App = () => {
   return (
@@ -80,13 +82,19 @@ const App = () => {
       <Route path="/" element={<LandingPage />} />
       <Route path="/chat" element={<ChatInterface />} />
       <Route path="/app/*" element={<CustomerApp />} />
-      <Route path="/admin" element={<AdminRouter />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/admin/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
-      <Route path="/admin/inventory" element={<AdminLayout><Inventory /></AdminLayout>} />
-      <Route path="/admin/customers" element={<AdminLayout><Customers /></AdminLayout>} />
-      <Route path="/admin/orders" element={<AdminLayout><Orders /></AdminLayout>} />
-      <Route path="/admin/pending" element={<AdminLayout><Pending /></AdminLayout>} />
+      <Route path="/admin/*" element={
+        <AdminProvider>
+          <Routes>
+            <Route index element={<AdminRouter />} />
+            <Route path="login" element={<AdminLogin />} />
+            <Route path="dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
+            <Route path="inventory" element={<AdminLayout><Inventory /></AdminLayout>} />
+            <Route path="customers" element={<AdminLayout><Customers /></AdminLayout>} />
+            <Route path="orders" element={<AdminLayout><Orders /></AdminLayout>} />
+            <Route path="pending" element={<AdminLayout><Pending /></AdminLayout>} />
+          </Routes>
+        </AdminProvider>
+      } />
     </Routes>
   );
 };

@@ -56,14 +56,23 @@ def init_db():
     # Raw migration: add refill_confirmed if it doesn't exist (SQLite safe)
     try:
         with engine.connect() as conn:
-            conn.execute(
-                __import__("sqlalchemy").text(
-                    "ALTER TABLE refill_predictions ADD COLUMN refill_confirmed BOOLEAN DEFAULT FALSE"
-                )
-            )
+            # Refill confirmation
+            try:
+                conn.execute(__import__("sqlalchemy").text("ALTER TABLE refill_predictions ADD COLUMN refill_confirmed BOOLEAN DEFAULT FALSE"))
+            except Exception: pass
+            
+            # Symptom context unification
+            try:
+                conn.execute(__import__("sqlalchemy").text("ALTER TABLE conversation_sessions ADD COLUMN patient_symptom_duration VARCHAR(100)"))
+            except Exception: pass
+            
+            try:
+                conn.execute(__import__("sqlalchemy").text("ALTER TABLE conversation_sessions ADD COLUMN patient_symptom_severity VARCHAR(50)"))
+            except Exception: pass
+            
             conn.commit()
     except Exception:
-        pass  # Column already exists — safe to ignore
+        pass  # Safe to ignore if table doesn't exist yet
     print(f"✅ Database initialized: {DATABASE_URL}")
 
 

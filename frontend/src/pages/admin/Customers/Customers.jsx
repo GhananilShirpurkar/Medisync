@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useAdminContext } from '../../../context/AdminContext';
 
 const mockCustomers = [
   { id: 'PAT-4921', phone: '+1 (555) ***-9214', registered: 'Oct 12, 2025', orders: 14, lastVisit: 'Feb 21, 2026' },
@@ -19,11 +20,11 @@ const mockCustomers = [
 ];
 
 const Customers = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const { searchQuery } = useAdminContext();
 
   const filteredCustomers = mockCustomers.filter(customer =>
-    customer.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone.toLowerCase().includes(searchQuery.toLowerCase())
+    (customer.id?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (customer.phone?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   return (

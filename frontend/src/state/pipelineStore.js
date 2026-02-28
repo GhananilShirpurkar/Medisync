@@ -96,7 +96,10 @@ export const pipelineStore = {
         nextState.intent = payload.intent;
         nextState.entities = payload.entities || [];
         if (payload.patientContext) {
-          nextState.patientContext = payload.patientContext;
+          nextState.patientContext = {
+            ...(nextState.patientContext || {}),
+            ...payload.patientContext
+          };
         }
         if (payload.recommendations && payload.recommendations.length > 0) {
           nextState.lastRecommendations = payload.recommendations;

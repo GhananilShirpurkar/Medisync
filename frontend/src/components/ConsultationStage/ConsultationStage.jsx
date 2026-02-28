@@ -1,7 +1,7 @@
-/* eslint-disable no-unused-vars */
 import React, { useEffect, useRef } from 'react';
 import './ConsultationStage.css';
 import PulseLine from '../PulseLine/PulseLine';
+import Robo_Face from '../../assets/Robo_Face.png';
 
 const ConsultationStage = ({ 
   messages = [], 
@@ -32,7 +32,7 @@ const ConsultationStage = ({
       <div className="stage-message-list" ref={scrollRef}>
         {(!messages || messages.length === 0) ? (
           <div className="stage-idle-watermark">
-             <div className="watermark-logo">⋈</div>
+             <img src={Robo_Face} alt="MediSync AI Logo" className="watermark-logo" />
              <div className="watermark-text">How can I help you today?</div>
              <div className="watermark-sub">MediSync AI Assistant v2.0</div>
           </div>
@@ -69,16 +69,7 @@ const ConsultationStage = ({
                 )}
 
                 {textContent && (
-                  <p 
-                    className="stage-message-text"
-                    style={isAssistant ? { 
-                      fontFamily: "'Cormorant Garamond', serif", 
-                      fontSize: '20px', 
-                      fontStyle: 'italic',
-                      lineHeight: '1.4',
-                      color: 'var(--amber)' 
-                    } : {}}
-                  >
+                  <p className="stage-message-text">
                     {textContent}
                   </p>
                 )}

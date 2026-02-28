@@ -1,105 +1,97 @@
+/* ══════════════════════════════════════════════
+   CameraModal — Medical Scan Interface
+   ══════════════════════════════════════════════ */
+
 .camera-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(10, 10, 10, 0.85);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   padding: 20px;
+  animation: modalFadeIn 0.3s ease-out;
 }
 
-.camera-modal-content.neo-brutalist {
-  background: #0f0f0f;
-  border: 1px solid #333;
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.camera-modal-content {
+  background: #ffffff;
   width: 100%;
-  max-width: 500px;
+  max-width: 800px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
-  transition: max-width 0.3s ease;
+  max-height: 90vh;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .camera-modal-content.expanded {
-  max-width: 900px;
+  max-width: 1000px;
+}
+
+.camera-modal-header {
+  padding: 1.5rem 2rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.camera-modal-header h2 {
+  font-family: var(--font-machine, monospace);
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  color: #1e293b;
+  margin: 0;
+}
+
+.camera-close-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-family: var(--font-machine, monospace);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 8px;
+  transition: color 0.2s;
+}
+
+.camera-close-btn:hover {
+  color: #ef4444;
 }
 
 .camera-modal-body {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-@media (min-width: 768px) {
-  .camera-modal-content.expanded .camera-modal-body {
-    flex-direction: row;
-    align-items: flex-start;
-  }
+  overflow: hidden;
+  background: #0f172a;
 }
 
 .camera-viewfinder-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.camera-pipeline-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-left: 16px;
-  border-left: 1px dashed #333;
-}
-
-.camera-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #333;
-  padding-bottom: 12px;
-}
-
-.camera-modal-header h2 {
-  font-family: var(--font-mono, monospace);
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  margin: 0;
-  color: #eee;
-  text-transform: uppercase;
-}
-
-.camera-close-btn {
-  background: transparent;
-  border: none;
-  color: #888;
-  font-family: var(--font-mono, monospace);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-.camera-close-btn:hover {
-  color: #fff;
+  position: relative;
+  min-width: 0;
 }
 
 .camera-viewfinder {
+  flex: 1;
   position: relative;
-  width: 100%;
-  aspect-ratio: 3/4;
   background: #000;
-  border: 1px solid #333;
-  overflow: hidden;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .camera-video {
@@ -109,221 +101,193 @@
 }
 
 .camera-error {
-  color: #ff4a4a;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.9rem;
+  color: #ef4444;
   text-align: center;
-  padding: 20px;
+  padding: 2rem;
+  font-family: var(--font-human);
 }
 
-.camera-controls {
-  display: flex;
-  justify-content: center;
-  padding-top: 8px;
-}
-
-.camera-capture-btn {
-  width: 100%;
-  padding: 16px;
-  background: #eee;
-  color: #000;
-  border: none;
-  font-family: var(--font-mono, monospace);
-  font-weight: bold;
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: transform 0.1s;
-}
-
-.camera-capture-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  background: #fff;
-}
-
-.camera-capture-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.camera-capture-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.camera-post-capture-controls {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.camera-retake-btn,
-.camera-confirm-btn {
-  flex: 1;
-  padding: 16px 8px;
-  color: #000;
-  border: none;
-  font-family: var(--font-mono, monospace);
-  font-weight: bold;
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  text-transform: uppercase;
-  transition: transform 0.1s, background 0.2s;
-}
-
-.camera-retake-btn {
-  background: #333;
-  color: #fff;
-}
-
-.camera-retake-btn:hover:not(:disabled) {
-  background: #444;
-  transform: translateY(-2px);
-}
-
-.camera-confirm-btn {
-  background: #eee;
-}
-
-.camera-confirm-btn:hover:not(:disabled) {
-  background: #fff;
-  transform: translateY(-2px);
-}
-
-.camera-retake-btn:disabled,
-.camera-confirm-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Scanning Animation */
 .scanning-overlay {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 255, 0, 0.1);
+  inset: 0;
+  background: rgba(0, 102, 255, 0.1);
   pointer-events: none;
-  z-index: 10;
 }
 
 .scan-line {
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: #0f0;
-  box-shadow: 0 0 10px #0f0, 0 0 5px #0f0;
-  animation: scan 2s linear infinite;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #0066ff, transparent);
+  box-shadow: 0 0 15px #0066ff;
+  animation: scan 2.5s ease-in-out infinite;
 }
 
 @keyframes scan {
-  0% { top: 0; opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { top: 100%; opacity: 1; }
+  0% { top: 0; }
+  100% { top: 100%; }
 }
 
-/* Pipeline Styles */
+.camera-controls {
+  padding: 1.5rem;
+  background: #0f172a;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.camera-capture-btn {
+  background: #0066ff;
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-family: var(--font-machine, monospace);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(0, 102, 255, 0.3);
+}
+
+.camera-capture-btn:hover:not(:disabled) {
+  background: #0052cc;
+  transform: scale(1.05);
+}
+
+.camera-capture-btn:disabled {
+  background: #334155;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.camera-post-capture-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.camera-retake-btn {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-family: var(--font-machine, monospace);
+  cursor: pointer;
+}
+
+.camera-confirm-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  font-family: var(--font-machine, monospace);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Pipeline Section */
+.camera-pipeline-section {
+  width: 320px;
+  background: #1e293b;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 .pipeline-header {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.9rem;
-  color: #888;
+  font-family: var(--font-machine, monospace);
+  font-size: 0.75rem;
+  color: #94a3b8;
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .pipeline-steps {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 1rem;
 }
 
 .pipeline-step {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background: #151515;
-  border: 1px solid #333;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.85rem;
-  color: #aaa;
+  font-family: var(--font-human);
+  font-size: 0.875rem;
+  color: #94a3b8;
+  transition: all 0.3s;
 }
 
 .pipeline-step.active {
-  border-color: #eee;
-  color: #eee;
+  color: #0066ff;
 }
 
 .pipeline-step.done {
-  border-color: #0f0;
-  color: #0f0;
-}
-
-.pipeline-step.error {
-  border-color: #f00;
-  color: #f00;
+  color: #10b981;
 }
 
 .step-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid currentColor;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
-.step-spinner {
-  margin-left: auto;
-  animation: blink 1s infinite alternate;
-}
-
-.step-warning {
-  margin-left: auto;
-  color: #ffaa00;
-}
-
-@keyframes blink {
-  0% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
+/* Results */
 .pipeline-results {
+  margin-top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px dashed #333;
+  gap: 0.75rem;
 }
 
 .extracted-med-card {
+  background: rgba(255, 255, 255, 0.05);
   padding: 12px;
-  background: rgba(0, 255, 0, 0.05);
-  border-left: 2px solid #0f0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .med-name {
-  font-family: var(--font-human);
-  font-size: 1rem;
-  font-weight: 500;
-  color: #eee;
+  color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
 }
 
 .med-details {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
-.extracted-med-error {
-  color: #f00;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.85rem;
-  padding: 12px;
-  background: rgba(255, 0, 0, 0.05);
-  border-left: 2px solid #f00;
+/* Responsive */
+@media (max-width: 768px) {
+  .camera-modal-body {
+    flex-direction: column;
+  }
+  .camera-pipeline-section {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    height: 300px;
+  }
 }

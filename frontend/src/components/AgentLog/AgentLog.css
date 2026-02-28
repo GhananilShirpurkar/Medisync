@@ -2,14 +2,15 @@
   height: 100%;
   width: 100%;
   overflow-y: auto;
-  padding-right: 4px; /* Reduced from 8px to give more space for text */
+  padding-right: 4px;
   position: relative;
   scrollbar-width: thin;
   scrollbar-color: var(--green) transparent;
+  background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, transparent 10%);
 }
 
 .agent-log-container::-webkit-scrollbar {
-  width: 3px;
+  width: 4px;
 }
 
 .agent-log-container::-webkit-scrollbar-track {
@@ -17,65 +18,155 @@
 }
 
 .agent-log-container::-webkit-scrollbar-thumb {
-  background-color: var(--green);
-  border-radius: 0;
+  background: linear-gradient(180deg, var(--green) 0%, color-mix(in srgb, var(--green) 70%, transparent) 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--green) 50%, transparent);
 }
 
 .agent-log-track {
   display: flex;
   flex-direction: column;
-  padding-left: 6px; /* Space for the rail to align nicely */
+  padding-left: 8px;
+  position: relative;
+}
+
+/* Subtle grid background pattern */
+.agent-log-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(90deg, color-mix(in srgb, var(--divider) 30%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--divider) 30%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, transparent 0%, black 10%, black 90%, transparent 100%);
 }
 
 .agent-log-entry {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   position: relative;
-  /* Fade-in animation from 0 opacity */
-  animation: logFadeIn 400ms ease-out forwards;
+  animation: logFadeIn 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transition: transform 200ms ease, background-color 200ms ease;
+  padding: 4px 8px 4px 4px;
+  border-radius: 6px;
+  margin-left: -4px;
+}
+
+.agent-log-entry:hover {
+  background-color: color-mix(in srgb, var(--ink-2) 5%, transparent);
+  transform: translateX(2px);
 }
 
 .agent-log-entry.is-fusion {
-  margin-top: 4px; /* Extra 4px gap for fusion events to separate them */
+  margin-top: 6px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ink-faint) 10%, transparent) 0%, transparent 100%);
+  border-left: 2px solid var(--ink-faint);
 }
 
 .trace-step-enter {
-  animation: logFadeIn 150ms ease-out forwards;
+  animation: logFadeIn 150ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes logFadeIn {
   0% {
     opacity: 0;
+    transform: translateY(-8px) scale(0.98);
   }
   100% {
     opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
 .trace-initializing {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 10px;
+  padding: 12px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated background shimmer for initializing state */
+.trace-initializing::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--green) 10%, transparent), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .trace-init-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--ink-faint);
   animation: pulse-init 2s ease-in-out infinite;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--green) 60%, transparent);
+  position: relative;
+  z-index: 1;
+}
+
+.trace-init-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--green) 40%, transparent);
+  animation: ripple 2s ease-out infinite;
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
 }
 
 .trace-init-text {
   font-family: var(--font-machine);
   font-size: 10px;
   color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--green) 30%, transparent);
 }
 
 @keyframes pulse-init {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+    background: var(--ink-faint);
+  }
+  50% { 
+    opacity: 0.4; 
+    transform: scale(1.1);
+    background: var(--green);
+  }
 }
 
 .log-icon-col {
@@ -83,62 +174,109 @@
   flex-direction: column;
   align-items: center;
   position: relative;
-  width: 12px;
-  padding-top: 4px; /* Align icon with the first line of text */
+  width: 14px;
+  padding-top: 6px;
+  flex-shrink: 0;
 }
 
-/* The vertical rail connecting steps */
+/* Glowing rail effect */
 .log-rail {
   position: absolute;
-  top: 16px; /* Start below the dot */
-  bottom: -4px; /* Extend into the gap for the next element */
-  left: 5px; /* Center horizontally in the 12px col */
-  width: 1px;
-  background-color: var(--divider);
+  top: 18px;
+  bottom: -6px;
+  left: 6px;
+  width: 2px;
+  background: linear-gradient(180deg, 
+    color-mix(in srgb, var(--divider) 80%, transparent) 0%,
+    color-mix(in srgb, var(--green) 20%, transparent) 50%,
+    color-mix(in srgb, var(--divider) 80%, transparent) 100%
+  );
   z-index: 0;
+  border-radius: 1px;
+  box-shadow: 0 0 4px color-mix(in srgb, var(--green) 20%, transparent);
 }
 
 .agent-log-entry:last-child .log-rail {
-  display: none; /* No rail after the last item */
+  display: none;
 }
 
 .status-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   z-index: 1;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: white; /* to cover the rail line */
+  background-color: white;
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .status-dot.hollow-circle {
-  border: 1px solid var(--ink-ghost);
+  border: 2px solid var(--ink-ghost);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink-ghost) 50%, transparent);
+}
+
+.status-dot.hollow-circle:hover {
+  border-color: var(--green);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--green) 50%, transparent), 0 0 8px color-mix(in srgb, var(--green) 40%, transparent);
 }
 
 .status-dot.solid-amber {
-  background-color: var(--amber);
+  background: radial-gradient(circle at 30% 30%, #ffd700, var(--amber));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 60%, transparent), 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .status-dot.solid-red {
-  background-color: var(--red);
+  background: radial-gradient(circle at 30% 30%, #ff6b6b, var(--red));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--red) 60%, transparent), 0 2px 4px rgba(0,0,0,0.2);
+  animation: errorPulse 2s ease-in-out infinite;
+}
+
+@keyframes errorPulse {
+  0%, 100% { box-shadow: 0 0 12px color-mix(in srgb, var(--red) 60%, transparent); }
+  50% { box-shadow: 0 0 20px color-mix(in srgb, var(--red) 80%, transparent); }
 }
 
 .status-dot.fusion-diamond {
-  background-color: var(--ink-mute);
-  border-radius: 0;
-  transform: rotate(45deg);
+  background: linear-gradient(135deg, var(--ink-mute), color-mix(in srgb, var(--ink-mute) 70%, black));
+  border-radius: 2px;
+  transform: rotate(45deg) scale(0.8);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ink-mute) 50%, transparent);
+  border: 1px solid color-mix(in srgb, white 30%, transparent);
+}
+
+.status-dot.fusion-diamond::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid color-mix(in srgb, white 50%, transparent);
+  border-radius: 1px;
 }
 
 .status-dot.complete-check {
-  width: 12px;
-  height: 12px;
-  background-color: transparent;
-  transform: translateX(
-    -3px
-  ); /* Shift left slightly to center over the 6px dot spot */
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  transform: translateX(-3px);
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--green) 60%, transparent));
+}
+
+.status-dot.complete-check svg {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+}
+
+.status-dot.complete-check path {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: drawCheck 400ms ease-out forwards;
+}
+
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
 }
 
 .status-dot.pulse-anim {
@@ -149,14 +287,17 @@
   0% {
     opacity: 1;
     transform: scale(1);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 60%, transparent);
   }
   50% {
-    opacity: 0.5;
-    transform: scale(1.2);
+    opacity: 0.7;
+    transform: scale(1.15);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--amber) 80%, transparent);
   }
   100% {
     opacity: 1;
     transform: scale(1);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--amber) 60%, transparent);
   }
 }
 
@@ -164,7 +305,8 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
+  min-width: 0; /* Prevent flex overflow */
 }
 
 .log-header-row {
@@ -172,7 +314,8 @@
   justify-content: space-between;
   align-items: flex-start;
   line-height: 1.2;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  gap: 8px;
 }
 
 .log-agent-name {
@@ -180,7 +323,23 @@
   font-size: 9px;
   text-transform: uppercase;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Add subtle tech indicator before agent name */
+.log-agent-name::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: currentColor;
+  border-radius: 50%;
+  opacity: 0.6;
 }
 
 .log-timestamp {
@@ -188,19 +347,95 @@
   font-size: 8px;
   color: var(--ink-ghost);
   text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+  transition: opacity 200ms ease;
+}
+
+.agent-log-entry:hover .log-timestamp {
+  opacity: 1;
+  color: var(--ink-2);
 }
 
 .log-step-desc {
   font-family: var(--font-machine);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-2);
-  line-height: 1.3;
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  position: relative;
+  padding-left: 0;
+  transition: color 200ms ease;
+}
+
+.agent-log-entry:hover .log-step-desc {
+  color: color-mix(in srgb, var(--ink-2) 90%, black);
 }
 
 .agent-detail-line {
   font-family: var(--font-machine);
   font-size: 9px;
   color: var(--ink-faint);
-  margin-top: 2px;
-  padding-left: 4px;
+  margin-top: 4px;
+  padding-left: 8px;
+  position: relative;
+  line-height: 1.4;
+  opacity: 0.9;
+  transition: all 200ms ease;
+  border-left: 1px solid color-mix(in srgb, var(--ink-faint) 30%, transparent);
+}
+
+.agent-detail-line:hover {
+  opacity: 1;
+  color: var(--ink-2);
+  border-left-color: color-mix(in srgb, var(--green) 50%, transparent);
+  padding-left: 10px;
+}
+
+/* Specific styling for fusion details */
+.agent-log-entry.is-fusion .agent-detail-line {
+  color: color-mix(in srgb, var(--ink-faint) 80%, var(--green));
+  font-weight: 500;
+}
+
+/* Staggered animation delays for sequential entries */
+.agent-log-entry:nth-child(1) { animation-delay: 0ms; }
+.agent-log-entry:nth-child(2) { animation-delay: 50ms; }
+.agent-log-entry:nth-child(3) { animation-delay: 100ms; }
+.agent-log-entry:nth-child(4) { animation-delay: 150ms; }
+.agent-log-entry:nth-child(5) { animation-delay: 200ms; }
+.agent-log-entry:nth-child(n+6) { animation-delay: 250ms; }
+
+/* Print styles for clean output */
+@media print {
+  .agent-log-container {
+    overflow: visible;
+    height: auto;
+  }
+  
+  .agent-log-entry {
+    break-inside: avoid;
+    animation: none;
+  }
+  
+  .log-rail {
+    box-shadow: none;
+  }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .agent-log-entry,
+  .status-dot,
+  .trace-init-dot,
+  .trace-initializing::before {
+    animation: none;
+    transition: none;
+  }
+  
+  .status-dot.complete-check path {
+    stroke-dashoffset: 0;
+  }
 }

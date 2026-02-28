@@ -118,19 +118,37 @@ class ConversationService:
                 session.user_id = user_id
             
             if patient_context:
-                if "age" in patient_context and patient_context["age"]:
-                    session.patient_age = patient_context["age"]
+                # Merge age only if non-null
+                val_age = patient_context.get("age")
+                if val_age:
+                    session.patient_age = val_age
                 
-                if "allergies" in patient_context:
-                    session.patient_allergies = patient_context["allergies"]
+                # Merge lists instead of overwriting
+                val_allergies = patient_context.get("allergies")
+                if isinstance(val_allergies, list):
+                    current_allergies = set(session.patient_allergies or [])
+                    current_allergies.update(val_allergies)
+                    session.patient_allergies = list(current_allergies)
                 
-                if "existing_conditions" in patient_context:
-                    session.patient_conditions = patient_context["existing_conditions"]
+                val_conditions = patient_context.get("existing_conditions")
+                if isinstance(val_conditions, list):
+                    current_conditions = set(session.patient_conditions or [])
+                    current_conditions.update(val_conditions)
+                    session.patient_conditions = list(current_conditions)
                 
-                if "phone" in patient_context and patient_context["phone"]:
-                    session.whatsapp_phone = patient_context["phone"]
-                elif "whatsapp_phone" in patient_context and patient_context["whatsapp_phone"]:
-                    session.whatsapp_phone = patient_context["whatsapp_phone"]
+                # Update phone
+                val_phone = patient_context.get("phone") or patient_context.get("whatsapp_phone")
+                if val_phone:
+                    session.whatsapp_phone = val_phone
+                
+                # Update symptom details
+                val_duration = patient_context.get("symptom_duration")
+                if val_duration:
+                    session.patient_symptom_duration = val_duration
+                
+                val_severity = patient_context.get("symptom_severity")
+                if val_severity:
+                    session.patient_symptom_severity = val_severity
             
             if status:
                 session.status = status

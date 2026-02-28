@@ -152,8 +152,21 @@ class ConfirmOrderResponse(BaseModel):
 
 
 # ------------------------------------------------------------------
-# ENDPOINTS
+# HELPERS
 # ------------------------------------------------------------------
+
+def _get_merged_context(session: Dict) -> Dict:
+    """Extract unified patient context from session dict."""
+    return {
+        "age": session.get("patient_age"),
+        "allergies": session.get("patient_allergies") or [],
+        "existing_conditions": session.get("patient_conditions") or [],
+        "pid": session.get("user_id"),
+        "phone": session.get("whatsapp_phone"),
+        "name": session.get("user_id") if str(session.get("user_id", "")).startswith("PID-") else None,
+        "symptom_duration": session.get("patient_symptom_duration"),
+        "symptom_severity": session.get("patient_symptom_severity")
+    }
 
 @router.post("/create", response_model=CreateSessionResponse, status_code=status.HTTP_201_CREATED)
 async def create_session(request: CreateSessionRequest):
@@ -549,6 +562,10 @@ async def send_message(request: ConversationRequest):
             intent=intent,
             patient_context=patient_context
         )
+
+        # RE-FETCH SESSION FOR MERGED CONTEXT
+        session = conversation_service.get_session(request.session_id)
+        patient_context = _get_merged_context(session)
 
         # Trace: Context Extraction
         await trace_manager.emit(
@@ -1639,6 +1656,10 @@ async def voice_input(
             intent=intent,
             patient_context=patient_context
         )
+        
+        # RE-FETCH SESSION FOR MERGED CONTEXT
+        session = conversation_service.get_session(session_id)
+        patient_context = _get_merged_context(session)
         
         # Special handling for prescription upload - skip clarification and return immediately
         if intent == "prescription_upload":

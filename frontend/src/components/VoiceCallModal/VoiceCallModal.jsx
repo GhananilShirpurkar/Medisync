@@ -433,9 +433,9 @@ const VoiceCallModal = () => {
       recorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
         mlog.info('VoiceCall', `Recorded ${blob.size}b`);
-        // Skip tiny recordings (< 5KB = likely just noise/silence, causes hallucination)
-        if (blob.size < 5000) {
-          mlog.info('VoiceCall', `Skipping tiny recording (${blob.size}b < 5KB)`);
+        // Skip tiny recordings (< 1KB = likely just noise/silence, causes hallucination)
+        if (blob.size < 1000) {
+          mlog.info('VoiceCall', `Skipping tiny recording (${blob.size}b < 1KB)`);
           if (mountedRef.current) startListeningRef.current?.();
           return;
         }

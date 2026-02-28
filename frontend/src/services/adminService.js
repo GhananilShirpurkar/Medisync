@@ -40,4 +40,32 @@ export const adminService = {
     if (!response.ok) throw new Error(`Failed to ${status} order`);
     return response.json();
   },
+
+  addMedicine: async (data) => {
+    const response = await fetch(`${ADMIN_BASE_URL}/inventory`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to add medicine");
+    return response.json();
+  },
+
+  updateMedicine: async (id, data) => {
+    const response = await fetch(`${ADMIN_BASE_URL}/inventory/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error("Failed to update medicine");
+    return response.json();
+  },
+
+  deleteMedicine: async (id) => {
+    const response = await fetch(`${ADMIN_BASE_URL}/inventory/${id}`, {
+      method: "DELETE"
+    });
+    if (!response.ok) throw new Error("Failed to delete medicine");
+    return response.json();
+  }
 };

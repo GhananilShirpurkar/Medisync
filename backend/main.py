@@ -77,17 +77,27 @@ def startup_event():
             })
         semantic_search_service.index_medicines(med_dicts)
         logger.info(f"🧠 Indexed {len(med_dicts)} medicines for semantic search")
+    
+    # Initialize Admin Real-time Service
+    from src.services.admin_realtime_service import admin_realtime_manager
+    admin_realtime_manager.initialize()
+    logger.info("⚡ Admin Real-time Service initialized")
 
 @app.on_event("startup")
 async def prewarm_models():
     import asyncio
     from src.services.intent_classifier import get_intent_classifier
+    from src.services.speech_service import _get_whisper_model
     
     loop = asyncio.get_event_loop()
     
     # Load sentence-transformers in thread pool (blocking operation)
     await loop.run_in_executor(None, get_intent_classifier)
     logger.info("✅ Intent classifier pre-warmed and resident")
+
+    # Load Whisper model in thread pool
+    await loop.run_in_executor(None, _get_whisper_model)
+    logger.info("✅ Whisper model pre-warmed and resident")
 
 # ------------------------------------------------------------------
 # PROACTIVE INTELLIGENCE SCHEDULER

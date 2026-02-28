@@ -1,40 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { adminService } from '../../../services/adminService';
+import { useAdminRealtime } from '../../../hooks/useAdminRealtime';
 import './Dashboard.css';
 
 const Dashboard = () => {
+  const [stats, setStats] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const mockActivity = [
-    { id: 'ORD-892A', patient: 'Elena Rostova', medicine: 'Amoxicillin 500mg', status: 'COMPLETED', time: '10:42 AM' },
-    { id: 'ORD-892B', patient: 'Marcus Chen', medicine: 'Lisinopril 10mg', status: 'PENDING', time: '11:15 AM' },
-    { id: 'ORD-892C', patient: 'Sarah Jenkins', medicine: 'Metformin 850mg', status: 'COMPLETED', time: '11:30 AM' },
-    { id: 'ORD-892D', patient: 'David Okafor', medicine: 'Atorvastatin 20mg', status: 'REJECTED', time: '12:05 PM' },
-    { id: 'ORD-892E', patient: 'Priya Sharma', medicine: 'Levothyroxine 50mcg', status: 'PENDING', time: '12:45 PM' }
-  ];
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      const data = await adminService.getStats();
+      setStats(data.stats);
+      setActivity(data.recent_activity);
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const handleRealtimeEvent = useCallback((event) => {
+    console.log("Real-time event received:", event);
+    if (event.type === 'ORDER_CREATED' || event.type === 'ORDER_REJECTED') {
+      // Refresh stats and activity on new orders or status changes
+      fetchDashboardData();
+    }
+  }, [fetchDashboardData]);
+
+  const { isConnected } = useAdminRealtime(handleRealtimeEvent);
+
+  if (loading) {
+    return <div className="admin-dashboard protera-bio-theme">Loading...</div>;
+  }
 
   return (
     <div className="admin-dashboard protera-bio-theme">
+      {/* Real-time Status Indicator */}
+      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+        <span className="dot"></span> {isConnected ? 'LIVE' : 'OFFLINE'}
+      </div>
+
       <div className="protera-grid">
         <div className="protera-main-column">
           {/* Grouped Stat Cards with Bio Styling */}
           <div className="bio-stat-row">
-            <div className="bio-stat-card">
-              <div className="bio-stat-label">TOTAL ORDERS</div>
-              <div className="bio-stat-value digital-font">142</div>
-              <div className="bio-stat-footer text-green">+12% ↑</div>
-            </div>
-            <div className="bio-stat-card">
-              <div className="bio-stat-label">PENDING ORDERS</div>
-              <div className="bio-stat-value digital-font">7</div>
-              <div className="bio-stat-footer text-green">Priority ↑</div>
-            </div>
-            <div className="bio-stat-card">
-              <div className="bio-stat-label">LOW STOCK</div>
-              <div className="bio-stat-value digital-font">4</div>
-              <div className="bio-stat-footer text-green">Critical ↓</div>
-            </div>
+            {stats.map((stat, index) => (
+              <div key={index} className="bio-stat-card">
+                <div className="bio-stat-label">{stat.label}</div>
+                <div className="bio-stat-value digital-font">{stat.value}</div>
+                <div className="bio-stat-footer text-green">
+                  {stat.label === 'PENDING ORDERS' && stat.value > 0 ? 'Priority ↑' : 'Active'}
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* Order Composition Bar */}
+          {/* ... Order Composition Bar ... (kept for visual consistency) */}
           <div className="protera-composition-card">
             <div className="card-header-flex">
               <h1 className="card-title">Order Composition</h1>
@@ -86,13 +112,13 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {mockActivity.map((row) => (
+                {activity.map((row) => (
                   <tr key={row.id}>
                     <td className="font-medium text-dark">{row.id}</td>
                     <td>{row.patient}</td>
                     <td>{row.medicine}</td>
                     <td>
-                      <span className={`risk-capsule risk-${row.status === 'COMPLETED' ? 'low' : row.status === 'PENDING' ? 'med' : 'rejected'}`}>
+                      <span className={`risk-capsule risk-${row.status.toLowerCase() === 'completed' || row.status.toLowerCase() === 'fulfilled' ? 'low' : row.status.toLowerCase() === 'pending' ? 'med' : 'rejected'}`}>
                         {row.status}
                       </span>
                     </td>

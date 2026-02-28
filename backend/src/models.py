@@ -267,6 +267,8 @@ class ConversationSession(Base):
     patient_age = Column(Integer)
     patient_allergies = Column(JSON)  # List of allergies
     patient_conditions = Column(JSON)  # List of existing conditions
+    patient_symptom_duration = Column(String(100))
+    patient_symptom_severity = Column(String(50))
     
     # Session metadata
     turn_count = Column(Integer, default=0)

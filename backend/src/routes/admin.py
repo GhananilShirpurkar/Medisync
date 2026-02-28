@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from datetime import datetime, date
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel
 
 import src.db_config
 from src.db_config import get_db_context
 from src.models import Order, Medicine, Patient, OrderItem, RefillPrediction
 from src.database import Database
+from src.services.admin_realtime_service import admin_realtime_manager
 
 router = APIRouter(tags=["admin"])
 
@@ -174,6 +175,65 @@ def order_action(order_id: str, req: OrderActionRequest):
         db.commit()
         return {"status": "success", "new_status": order.status}
 
+# --- Inventory CRUD Schemas ---
+
+class MedicineSchema(BaseModel):
+    name: str
+    category: Optional[str] = None
+    manufacturer: Optional[str] = None
+    price: float
+    stock: int = 0
+    requires_prescription: bool = False
+    description: Optional[str] = None
+    indications: Optional[str] = None
+    generic_equivalent: Optional[str] = None
+    dosage_form: Optional[str] = None
+    strength: Optional[str] = None
+    active_ingredients: Optional[str] = None
+
+# --- Endpoints ---
+
+@router.post("/inventory")
+async def add_medicine_endpoint(req: MedicineSchema):
+    db_manager = Database()
+    try:
+        med_id = db_manager.add_medicine(req.model_dump())
+        # Broadcast real-time update
+        await admin_realtime_manager.broadcast({
+            "type": "STOCK_UPDATED",
+            "medicine": req.name,
+            "stock": req.stock
+        })
+        return {"status": "success", "id": med_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/inventory/{med_id}")
+async def update_medicine_endpoint(med_id: int, req: MedicineSchema):
+    db_manager = Database()
+    success = db_manager.update_medicine(med_id, req.model_dump())
+    if not success:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    
+    # Broadcast real-time update
+    await admin_realtime_manager.broadcast({
+        "type": "STOCK_UPDATED",
+        "medicine": req.name,
+        "stock": req.stock
+    })
+    return {"status": "success"}
+
+@router.delete("/inventory/{med_id}")
+async def delete_medicine_endpoint(med_id: int):
+    db_manager = Database()
+    # Need to get name for broadcast before deletion if we want to be accurate, 
+    # but STOCK_UPDATED usually triggers a full refetch in the frontend anyway.
+    success = db_manager.delete_medicine(med_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Medicine not found")
+    
+    await admin_realtime_manager.broadcast({"type": "STOCK_UPDATED"})
+    return {"status": "success"}
 
 # ------------------------------------------------------------------
 # REFILL ALERTS
@@ -246,3 +306,25 @@ async def send_refill_alert(req: SendRefillAlertRequest):
         return {"status": "sent", "user_id": req.user_id, "medicine_name": req.medicine_name}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- WebSocket ---
+
+@router.websocket("/ws")
+async def admin_websocket(websocket: WebSocket):
+    """
+    WebSocket for real-time admin dashboard updates.
+    Broadcasts new orders, status changes, and inventory alerts.
+    """
+    await admin_realtime_manager.connect(websocket)
+    try:
+        while True:
+            # Wait for any message (heartbeat/ping)
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        admin_realtime_manager.disconnect(websocket)
+    except Exception as e:
+        print(f"Admin WebSocket error: {e}")
+        admin_realtime_manager.disconnect(websocket)
