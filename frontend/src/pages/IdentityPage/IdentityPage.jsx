@@ -1,16 +1,20 @@
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { pipelineStore } from '../../state/pipelineStore';
-import { runIdentityFlowAPI } from '../../data/apiFlows';
+import { runIdentityFlowAPI, sendOTPAPI, verifyOTPAPI } from '../../data/apiFlows';
 import './IdentityPage.css';
 
 const IdentityPage = () => {
+  const [step, setStep] = useState('phone'); // 'phone' or 'otp'
   const [phoneValue, setPhoneValue] = useState('');
+  const [otpValue, setOtpValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
   const fileInputRef = useRef(null);
+
+  const cleanPhone = (val) => val.replace(/\D/g, '').slice(-10);
 
   const handlePhoneSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -27,26 +31,47 @@ const IdentityPage = () => {
       return;
     }
 
-    // Clean input: remove all non-digits
     const digits = phoneValue.replace(/\D/g, '');
-    
-    // Support 10+ digits (handle country code such as +91)
     if (digits.length >= 10) {
-      const cleanPhone = digits.slice(-10); // Take last 10 digits
+      const phone = cleanPhone(digits);
       setIsLoading(true);
-      console.log(`[IdentityFlow] Attempting resolution for: ${cleanPhone}`);
       try {
-        await runIdentityFlowAPI(cleanPhone);
-        // Successful API call will dispatch identity_resolved
-        // which triggers navigation in the central store.
+        await sendOTPAPI(phone);
+        toast.success("Verification code sent to WhatsApp!");
+        setStep('otp');
+        setIsLoading(false);
       } catch (err) {
-        console.error("[IdentityFlow] API Error:", err);
-        toast.error("Network Error: Backend unreachable (localhost:8000)");
+        console.error("[IdentityFlow] OTP Send Error:", err);
+        toast.error("Failed to send verification code. Check WhatsApp Sandbox session.");
         setIsLoading(false);
         triggerError();
       }
     } else {
-      console.warn(`[IdentityFlow] Invalid length: ${digits.length}`);
+      triggerError();
+    }
+  };
+
+  const handleOTPSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (isLoading) return;
+
+    if (otpValue.length === 4) {
+      setIsLoading(true);
+      const phone = cleanPhone(phoneValue);
+      try {
+        await verifyOTPAPI(phone, otpValue);
+        toast.success("Identity verified!");
+        
+        // Final resolution
+        await runIdentityFlowAPI(phone);
+      } catch (err) {
+        console.error("[IdentityFlow] OTP Verify Error:", err);
+        toast.error(err.message || "Invalid or expired code.");
+        setIsLoading(false);
+        setOtpValue('');
+        triggerError();
+      }
+    } else {
       triggerError();
     }
   };
@@ -58,29 +83,24 @@ const IdentityPage = () => {
 
   const handleFileUpload = (e) => {
     if (e.target.files?.length > 0) {
-      // Direct transition to Theatre as per spec
       pipelineStore.dispatch('prescription_uploaded', {});
-      // In a real app, we'd upload here. 
-      // demoFlows.js or similar would be triggered by this state change.
     }
   };
 
   return (
-    <div className="identity-container">
-      {/* Fix 3: MediSync Wordmark */}
+    <div className={`identity-container ${step === 'otp' ? 'modal-open' : ''}`}>
       <div className="identity-wordmark">MEDISYNC</div>
 
-      <div className="identity-content">
+      <div className={`identity-content ${step === 'otp' ? 'blurred-bg' : ''}`}>
         <h1 className="identity-prompt">
           What brings you in today?
         </h1>
         
         <div className="identity-input-area">
-          {isLoading ? (
-            <div className="identity-status">Initializing secure session...</div>
+          {isLoading && step === 'phone' ? (
+            <div className="identity-status">Sending code...</div>
           ) : (
             <form onSubmit={handlePhoneSubmit} className="identity-form">
-              {/* Fix 1: Minimal Line Input */}
               <div className={`input-line-wrapper ${isFocused ? 'focused' : ''} ${isError ? 'error-flash' : ''}`}>
                 <input 
                   type="text"
@@ -91,15 +111,14 @@ const IdentityPage = () => {
                   onBlur={() => setIsFocused(false)}
                   placeholder="Enter your phone number..."
                   autoComplete="off"
+                  disabled={step === 'otp'}
                 />
-                {/* Hidden submit to ensure Enter always triggers onSubmit */}
                 <button type="submit" style={{ display: 'none' }} />
               </div>
             </form>
           )}
         </div>
 
-        {/* Fix 2: Static Mode Labels */}
         <div className="identity-labels">
           <span className="identity-label">ENTER PHONE NUMBER</span>
           <span className="identity-label upload-trigger" onClick={() => fileInputRef.current.click()}>
@@ -114,8 +133,51 @@ const IdentityPage = () => {
           />
         </div>
       </div>
+
+      {step === 'otp' && (
+        <div className="otp-modal-overlay">
+          <div className="otp-modal-content">
+            <h2 className="otp-modal-title">Verification</h2>
+            <p className="otp-modal-desc">
+              We've sent a 4-digit code to <br/>
+              <strong>{phoneValue}</strong> via WhatsApp.
+            </p>
+            
+            <form onSubmit={handleOTPSubmit} className="identity-form">
+              <div className={`input-line-wrapper focused ${isError ? 'error-flash' : ''}`}>
+                <input 
+                  type="text"
+                  className="identity-input-line"
+                  value={otpValue}
+                  onChange={(e) => setOtpValue(e.target.value)}
+                  placeholder="Code"
+                  autoComplete="off"
+                  maxLength={4}
+                  autoFocus
+                />
+                <button type="submit" style={{ display: 'none' }} />
+              </div>
+              
+              <div className="otp-modal-actions">
+                {isLoading ? (
+                  <div className="identity-status">Verifying...</div>
+                ) : (
+                  <>
+                    <button type="submit" className="otp-confirm-btn">Confirm</button>
+                    <div className="otp-hint" onClick={() => setStep('phone')}>
+                      ← Back
+                    </div>
+                  </>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+
 export default IdentityPage;
+

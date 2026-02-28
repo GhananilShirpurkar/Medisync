@@ -26,6 +26,7 @@ from src.graph import agent_graph
 from src.agents.fulfillment_agent import format_order_confirmation, fulfillment_agent
 from src.services.confirmation_store import confirmation_store
 from src.errors import ConfirmationRequiredError
+from src.agents.risk_scoring_agent import run_risk_scoring_agent
 
 # FIX BUG 1: Initialize logger
 logger = logging.getLogger(__name__)
@@ -41,6 +42,11 @@ from src.agents.identity_agent import IdentityAgent
 identity_agent = IdentityAgent()
 
 from src.services.observability_service import observe, langfuse_context
+from src.services.whatsapp_service import whatsapp_service
+
+# Temporary in-memory store for demo OTPs
+otp_store = {} # {phone: {"code": str, "expires": datetime}}
+
 
 
 # ------------------------------------------------------------------
@@ -151,11 +157,66 @@ class ConfirmOrderResponse(BaseModel):
     requires_pharmacist_override: bool = False
 
 
+class OTPSendRequest(BaseModel):
+    phone: str
+
+class OTPVerifyRequest(BaseModel):
+    phone: str
+    code: str
+
+
+
 # ------------------------------------------------------------------
 # HELPERS
 # ------------------------------------------------------------------
 
+@router.post("/auth/otp/send")
+async def send_otp(request: OTPSendRequest):
+    """Generate and send a 4-digit OTP via WhatsApp."""
+    import random
+    from datetime import timedelta
+    
+    # Generate 4-digit code
+    code = f"{random.randint(1000, 9999)}"
+    
+    # Store with 5-minute expiry
+    otp_store[request.phone] = {
+        "code": code,
+        "expires": datetime.now() + timedelta(minutes=5)
+    }
+    
+    # Send via WhatsApp
+    message = f"🔐 *MediSync Verification*\n\nYour secure access code is: *{code}*\n\nThis code expires in 5 minutes. Please do not share it with anyone."
+    result = whatsapp_service.send_message(request.phone, message)
+    
+    if not result.get("success"):
+        logger.error(f"Failed to send OTP to {request.phone}: {result.get('error')}")
+        # For demo purposes, we log the code even if WhatsApp fails
+        print(f"DEBUG OTP for {request.phone}: {code}")
+    
+    return {"success": True, "message": "OTP sent via WhatsApp"}
+
+@router.post("/auth/otp/verify")
+async def verify_otp(request: OTPVerifyRequest):
+    """Verify the 4-digit OTP."""
+    entry = otp_store.get(request.phone)
+    
+    if not entry:
+        raise HTTPException(status_code=400, detail="No OTP found for this number")
+        
+    if datetime.now() > entry["expires"]:
+        del otp_store[request.phone]
+        raise HTTPException(status_code=400, detail="OTP has expired")
+        
+    if request.code != entry["code"]:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
+        
+    # Success
+    del otp_store[request.phone]
+    return {"success": True, "message": "OTP verified successfully"}
+
 def _get_merged_context(session: Dict) -> Dict:
+
     """Extract unified patient context from session dict."""
     return {
         "age": session.get("patient_age"),
@@ -813,6 +874,10 @@ Red Flags Detected:
                     intent=intent,
                     extracted_items=order_items
                 )
+                
+                # Run Risk Scoring
+                state = run_risk_scoring_agent(state)
+                
                 state.trace_metadata["front_desk"] = {"patient_context": patient_context}
 
                 # -- Build replacement context summary (Block 3→4 injection) --
@@ -1111,6 +1176,10 @@ Red Flags Detected:
                         intent=intent,
                         extracted_items=order_items
                     )
+                    
+                    # Run Risk Scoring
+                    state = run_risk_scoring_agent(state)
+                    
                     state.trace_metadata["front_desk"] = {"patient_context": patient_context}
 
                     # Build confirmation message (look up price from DB)
@@ -1324,6 +1393,37 @@ Red Flags Detected:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Conversation error: {str(e)}"
         )
+
+
+# ------------------------------------------------------------------
+# ADMIN RISK ENDPOINTS
+# ------------------------------------------------------------------
+
+@router.get("/admin/risk-summary")
+async def get_risk_summary():
+    """
+    Get summary of patient risk profiles for admin dashboard.
+    """
+    from src.db_config import get_db_context
+    from src.models import Patient
+    
+    with get_db_context() as db:
+        patients = db.query(Patient).filter(Patient.risk_score > 0).all()
+        
+        summary = []
+        for p in patients:
+            summary.append({
+                "pid": p.user_id,
+                "risk_score": p.risk_score,
+                "risk_level": p.risk_level,
+                "risk_flags": p.risk_flags,
+                "updated_at": p.risk_updated_at.isoformat() if p.risk_updated_at else None,
+                "flagged": p.flagged_for_review
+            })
+            
+        # Sort by score descending
+        summary.sort(key=lambda x: x["risk_score"], reverse=True)
+        return summary
 
 
 # ------------------------------------------------------------------

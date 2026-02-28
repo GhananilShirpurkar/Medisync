@@ -19,7 +19,10 @@ from src.models import Base
 # ------------------------------------------------------------------
 # DATABASE URL
 # ------------------------------------------------------------------
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hackfusion.db")
+# Force path to be relative to the backend directory where this file lives
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "hackfusion.db")
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
 
 # SQLite-specific settings
 connect_args = {}

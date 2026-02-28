@@ -105,15 +105,18 @@ const SummaryPage = () => {
         shelfCards, 
         orderSummary, 
         notificationSent,
-        phone 
+        phone,
+        lastUserMessage,
+        lastRecommendations
     } = pipelineState;
 
     // --- DATA PROCESSING (V3) ---
 
-    const complaint = messages.find(m => m.sender === 'user')?.content || '"paracetamol"';
+    const complaint = lastUserMessage ? `"${lastUserMessage}"` : '"Awaiting input..."';
     const triage = shelfCards.triage || {};
     const validationStatus = triage.details?.decision || 'approved';
     const safetyIssue = triage.details?.safety_issues?.[0] || triage.safety_issues?.[0];
+
 
     const processedTraceSteps = useMemo(() => {
         // Step 1 — deduplicate: one entry per unique agent, keep final completed event

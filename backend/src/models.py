@@ -145,6 +145,13 @@ class Patient(Base):
     last_order_date = Column(DateTime)
     last_visit = Column(DateTime, default=datetime.utcnow)  # Track engagement
     
+    # NEW: Behavioral Risk Tracking
+    risk_score = Column(Integer, default=0)           # 0-100 cumulative risk
+    risk_level = Column(String(20), default="normal") # normal | elevated | high | critical
+    risk_flags = Column(JSON, default=list)           # List of triggered risk factors
+    risk_updated_at = Column(DateTime, default=datetime.utcnow)
+    flagged_for_review = Column(Boolean, default=False)
+    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

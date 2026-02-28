@@ -9,9 +9,9 @@ BACKEND_DIR="$PROJECT_ROOT/backend"
 VENV_PATH="$BACKEND_DIR/.venv"
 FRONTEND_DIR="$PROJECT_ROOT/frontend"
 
-# ── FIXED: dynamically generate subdomain to avoid localtunnel server locks ──
-RANDOM_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
-SUBDOMAIN="medisync-koanoir-$RANDOM_SUFFIX"
+# ── FIXED: use persistent subdomain for Twilio Sandbox stability ──
+SUBDOMAIN="medisync-koanoir"
+
 
 # Colors for output
 GREEN='\033[0;32m'

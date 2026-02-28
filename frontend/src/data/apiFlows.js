@@ -77,7 +77,28 @@ const initWebSocket = (sessionId) => {
   };
 };
 
+export const sendOTPAPI = async (phone) => {
+  const res = await fetch('http://localhost:8000/api/conversation/auth/otp/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone })
+  });
+  if (!res.ok) throw new Error('Failed to send OTP');
+  return await res.json();
+};
+
+export const verifyOTPAPI = async (phone, code) => {
+  const res = await fetch('http://localhost:8000/api/conversation/auth/otp/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone, code })
+  });
+  if (!res.ok) throw new Error('Invalid or expired OTP');
+  return await res.json();
+};
+
 export const runIdentityFlowAPI = async (phoneNumber) => {
+
   try {
     pipelineStore.dispatch('TRACE_APPEND', { 
       agent: 'GATEWAY', 
@@ -257,13 +278,14 @@ export const runConsultationFlowAPI = async (userMessage) => {
 
     // FIX 3: Trigger CHECKOUT_READY after YES confirmation
     if (data.order_id || (data.next_step === 'order_complete' && data.message?.includes('Order'))) {
+      const currentState = pipelineStore.get();
       pipelineStore.dispatch('CHECKOUT_READY', {
         orderSummary: {
-          pid: pipelineStore.get().pid,
+          pid: currentState.pid,
           orderId: data.order_id || `ORD-${Date.now()}`,
-          complaint: pipelineStore.get().lastUserMessage || '',
+          complaint: currentState.lastUserMessage || '',
           validation: { status: 'Approved', severity: 0 },
-          items: (pipelineStore.get().lastRecommendations || []).map(r => ({
+          items: (currentState.lastRecommendations || []).map(r => ({
             name: r.medicine_name || r.name,
             stockStatus: (r.in_stock || r.stock > 0 || r.available) ? 'In Stock' : 'Out of Stock',
             price: r.price || 0,
@@ -271,10 +293,11 @@ export const runConsultationFlowAPI = async (userMessage) => {
             substitute: null
           })),
           substitutions: [],
-          totalPrice: (pipelineStore.get().lastRecommendations || []).reduce((sum, r) => sum + (r.price || 0), 0)
+          totalPrice: (currentState.lastRecommendations || []).reduce((sum, r) => sum + (r.price || 0), 0)
         }
       });
     }
+
 
   } catch (error) {
     console.error("Failed consultation flow", error);

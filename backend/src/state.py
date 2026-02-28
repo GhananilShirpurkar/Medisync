@@ -77,6 +77,12 @@ class PharmacyState(BaseModel):
     pharmacist_decision: Optional[str] = None  # approved | rejected | needs_review
     safety_issues: List[str] = Field(default_factory=list)
     
+    # NEW: Behavioral Risk Scoring
+    risk_score: int = 0
+    risk_level: str = "normal"          # normal | elevated | high | critical
+    risk_factors_triggered: List[str] = Field(default_factory=list)
+    risk_escalated: bool = False        # True if this request triggered escalation
+    
     # NEW: Multi-turn clinical context accumulator
     clinical_context: ClinicalContext = Field(default_factory=ClinicalContext)
     turn_count: int = 0

@@ -22,6 +22,15 @@ def set_whatsapp_webhook(url: str):
     try:
         client = Client(sid, token)
         
+        # Sandbox Check: Standard IncomingPhoneNumbers API cannot update Sandbox webhooks
+        if raw_number == "+14155238886":
+            print(f"ℹ️  Detected Twilio Sandbox number ({raw_number})")
+            print(f"⚠️  Sandbox webhooks MUST be set manually in the Twilio Console.")
+            print(f"Please go to: https://console.twilio.com/us1/develop/sms/settings/whatsapp-sandbox")
+            print(f"Set 'When a message comes in' to:")
+            print(f"👉 {url}")
+            return
+
         # Find the incoming phone number SID
         numbers = client.incoming_phone_numbers.list(phone_number=raw_number)
         

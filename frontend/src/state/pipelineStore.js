@@ -15,10 +15,12 @@ let state = {
   orderSummary: null,
   sessionSettled: false,
   telegramSent: false,
-  isCameraOpen: false,
   isVoiceCallOpen: false,
   isVoiceResponseEnabled: false,
+  lastUserMessage: null,      // Added for SummaryPage persistence
+  lastRecommendations: [],    // Added for SummaryPage persistence
 };
+
 
 const listeners = new Set();
 
@@ -63,7 +65,10 @@ export const pipelineStore = {
           isVoiceCallOpen: false,
           // Preserve voice preference across sessions
           isVoiceResponseEnabled: state.isVoiceResponseEnabled,
+          lastUserMessage: null,
+          lastRecommendations: [],
         };
+
         break;
 
       case 'SET_SESSION_ID':
@@ -106,6 +111,8 @@ export const pipelineStore = {
         }
         nextState.currentPage = 'THEATRE';
         break;
+
+
 
       case 'CHECKOUT_READY':
         nextState.checkoutReady = true;
@@ -153,10 +160,13 @@ export const pipelineStore = {
       case 'USER_MESSAGE_SENT':
         if (typeof payload === 'object' && payload !== null) {
           nextState.messages = [...nextState.messages, { sender: 'user', ...payload }];
+          nextState.lastUserMessage = payload.text || payload.message || '';
         } else {
           nextState.messages = [...nextState.messages, { sender: 'user', text: payload }];
+          nextState.lastUserMessage = payload;
         }
         break;
+
 
       case 'AI_RESPONSE_RECEIVED':
         nextState.messages = [...nextState.messages, { 

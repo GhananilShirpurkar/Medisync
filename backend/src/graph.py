@@ -25,6 +25,7 @@ from langgraph.graph import StateGraph, END
 
 from src.state import PharmacyState
 from src.agents.medical_validator_agent import medical_validation_agent
+from src.agents.risk_scoring_agent import run_risk_scoring_agent
 from src.agents.inventory_and_rules_agent import inventory_agent
 from src.agents.fulfillment_agent import fulfillment_agent
 from src.events.event_bus import get_event_bus
@@ -35,12 +36,12 @@ from src.events.handlers.notification_handler import register_notification_handl
 # ------------------------------------------------------------------
 # ROUTING LOGIC
 # ------------------------------------------------------------------
-def route_after_validation(state: PharmacyState) -> Literal["inventory", "end"]:
+def route_after_validation(state: PharmacyState) -> Literal["risk_scoring", "end"]:
     """
     Decide next step based on medical validation decision.
     
     - rejected: Emit rejection event and stop (safety concern)
-    - approved/needs_review: Continue to inventory check
+    - continue to risk assessment
     """
     if state.pharmacist_decision == "rejected":
         # Emit rejection event
@@ -49,6 +50,23 @@ def route_after_validation(state: PharmacyState) -> Literal["inventory", "end"]:
             user_id=state.user_id or "anonymous",
             reason="prescription_rejected",
             details={"safety_flags": state.safety_flags}
+        )
+        event_bus.publish(event)
+        return "end"
+    return "risk_scoring"
+
+
+def route_after_risk_scoring(state: PharmacyState) -> Literal["inventory", "end"]:
+    """
+    Decide next step based on risk level.
+    """
+    if state.risk_level == "critical":
+        # Order already blocked by risk_scoring_agent (pharmacist_decision=rejected)
+        event_bus = get_event_bus()
+        event = OrderRejectedEvent(
+            user_id=state.user_id or "anonymous",
+            reason="critical_risk_blocked",
+            details={"risk_score": state.risk_score, "factors": state.risk_factors_triggered}
         )
         event_bus.publish(event)
         return "end"
@@ -96,16 +114,27 @@ def build_graph():
 
     # --- Nodes ---
     graph.add_node("medical_validation", medical_validation_agent)
+    graph.add_node("risk_scoring", run_risk_scoring_agent)
     graph.add_node("inventory", inventory_agent)
     graph.add_node("fulfillment", fulfillment_agent)
 
     # --- Edges ---
     graph.set_entry_point("medical_validation")
 
-    # Medical Validation → Inventory (if approved/needs_review) or END (if rejected)
+    # Medical Validation → Risk Scoring (if approved/needs_review) or END (if rejected)
     graph.add_conditional_edges(
         "medical_validation",
         route_after_validation,
+        {
+            "risk_scoring": "risk_scoring",
+            "end": END,
+        },
+    )
+
+    # Risk Scoring → Inventory (if not critical) or END (if critical)
+    graph.add_conditional_edges(
+        "risk_scoring",
+        route_after_risk_scoring,
         {
             "inventory": "inventory",
             "end": END,
