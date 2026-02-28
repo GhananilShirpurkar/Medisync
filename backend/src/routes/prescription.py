@@ -87,12 +87,34 @@ async def upload_prescription(
         # Determine status
         extraction_status = "success" if result["extraction"]["success"] else "failed"
         
-        # Build response
+        # Base medicines from extraction
+        extracted_medicines = result["extraction"].get("data", {}).get("medicines", []) if result["extraction"]["success"] else []
+        
+        # Enrich medicines with inventory data for the frontend
+        inventory_items = {
+            item["medicine"].lower(): item 
+            for item in result.get("inventory", {}).get("items", [])
+        }
+        
+        enriched_medicines = []
+        for med in extracted_medicines:
+            name = med.get("name", "").lower()
+            inv = inventory_items.get(name, {})
+            
+            enriched_med = {
+                **med,
+                "available": inv.get("available", False),
+                "price": inv.get("price", 0),
+                "substitute": inv.get("substitute")
+            }
+            enriched_medicines.append(enriched_med)
+            
+        # Build final response object
         response_data = {
             "session_id": session_id,
             "extraction_status": extraction_status,
             "patient_info": result["extraction"].get("data", {}) if result["extraction"]["success"] else None,
-            "medicines": result["extraction"].get("data", {}).get("medicines", []) if result["extraction"]["success"] else [],
+            "medicines": enriched_medicines,
             "validation_results": result.get("validation"),
             "inventory_check": result.get("inventory"),
             "message": _generate_response_message(result)

@@ -1077,11 +1077,16 @@ Red Flags Detected:
                         "Reply *YES* to confirm or *NO* to cancel."
                     )
 
-                    # Persist pending state and set awaiting flag
-                    _confirmation_store[request.session_id] = {
-                        'awaiting_confirmation': True,
-                        'pending_pharmacy_state': state.dict()
-                    }
+                    # Open the confirmation gate with idempotency token
+                    state.conversation_phase = "awaiting_confirmation"
+                    token = confirmation_store.create(
+                        session_id=request.session_id,
+                        state_dict=state.model_dump(),
+                    )
+                    state.confirmation_token = token
+                    conversation_service.transition_phase(
+                        request.session_id, "awaiting_confirmation"
+                    )
                     response_message = confirmation_message
                     conversation_service.add_message(
                         session_id=request.session_id,

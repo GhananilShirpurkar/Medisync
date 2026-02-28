@@ -11,6 +11,7 @@ import logging
 
 from src.database import Database
 from src.errors import ValidationError
+from src.agents.replacement_models import ReplacementResponse
 
 logger = logging.getLogger(__name__)
 
@@ -73,27 +74,10 @@ class InventoryService:
             medicine = self.db.get_medicine(medicine_name)
             
             if not medicine or medicine["stock"] < quantity:
-                from src.services.semantic_search_service import semantic_search_service
+                from src.agents.inventory_and_rules_agent import find_equivalent_replacement
                 
-                # Use semantic search to find suitable in-stock alternatives
-                search_results = semantic_search_service.search(medicine_name, top_k=5, threshold=0.65)
-                alternatives = []
-                for alt_name, score in search_results:
-                    # Don't recommend the exact same out-of-stock medicine
-                    if alt_name.lower() == medicine_name.lower():
-                        continue
-                        
-                    alt_med = self.db.get_medicine(alt_name)
-                    if alt_med and alt_med.get("stock", 0) > 0:
-                        alternatives.append({
-                            "name": alt_med["name"],
-                            "price": alt_med["price"],
-                            "stock": alt_med["stock"],
-                            "compatibility_score": round(score * 100)
-                        })
-                
-                # Sort alternatives by stock & price
-                alternatives.sort(key=lambda x: (-x["stock"], x["price"]))
+                # Use the strict replacement engine with safety gates
+                replacement = find_equivalent_replacement(medicine_name, self.db)
                 
                 result_item = {
                     "medicine": medicine_name,
@@ -101,12 +85,13 @@ class InventoryService:
                     "reason": "not_found" if not medicine else "insufficient_stock",
                     "stock": medicine["stock"] if medicine else 0,
                     "requested": quantity,
-                    "alternatives": alternatives
+                    "substitute": replacement.suggested if replacement.replacement_found else None,
+                    "substitute_confidence": replacement.confidence if replacement.replacement_found else None,
+                    "substitute_reasoning": replacement.reasoning if replacement.replacement_found else None
                 }
                 
-                if not alternatives:
-                    # Specific requirement for no alternatives found message
-                    result_item["message"] = "No therapeutically equivalent alternative found in current inventory."
+                if not replacement.replacement_found:
+                    result_item["message"] = replacement.reasoning
                     
                 results.append(result_item)
             else:
