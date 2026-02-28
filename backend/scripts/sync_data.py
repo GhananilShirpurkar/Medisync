@@ -95,12 +95,19 @@ def sync_symptoms(symptoms_path):
         print(f"  ❌ File not found: {symptoms_path}")
         return False
     
-    # The symptoms.xlsx has Row 0 as empty, Row 1 as headers
-    df = pd.read_excel(symptoms_path, header=None)
-    # Row 1 is where headers actually are
-    df.columns = [str(c).strip() for c in df.iloc[1]]
-    # Rest is data (Row 2 onwards)
-    df = df[2:].reset_index(drop=True)
+    # Detect if this is the large_diversified format (header at row 0) or old format (header at row 1)
+    df_preview = pd.read_excel(symptoms_path, header=None, nrows=2)
+    is_diversified = "Symptom" in df_preview.iloc[0].values
+    
+    if is_diversified:
+        df = pd.read_excel(symptoms_path)
+    else:
+        # The old symptoms.xlsx has Row 0 as empty, Row 1 as headers
+        df = pd.read_excel(symptoms_path, header=None)
+        # Row 1 is where headers actually are
+        df.columns = [str(c).strip() for c in df.iloc[1]]
+        # Rest is data (Row 2 onwards)
+        df = df[2:].reset_index(drop=True)
     
     # Pre-process: Drop exact duplicates
     initial_count = len(df)
@@ -164,8 +171,15 @@ def main():
     # Paths
     base_dir = Path(__file__).parent.parent.parent
     new_data_dir = base_dir / "new data"
-    medicines_path = new_data_dir / "medicines.xlsx"
-    symptoms_path = new_data_dir / "symptoms.xlsx"
+    
+    # Prioritize large diversified files if they exist
+    medicines_path = new_data_dir / "medicines_large_diversified.xlsx"
+    if not medicines_path.exists():
+        medicines_path = new_data_dir / "medicines.xlsx"
+        
+    symptoms_path = new_data_dir / "symptoms_large_diversified.xlsx"
+    if not symptoms_path.exists():
+        symptoms_path = new_data_dir / "symptoms.xlsx"
     
     # Initialize DB (create tables if missing)
     init_db()
