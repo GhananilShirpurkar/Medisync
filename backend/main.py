@@ -140,6 +140,10 @@ app.include_router(stream_router)  # /ws/* handled internally
 from src.routes.notifications import router as notifications_router
 app.include_router(notifications_router, prefix="/api")
 
+# Import payment router
+from src.routes.payment import router as payment_router
+app.include_router(payment_router, prefix="/api/payment")
+
 # Import WhatsApp Webhook router
 from whatsapp_bot import router as whatsapp_bot_router
 app.include_router(whatsapp_bot_router, prefix="/api")

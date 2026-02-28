@@ -84,8 +84,14 @@ class InventoryService:
                     "available": False,
                     "reason": "not_found" if not medicine else "insufficient_stock",
                     "stock": medicine["stock"] if medicine else 0,
+                    "price": medicine["price"] if medicine else 0.0,
                     "requested": quantity,
-                    "substitute": replacement.suggested if replacement.replacement_found else None,
+                    "substitute": {
+                        "name": replacement.suggested,
+                        "price": replacement.suggested_price,
+                        "confidence": replacement.confidence,
+                        "reasoning": replacement.reasoning
+                    } if replacement.replacement_found else None,
                     "substitute_confidence": replacement.confidence if replacement.replacement_found else None,
                     "substitute_reasoning": replacement.reasoning if replacement.replacement_found else None
                 }

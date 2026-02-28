@@ -385,6 +385,7 @@ def find_equivalent_replacement(
             replacement_found=True,
             original=medicine_name,
             suggested=best_candidate.name,
+            suggested_price=cand_price,
             confidence=best_confidence,
             reasoning=best_reasoning,
             price_difference_percent=round(price_diff_pct, 2),

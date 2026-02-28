@@ -106,6 +106,15 @@ class PharmacyState(BaseModel):
     notifications_sent: bool = False
 
     # --------------------------------------------------------
+    # Payment & Notification Integration (Block 5)
+    # --------------------------------------------------------
+    payment_id: Optional[str] = None
+    payment_status: Optional[str] = "pending" # pending | success | failed
+    qr_code_data: Optional[str] = None
+    payment_transaction_id: Optional[str] = None
+    notification_sent_at: Optional[str] = None
+
+    # --------------------------------------------------------
     # Meta / Debug / Tracing
     # --------------------------------------------------------
     trace_metadata: Dict[str, Any] = Field(default_factory=dict)

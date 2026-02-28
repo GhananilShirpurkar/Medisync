@@ -233,20 +233,20 @@ const TheatrePage = () => {
                    </div>
                  )}
 
-                 {isOutOfStock && item.substitute && !requiresConsultation && (
-                   <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(102, 126, 234, 0.1)', borderLeft: '2px solid var(--indigo)', fontSize: '12px' }}>
-                     <div style={{ color: 'var(--indigo)', fontFamily: 'var(--font-machine)', fontSize: '11px', marginBottom: '4px' }}>⇄ SUBSTITUTE SUGGESTED</div>
-                     <div style={{ color: 'var(--ink-1)' }}>{item.substitute.name} (₹{item.substitute.price})</div>
-                     <div style={{ color: 'var(--ink-mute)', marginTop: '4px' }}>Awaiting user confirmation in chat...</div>
-                   </div>
-                 )}
+                  {isOutOfStock && item.substitute && item.substitute.name && !requiresConsultation && (
+                    <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(102, 126, 234, 0.1)', borderLeft: '2px solid var(--indigo)', fontSize: '12px' }}>
+                      <div style={{ color: 'var(--indigo)', fontFamily: 'var(--font-machine)', fontSize: '11px', marginBottom: '4px' }}>⇄ SUBSTITUTE SUGGESTED</div>
+                      <div style={{ color: 'var(--ink-1)' }}>{item.substitute.name} (₹{item.substitute.price})</div>
+                      <div style={{ color: 'var(--ink-mute)', marginTop: '4px' }}>{item.substitute_reasoning || 'Awaiting user confirmation in chat...'}</div>
+                    </div>
+                  )}
 
-                 {requiresConsultation && (
-                   <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 82, 82, 0.1)', borderLeft: '2px solid var(--red)', color: 'var(--red)', fontSize: '12px' }}>
-                     <strong>⛔ UNAVAILABLE</strong>
-                     <p style={{ margin: '4px 0 0 0' }}>Primary and substitutes unavailable or unsafe. Doctor consultation required.</p>
-                   </div>
-                 )}
+                  {requiresConsultation && (
+                    <div style={{ marginTop: '12px', padding: '8px', background: 'rgba(255, 82, 82, 0.1)', borderLeft: '2px solid var(--red)', color: 'var(--red)', fontSize: '12px' }}>
+                      <strong>⛔ UNAVAILABLE</strong>
+                      <p style={{ margin: '4px 0 0 0' }}>{item.message || item.substitute_reasoning || 'Primary and substitutes unavailable or unsafe. Doctor consultation required.'}</p>
+                    </div>
+                  )}
                </div>
             );
           })

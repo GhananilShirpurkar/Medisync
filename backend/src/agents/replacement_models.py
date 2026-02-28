@@ -41,6 +41,7 @@ class ReplacementResponse(BaseModel):
     replacement_found: bool
     original: str
     suggested: Optional[str] = None
+    suggested_price: float = 0.0
     confidence: Literal["high", "medium", "low"] = "low"
     reasoning: str = ""
     price_difference_percent: float = 0.0

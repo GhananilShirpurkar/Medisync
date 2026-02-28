@@ -222,6 +222,42 @@ class ConversationSession(Base):
     messages = relationship("ConversationMessage", back_populates="session", cascade="all, delete-orphan")
 
 
+class Payment(Base):
+    """Payment records."""
+    __tablename__ = "payments"
+    
+    id = Column(String(100), primary_key=True, index=True) # UUID
+    order_id = Column(String(50), ForeignKey("orders.order_id"), nullable=False)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(3), default="INR")
+    status = Column(String(20), default="pending") # pending, success, failed
+    method = Column(String(50)) # mock_upi_qr
+    transaction_id = Column(String(100))
+    qr_code_data = Column(Text) # Base64 Data URI
+    paid_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    order = relationship("Order", backref="payments")
+
+
+class Notification(Base):
+    """Audit log for sent notifications."""
+    __tablename__ = "notifications"
+    
+    id = Column(String(100), primary_key=True, index=True) # UUID
+    payment_id = Column(String(100), ForeignKey("payments.id"), nullable=True)
+    channel = Column(String(20)) # whatsapp, sms, email
+    recipient = Column(String(50))
+    content = Column(Text)
+    status = Column(String(20)) # sent, delivered, failed
+    sent_at = Column(DateTime, default=datetime.utcnow)
+    error_log = Column(Text)
+    
+    # Relationships
+    payment = relationship("Payment", backref="notifications")
+
+
 # NEW: Conversation Messages
 class ConversationMessage(Base):
     """Individual messages in a conversation."""

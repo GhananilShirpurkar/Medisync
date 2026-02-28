@@ -12,60 +12,67 @@ const SummaryPage = () => {
         return () => unsubscribe();
     }, []);
 
-    // Payment Simulation: confirm after 9 seconds, then send WhatsApp notification
+    const [paymentId, setPaymentId] = useState(null);
+    const [qrData, setQrData] = useState(null);
+    const [timeLeft, setTimeLeft] = useState(9);
+
+    // Phase 1: Initiate Payment
     useEffect(() => {
-        const timer = setTimeout(async () => {
-            setPaymentConfirmed(true);
-            pipelineStore.dispatch('payment_confirmed', {});
-
-            // Actually send WhatsApp notification via backend
-            const currentState = pipelineStore.get();
-            const phone = currentState.phone;
-            const order = currentState.orderSummary || currentState.pendingOrderSummary;
-
-            mlog.whatsapp('payment_confirmed — attempting notification', { 
-              hasPhone: !!phone, phone: phone || 'MISSING', 
-              hasOrder: !!order, orderId: order?.orderId || 'MISSING',
-              itemCount: order?.items?.length || 0
-            });
-
-            if (phone && order) {
+        const order = pipelineState.orderSummary;
+        if (order && !paymentId) {
+            const initiatePayment = async () => {
                 try {
-                    const res = await fetch('http://localhost:8000/api/notifications/order-confirmation', {
+                    const res = await fetch('http://localhost:8000/api/payment/initiate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            phone: phone,
-                            order_id: order.orderId || `ORD-${Date.now().toString().slice(-4)}`,
-                            patient_name: currentState.pid || 'Patient',
-                            items: (order.items || []).map(item => ({
-                                medicine_name: item.name,
-                                quantity: 1,
-                                price: item.price || 0
-                            })),
-                            total_amount: order.totalPrice || 0,
-                            estimated_pickup_time: '30 minutes'
+                            order_id: order.orderId,
+                            amount: order.totalPrice
                         })
                     });
-
                     const data = await res.json();
-                    if (data.success) {
-                        mlog.whatsapp('SENT OK', { message_id: data.message_id });
-                        console.log('[WhatsApp] Notification sent successfully:', data.message_id);
-                    } else {
-                        mlog.whatsapp('SEND FAILED', { message: data.message });
-                        console.warn('[WhatsApp] Notification failed:', data.message);
+                    if (data.payment_id) {
+                        setPaymentId(data.payment_id);
+                        setQrData(data.qr_code_data);
+                        mlog.info('Payment initiated', { paymentId: data.payment_id });
                     }
                 } catch (err) {
-                    mlog.whatsapp('API ERROR', { error: err.message });
-                    console.error('[WhatsApp] Failed to send notification:', err);
+                    mlog.error('Payment initiation failed', { error: err.message });
                 }
-            } else {
-                console.warn('[WhatsApp] Missing phone or order data — skipping notification', { phone: !!phone, order: !!order });
+            };
+            initiatePayment();
+        }
+    }, [pipelineState.orderSummary]);
+
+    // Phase 2: Poll for status + countdown UI
+    useEffect(() => {
+        if (!paymentId || paymentConfirmed) return;
+
+        const countdownInterval = setInterval(() => {
+            setTimeLeft(prev => Math.max(0, prev - 1));
+        }, 1000);
+
+        const pollInterval = setInterval(async () => {
+            try {
+                const res = await fetch(`http://localhost:8000/api/payment/status/${paymentId}`);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    setPaymentConfirmed(true);
+                    pipelineStore.dispatch('payment_confirmed', { txn_id: data.transaction_id });
+                    mlog.whatsapp('Payment SETTLED', { txn_id: data.transaction_id });
+                    clearInterval(pollInterval);
+                    clearInterval(countdownInterval);
+                }
+            } catch (err) {
+                console.error('Polling error:', err);
             }
-        }, 9000);
-        return () => clearTimeout(timer);
-    }, []);
+        }, 2000);
+
+        return () => {
+            clearInterval(pollInterval);
+            clearInterval(countdownInterval);
+        };
+    }, [paymentId, paymentConfirmed]);
 
     const handleNewConsultation = () => {
         pipelineStore.dispatch('RESET_SESSION', {});
@@ -252,13 +259,35 @@ const SummaryPage = () => {
                             <div className="rail-label">PAYMENT SETTLEMENT</div>
                             <div className="payment-mini-block">
                                 <div className="qr-box">
-                                    <img src="/assets/mock_qr.png" className={`qr-code ${paymentConfirmed ? 'confirmed' : ''}`} alt="QR" />
+                                    <img src={qrData || "/assets/mock_qr.png"} className={`qr-code ${paymentConfirmed ? 'confirmed' : ''}`} alt="QR" />
+                                    {!paymentConfirmed && timeLeft > 0 && (
+                                        <div className="qr-countdown-overlay" style={{
+                                            position: 'absolute',
+                                            top: '50%',
+                                            left: '50%',
+                                            transform: 'translate(-50%, -50%)',
+                                            background: 'rgba(0,0,0,0.7)',
+                                            color: 'white',
+                                            padding: '10px 15px',
+                                            borderRadius: '50%',
+                                            fontWeight: 'bold',
+                                            fontSize: '18px',
+                                            pointerEvents: 'none'
+                                        }}>
+                                            {timeLeft}s
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="pay-meta">
                                     <div className="upi">medisync@upi</div>
                                     <div className={`pay-status ${paymentConfirmed ? 'confirmed' : 'waiting'}`}>
-                                        {paymentConfirmed ? 'SETTLED ✓' : 'AWAITING ●'}
+                                        {paymentConfirmed ? 'SETTLED ✓' : `WAITING ${timeLeft}s ●`}
                                     </div>
+                                    {!paymentConfirmed && (
+                                        <div style={{ width: '100%', background: '#eee', height: '4px', marginTop: '8px', borderRadius: '2px', overflow: 'hidden' }}>
+                                            <div style={{ width: `${(timeLeft / 9) * 100}%`, background: 'var(--indigo)', height: '100%', transition: 'width 1s linear' }}></div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </section>
