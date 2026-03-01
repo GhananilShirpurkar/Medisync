@@ -44,7 +44,8 @@ class PrescriptionService:
         self,
         user_id: str,
         extracted_items: List[Dict[str, Any]],
-        whatsapp_phone: Optional[str] = None
+        whatsapp_phone: Optional[str] = None,
+        auto_confirm: bool = False
     ) -> Dict[str, Any]:
         """
         Process a prescription through the complete workflow.
@@ -53,9 +54,10 @@ class PrescriptionService:
             user_id: User/patient ID
             extracted_items: List of medicine items from prescription
             whatsapp_phone: Optional WhatsApp number for notifications
+            auto_confirm: If True, skip confirmation gate and create order immediately
             
         Returns:
-            Dictionary with processing results
+            Dictionary with processing results including confirmation_required flag
             
         Raises:
             ValidationError: If prescription validation fails
@@ -71,11 +73,29 @@ class PrescriptionService:
             
             logger.info(f"Processing prescription for user {user_id} with {len(extracted_items)} items")
             
-            # Run through agent workflow
+            # Run through agent workflow (validation + inventory check)
             result_state = agent_graph.invoke(state)
             
-            # Extract results
-            response = self._build_response(result_state)
+            # Check if order should be auto-confirmed or needs user confirmation
+            if auto_confirm or not whatsapp_phone:
+                # Direct order creation (legacy behavior for non-WhatsApp flows)
+                response = self._build_response(result_state)
+            else:
+                # Require confirmation for WhatsApp users
+                response = self._build_response(result_state)
+                response['confirmation_required'] = True
+                response['message'] = "Please confirm your order by replying YES or NO"
+                
+                # Store pending state for confirmation
+                from src.services.confirmation_store import confirmation_store
+                session_id = f"prescription_{user_id}_{datetime.now().timestamp()}"
+                token = confirmation_store.create(
+                    session_id=session_id,
+                    state_dict=result_state.model_dump() if hasattr(result_state, 'model_dump') else dict(result_state),
+                    replacement_info=None
+                )
+                response['session_id'] = session_id
+                response['confirmation_token'] = token
             
             logger.info(f"Prescription processed: {response['status']}")
             

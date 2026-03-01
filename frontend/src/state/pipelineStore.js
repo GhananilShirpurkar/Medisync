@@ -122,6 +122,17 @@ export const pipelineStore = {
         }
         break;
 
+      case 'PENDING_CONFIRMATION':
+        // Store items awaiting confirmation (for prescription/camera uploads)
+        nextState.pendingConfirmation = {
+          items: payload.items,
+          sessionId: payload.sessionId,
+          confirmationToken: payload.confirmationToken,
+          timestamp: Date.now()
+        };
+        nextState.checkoutReady = false; // Don't show checkout until confirmed
+        break;
+
       case 'order_created':
         // Usually handled when the user actually clicks proceed
         if (payload.orderSummary) {

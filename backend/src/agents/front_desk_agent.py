@@ -178,12 +178,8 @@ Respond in JSON format:
 
         # ── symptom: allow multi-turn clarification up to a limit ─────────
         if intent == "symptom":
-            # Cap at 5 user turns to accommodate elderly patients providing more context
-            # If we've reached the limit, force a recommendation.
-            # (Note: turn_count here is the number of user messages in this session)
-            if turn_count > 2:
-                return None  # Force recommendation after 2 clarifying turns
-            # Otherwise, we proceed to LLM clarification below
+            # Let the LLM intelligently decide when to recommend by generating 'READY_TO_RECOMMEND'
+            pass
 
         # ── All other intents: skip LLM ───────────────────────────────────
         if intent not in ("symptom",):

@@ -197,3 +197,56 @@
   display: inline-block;
   vertical-align: middle;
 }
+
+/* Fix table column widths */
+.protera-table th:nth-child(1),
+.protera-table td:nth-child(1) {
+  width: 25%;
+  min-width: 180px;
+}
+
+.protera-table th:nth-child(2),
+.protera-table td:nth-child(2) {
+  width: 20%;
+  min-width: 150px;
+}
+
+.protera-table th:nth-child(3),
+.protera-table td:nth-child(3) {
+  width: 10%;
+  min-width: 80px;
+  text-align: center;
+}
+
+.protera-table th:nth-child(4),
+.protera-table td:nth-child(4) {
+  width: 12%;
+  min-width: 100px;
+}
+
+.protera-table th:nth-child(5),
+.protera-table td:nth-child(5) {
+  width: 15%;
+  min-width: 120px;
+}
+
+.protera-table th:nth-child(6),
+.protera-table td:nth-child(6) {
+  width: 18%;
+  min-width: 140px;
+}
+
+.protera-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.protera-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.protera-table td.table-actions {
+  white-space: normal;
+}

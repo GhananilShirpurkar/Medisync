@@ -331,6 +331,13 @@ async def send_message(request: ConversationRequest):
                 role="user",
                 content=request.message
             )
+            
+            # Map loosely matching affirmations and negations
+            if user_reply in ["YES", "Y", "YEAH", "YEP", "SURE", "OK", "OKAY", "हाँ", "हो", "हां", "CONFIRM"]:
+                user_reply = "YES"
+            elif user_reply in ["NO", "N", "NOPE", "CANCEL", "STOP", "नाही", "नहीं"]:
+                user_reply = "NO"
+            
             if user_reply == 'YES':
                 # Consume atomically — prevents double execution
                 entry = confirmation_store.consume(
@@ -397,20 +404,12 @@ async def send_message(request: ConversationRequest):
                     next_step='cancelled'
                 )
             else:
-                response_message = "Please reply *YES* to confirm your order or *NO* to cancel."
-                conversation_service.add_message(
-                    session_id=request.session_id,
-                    role='assistant',
-                    content=response_message,
-                    agent_name='front_desk'
+                # Cancel the pending order and gracefully proceed with the new query
+                confirmation_store.cancel(request.session_id)
+                conversation_service.transition_phase(
+                    request.session_id, "collecting_items"
                 )
-                return ConversationResponse(
-                    session_id=request.session_id,
-                    message=response_message,
-                    intent='purchase',
-                    needs_clarification=True,
-                    next_step='awaiting_confirmation'
-                )
+                # DO NOT return early, let the flow continue to process the new message.
 
         # Trace: Start
         await trace_manager.emit(
@@ -624,6 +623,7 @@ async def send_message(request: ConversationRequest):
         )
 
         intent = intent_result.get("intent", "symptom")
+        previous_intent = session.get("intent")
         
         # Inherit previous intent if the user is answering a clarifying question
         # (e.g. they say "20" or "for last 5 days", which misclassifies as 'refill' or 'generic_help')

@@ -87,12 +87,12 @@ const TheatrePage = () => {
 
   const rightZone = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
-      <div className="fixed-system-zone" style={{ flex: '1 1 0%', display: 'flex', flexDirection: 'column', padding: '1.25rem 1rem', overflowY: 'auto', minHeight: '0' }}>
+      <div className="fixed-system-zone" style={{ flex: '1 1 0%', display: 'flex', flexDirection: 'column', padding: '1.25rem 1rem', overflowY: 'auto', minHeight: '0', position: 'relative', zIndex: 1 }}>
         <div className="metadata-header" style={{ marginBottom: '1.5rem', justifyContent: 'center', flexShrink: 0 }}>
           Fusion Confidence
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.75rem', flexShrink: 0 }}>
           {fusionState ? (
             <FusionGauge fusionState={fusionState} />
           ) : (

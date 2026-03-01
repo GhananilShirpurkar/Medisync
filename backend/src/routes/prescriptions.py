@@ -47,6 +47,10 @@ class PrescriptionResponse(BaseModel):
     order_status: Optional[str] = Field(None, description="Order status")
     fulfillment: Optional[dict] = Field(None, description="Fulfillment details")
     inventory: Optional[dict] = Field(None, description="Inventory details")
+    confirmation_required: Optional[bool] = Field(False, description="Whether user confirmation is required")
+    session_id: Optional[str] = Field(None, description="Session ID for confirmation")
+    confirmation_token: Optional[str] = Field(None, description="Token for confirmation")
+    message: Optional[str] = Field(None, description="Message to display to user")
 
 
 class ValidationResponse(BaseModel):
@@ -71,8 +75,8 @@ async def process_prescription(request: ProcessPrescriptionRequest):
     This endpoint:
     1. Validates the prescription
     2. Checks inventory availability
-    3. Creates an order if approved
-    4. Sends notifications
+    3. Returns items for confirmation (if WhatsApp provided)
+    4. Creates order only after user confirms via /confirm endpoint
     
     Returns order details and processing status.
     """
@@ -80,12 +84,33 @@ async def process_prescription(request: ProcessPrescriptionRequest):
         # Convert Pydantic models to dicts
         items = [item.dict() for item in request.items]
         
-        # Process prescription
+        # Process prescription (will require confirmation if whatsapp_phone provided)
         result = prescription_service.process_prescription(
             user_id=request.user_id,
             extracted_items=items,
-            whatsapp_phone=request.whatsapp_phone
+            whatsapp_phone=request.whatsapp_phone,
+            auto_confirm=False  # Always require confirmation for consistency
         )
+        
+        # If WhatsApp phone provided, send confirmation request
+        if request.whatsapp_phone and result.get('confirmation_required'):
+            from notifications.whatsapp_service import WhatsAppNotificationService
+            whatsapp_service = WhatsAppNotificationService()
+            
+            # Build confirmation message
+            items_text = "\n".join([
+                f"  • {item['medicine_name']} × {item.get('quantity', 1)}"
+                for item in items
+            ])
+            
+            confirmation_msg = (
+                f"📋 *Prescription Processed*\n\n"
+                f"Items validated and ready:\n{items_text}\n\n"
+                f"Reply *YES* to confirm your order or *NO* to cancel."
+            )
+            
+            await whatsapp_service.send_message(request.whatsapp_phone, confirmation_msg)
+            logger.info(f"Confirmation request sent to {request.whatsapp_phone}")
         
         return result
         

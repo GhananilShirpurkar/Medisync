@@ -213,6 +213,11 @@ export const runConsultationFlowAPI = async (userMessage) => {
       body: JSON.stringify({ session_id: sessionId, message: userMessage })
     });
     
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(`HTTP error ${res.status}: ${errorData.detail || 'Unknown error'}`);
+    }
+    
     const data = await res.json();
 
     if (data.client_action === 'OPEN_CAMERA') {
@@ -434,6 +439,106 @@ export const runVoiceFlowAPI = async (audioBlob) => {
     });
     pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
       text: "Sorry, I am having trouble connecting to the system right now.",
+      footnotes: []
+    });
+  }
+};
+
+export const runPrescriptionUploadAPI = async (imageFile, userId, whatsappPhone) => {
+  const storeState = pipelineStore.get();
+  let sessionId = storeState.sessionId;
+  
+  if (!sessionId) {
+    console.warn("No session ID found for Prescription Upload. Auto-generating anon session.");
+    await runIdentityFlowAPI(userId || `anon_${Date.now()}`);
+    sessionId = pipelineStore.get().sessionId;
+  }
+  
+  pipelineStore.dispatch('RECORD_APPEND', { text: "📸 Prescription image uploaded", type: 'image' });
+  
+  try {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    formData.append('user_id', userId || storeState.pid || `anon_${Date.now()}`);
+    if (whatsappPhone) {
+      formData.append('whatsapp_phone', whatsappPhone);
+    }
+
+    const res = await fetch('http://localhost:8000/api/v1/prescriptions/upload', {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    
+    // Show extracted items
+    if (data.fulfillment && data.fulfillment.items) {
+      const items = data.fulfillment.items.map(item => ({
+        name: item.medicine_name,
+        stockStatus: item.in_stock ? 'In Stock' : 'Out of Stock',
+        price: item.price || 0,
+        warnings: item.warnings || [],
+        substitute: item.substitute || null
+      }));
+      
+      pipelineStore.dispatch('SHELF_CARD_READY', {
+        type: 'prescription',
+        card: {
+          title: 'PRESCRIPTION ITEMS',
+          severity: 0,
+          content: items.map(i => `${i.name} - ${i.stockStatus}`)
+        }
+      });
+      
+      // If confirmation is required, show message and wait
+      if (data.confirmation_required) {
+        pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
+          text: data.message || "Please confirm your order by replying YES or NO via WhatsApp",
+          footnotes: [{ agent: 'System', text: 'Awaiting confirmation...' }]
+        });
+        
+        // Store items for later checkout
+        pipelineStore.dispatch('PENDING_CONFIRMATION', {
+          items,
+          sessionId: data.session_id,
+          confirmationToken: data.confirmation_token
+        });
+      } else {
+        // Direct checkout (no WhatsApp)
+        const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+        
+        pipelineStore.dispatch('CHECKOUT_READY', {
+          orderSummary: {
+            pid: storeState.pid,
+            complaint: 'Prescription Upload',
+            validation: { status: 'Approved', severity: 0 },
+            items,
+            substitutions: [],
+            totalPrice,
+            orderId: data.order_id || `ORD-${Date.now().toString().slice(-4)}`
+          }
+        });
+        
+        pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
+          text: "Prescription processed successfully! Items validated and ready for checkout.",
+          footnotes: []
+        });
+      }
+    }
+    
+    pipelineStore.dispatch('INPUT_CONFIDENCE_UPDATED', { 
+      type: 'vision', 
+      score: 95 
+    });
+    
+  } catch (error) {
+    console.error("Failed prescription upload", error);
+    pipelineStore.dispatch('AI_RESPONSE_RECEIVED', {
+      text: "Sorry, I couldn't process your prescription. Please try again or contact support.",
       footnotes: []
     });
   }
