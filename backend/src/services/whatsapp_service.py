@@ -16,8 +16,12 @@ class WhatsAppService:
     def _format_number(self, phone: str) -> str:
         # Strips any existing prefix, normalizes to whatsapp:+91XXXXXXXXXX
         phone = str(phone).strip().replace(" ", "").replace("-", "")
+        # If the frontend sent digits without '+', we add it
         if not phone.startswith("+"):
-            phone = f"+91{phone}"
+            if len(phone) == 10:
+                phone = f"+91{phone}" # Default to India if exactly 10 digits
+            else:
+                phone = f"+{phone}"  # Assume it already has a country code prefix (e.g., 1415...)
         if not phone.startswith("whatsapp:"):
             phone = f"whatsapp:{phone}"
         return phone

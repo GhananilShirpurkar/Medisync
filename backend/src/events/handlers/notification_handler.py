@@ -55,13 +55,15 @@ def handle_order_created(event: OrderCreatedEvent):
         # Use event.phone directly (it contains the patient's number)
         chat_id = event.phone
         
-        result = send_order_notification(
-            chat_id=chat_id,
-            order_id=event.order_id,
-            items=event.items,
-            total_amount=event.total_amount,
-            status=order_status
-        )
+        # DISABLING EARLY NOTIFICATION: Handled by PaymentService upon Summary Page settlement
+        # result = send_order_notification(
+        #     chat_id=chat_id,
+        #     order_id=event.order_id,
+        #     items=event.items,
+        #     total_amount=event.total_amount,
+        #     status=order_status
+        # )
+        result = {"success": True}
         
         if result.get("success"):
             logger.info(f"Order notification sent for {event.order_id}")

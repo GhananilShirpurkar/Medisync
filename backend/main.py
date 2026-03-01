@@ -110,7 +110,7 @@ async def start_proactive_scheduler():
     _scheduler.add_job(
         run_batch_analysis,
         'interval',
-        minutes=5,
+        hours=24,
         id='proactive_refill_job',
         replace_existing=True
     )

@@ -14,7 +14,7 @@ const IdentityPage = () => {
   
   const fileInputRef = useRef(null);
 
-  const cleanPhone = (val) => val.replace(/\D/g, '').slice(-10);
+  const cleanPhone = (val) => val.replace(/\D/g, '');
 
   const handlePhoneSubmit = async (e) => {
     if (e) e.preventDefault();
