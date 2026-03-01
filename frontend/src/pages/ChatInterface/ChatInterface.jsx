@@ -42,13 +42,24 @@ const ChatInterface = () => {
       const phone = cleanPhone(digits);
       setIsLoading(true);
       try {
-        await sendOTPAPI(phone);
-        toast.success("Verification code sent to WhatsApp!");
+        const result = await sendOTPAPI(phone);
+        
+        // Check if WhatsApp worked or fallback to console
+        if (result.method === 'console') {
+          toast.success(
+            `Code generated! ${result.debug_code ? `Code: ${result.debug_code}` : 'Check console'}`,
+            { duration: 8000 }
+          );
+          console.log('🔐 VERIFICATION CODE:', result.debug_code);
+        } else {
+          toast.success("Verification code sent to WhatsApp!");
+        }
+        
         setStep('otp');
         setIsLoading(false);
       } catch (err) {
         console.error("[IdentityFlow] OTP Send Error:", err);
-        toast.error("Failed to send verification code. Check WhatsApp Sandbox session.");
+        toast.error("Failed to send verification code. Check console or WhatsApp Sandbox.");
         setIsLoading(false);
         triggerError();
       }

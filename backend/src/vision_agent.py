@@ -35,7 +35,9 @@ def front_desk_agent(state: PharmacyState) -> PharmacyState:
 
     # ---- intent & language ----
     state.intent = extraction.get("intent", "unknown")
-    state.language = extraction.get("language", "en")
+    detected_lang = extraction.get("language", "en")
+    state.language = detected_lang
+    logger.info(f"Vision agent detected language: {detected_lang}")
 
     # ---- items → OrderItem ----
     items = []

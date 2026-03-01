@@ -149,7 +149,7 @@ def fulfillment_agent(state: PharmacyState) -> PharmacyState:
             total_amount += item_total
             
             item_details.append({
-                "medicine": item.medicine_name,
+                "name": item.medicine_name,
                 "dosage": item.dosage,
                 "quantity": item.quantity,
                 "price": item_price,
@@ -309,7 +309,7 @@ def fulfillment_agent(state: PharmacyState) -> PharmacyState:
         print(f"Items Skipped: {len(unavailable_items)}")
     print(f"Order Details:")
     for detail in item_details:
-        print(f"  • {detail['medicine']} x{detail['quantity']} @ ₹{detail['price']} = ₹{detail['total']:.2f}")
+        print(f"  • {detail['name']} x{detail['quantity']} @ ₹{detail['price']} = ₹{detail['total']:.2f}")
     print(f"{'='*60}\n")
     
     return state
@@ -350,7 +350,7 @@ Items Skipped: {summary['items_skipped']}
     if summary['item_details']:
         report += "Order Details:\n"
         for detail in summary['item_details']:
-            report += f"  • {detail['medicine']} x{detail['quantity']} @ ₹{detail['price']} = ₹{detail['total']:.2f}\n"
+            report += f"  • {detail['name']} x{detail['quantity']} @ ₹{detail['price']} = ₹{detail['total']:.2f}\n"
         report += "\n"
     
     if summary['stock_updates']:
@@ -379,7 +379,7 @@ def format_order_confirmation(state: PharmacyState) -> str:
     message = f"🎉 Order Confirmed!\n\nOrder ID: {summary['order_id']}\nTotal: ₹{summary['total_amount']:.2f}\n\nItems:\n"
     
     for detail in summary['item_details']:
-        message += f"  • {detail['medicine']} x{detail['quantity']}\n"
+        message += f"  • {detail['name']} x{detail['quantity']}\n"
     
     if summary['items_skipped'] > 0:
         message += f"\n⚠️  {summary['items_skipped']} item(s) unavailable - alternatives suggested\n"

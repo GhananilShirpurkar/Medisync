@@ -64,8 +64,11 @@ class EventBus:
             bus.subscribe(OrderCreatedEvent, send_order_notification)
         """
         event_name = event_type.__name__
-        self._subscribers[event_name].append(handler)
-        logger.info(f"Subscribed handler to {event_name}: {handler.__name__}")
+        if handler not in self._subscribers[event_name]:
+            self._subscribers[event_name].append(handler)
+            logger.info(f"Subscribed handler to {event_name}: {handler.__name__}")
+        else:
+            logger.debug(f"Handler {handler.__name__} already subscribed to {event_name}")
     
     def unsubscribe(self, event_type: Type[Event], handler: Callable[[Event], None]):
         """
@@ -260,6 +263,8 @@ def get_event_bus() -> EventBus:
     global _event_bus_instance
     if _event_bus_instance is None:
         _event_bus_instance = EventBus()
+    # DEBUG: Log instance ID to detect multiple buses
+    # print(f"DEBUG: EventBus instance ID: {id(_event_bus_instance)}")
     return _event_bus_instance
 
 

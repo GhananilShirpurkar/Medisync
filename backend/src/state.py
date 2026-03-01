@@ -72,6 +72,7 @@ class PharmacyState(BaseModel):
     # Safety & Validation (Pharmacist)
     # --------------------------------------------------------
     prescription_uploaded: bool = False
+    prescription_verified: bool = False
     validation_status: str = "pending"  # pending | valid | invalid | needs_review
     safety_flags: List[str] = Field(default_factory=list)
     pharmacist_decision: Optional[str] = None  # approved | rejected | needs_review

@@ -19,7 +19,7 @@ class Medicine(Base):
     __tablename__ = "medicines"
     
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), unique=True, index=True, nullable=False)
+    name = Column(String(255), index=True, nullable=False)
     category = Column(String(100))
     manufacturer = Column(String(255))
     price = Column(Float, nullable=False)

@@ -84,7 +84,10 @@ export const sendOTPAPI = async (phone) => {
     body: JSON.stringify({ phone })
   });
   if (!res.ok) throw new Error('Failed to send OTP');
-  return await res.json();
+  const data = await res.json();
+  
+  // Return data with method info for better error handling
+  return data;
 };
 
 export const verifyOTPAPI = async (phone, code) => {
@@ -270,7 +273,7 @@ export const runConsultationFlowAPI = async (userMessage) => {
             items,
             substitutions: [],
             totalPrice,
-            orderId: `ORD-${Date.now().toString().slice(-4)}`
+            orderId: data.order_id || `ORD-${Date.now().toString().slice(-4)}`
           }
         });
       }, 500);
@@ -415,7 +418,7 @@ export const runVoiceFlowAPI = async (audioBlob) => {
             items,
             substitutions: [],
             totalPrice,
-            orderId: `ORD-${Date.now().toString().slice(-4)}`
+            orderId: data.order_id || `ORD-${Date.now().toString().slice(-4)}`
           }
         });
       }, 500);

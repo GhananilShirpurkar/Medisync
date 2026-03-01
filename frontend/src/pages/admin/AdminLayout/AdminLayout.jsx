@@ -36,8 +36,12 @@ const AdminLayout = ({ children }) => {
   });
 
   return (
-    <div className="admin-layout protera-bio-theme">
-      <aside className="admin-sidebar">
+    <>
+      <title>Admin Dashboard | MediSync</title>
+      <meta name="description" content="Manage and review MediSync operations from the admin dashboard." />
+      <meta property="og:title" content="Admin Dashboard | MediSync" />
+      <div className="admin-layout protera-bio-theme">
+        <aside className="admin-sidebar">
         <div className="admin-sidebar-header">
           <div className="admin-logo-group" onClick={() => navigate('/')}>
             <div className="admin-logo-img-wrapper">
@@ -106,6 +110,7 @@ const AdminLayout = ({ children }) => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

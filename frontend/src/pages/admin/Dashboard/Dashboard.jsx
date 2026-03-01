@@ -80,11 +80,11 @@ const Dashboard = () => {
                 <span className="pill-percentage">20%</span>
               </div>
               <div className="pill-segment-wrapper" style={{ width: '18%' }}>
-                <div className="pill-segment color-purple-light"></div>
+                <div className="pill-segment color-emerald-light"></div>
                 <span className="pill-percentage">18%</span>
               </div>
               <div className="pill-segment-wrapper" style={{ width: '10%' }}>
-                <div className="pill-segment color-purple-dark"></div>
+                <div className="pill-segment color-emerald-dark"></div>
                 <span className="pill-percentage">10%</span>
               </div>
             </div>
@@ -93,8 +93,8 @@ const Dashboard = () => {
               <span><span className="dot color-orange"></span> Completed</span>
               <span><span className="dot color-green-light"></span> Pending (Stock)</span>
               <span><span className="dot color-green-teal"></span> Pending (Review)</span>
-              <span><span className="dot color-purple-light"></span> Processing</span>
-              <span><span className="dot color-purple-dark"></span> Rejected</span>
+              <span><span className="dot color-emerald-light"></span> Processing</span>
+              <span><span className="dot color-emerald-dark"></span> Rejected</span>
             </div>
           </div>
 

@@ -154,12 +154,16 @@ const LandingPage = () => {
   // Scroll reveal animations
   useEffect(() => {
     if (!ready) return;
-    gsap.utils.toArray('.reveal-up').forEach(el => {
-      gsap.fromTo(el, { y: 60, opacity: 0 }, {
+    const triggers = gsap.utils.toArray('.reveal-up').map(el => {
+      return gsap.fromTo(el, { y: 60, opacity: 0 }, {
         y: 0, opacity: 1, duration: 0.8, ease: 'power3.out',
         scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
       });
     });
+    return () => {
+      triggers.forEach(t => t.kill());
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
   }, [ready]);
 
   // Floating medical icons for background
@@ -432,7 +436,8 @@ const LandingPage = () => {
             <div className="lp-faq__cta-box">
               <p>Get Early Access</p>
               <div className="lp-faq__email-row">
-                <input type="email" placeholder="you@company.com" className="lp-faq__input" />
+                <label className="visually-hidden" style={{display: "none"}} htmlFor="emailInput">Email Address</label>
+                <input id="emailInput" type="email" placeholder="you@company.com" className="lp-faq__input" aria-label="Email Address" />
                 <button className="lp-btn lp-btn--primary lp-btn--sm"><Mail size={16} /></button>
               </div>
             </div>
@@ -460,15 +465,15 @@ const LandingPage = () => {
           </div>
           <div className="lp-footer__col">
             <h4>Product</h4>
-            <a href="#">Features</a><a href="#">Pricing</a><a href="#">API Docs</a><a href="#">Changelog</a>
+            <a href="#">Features</a><a href="#">Pricing</a><a href="#">API Docs</a>
           </div>
           <div className="lp-footer__col">
             <h4>Company</h4>
-            <a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a><a href="#">Contact</a>
+            <a href="#">Blog</a><a href="#">Contact</a>
           </div>
           <div className="lp-footer__col">
             <h4>Legal</h4>
-            <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Security</a>
+            <a href="#">Privacy</a><a href="#">Terms</a>
           </div>
         </div>
         <div className="lp-container lp-footer__bottom">

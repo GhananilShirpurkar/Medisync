@@ -24,8 +24,14 @@ class WhatsAppPipeline:
     async def handle_text(self, phone: str, text: str):
         """
         Process text message through agent pipeline.
+        Supports multi-language (Hindi, English, Hinglish, Marathi).
         """
         try:
+            # Detect language from user message
+            from src.services.language_service import detect_language
+            detected_language = detect_language(text)
+            logger.info(f"WhatsApp message from {phone} in language: {detected_language}")
+            
             # 1. Resolve Identity
             patient = self.db.resolve_patient(phone)  # BUG 1 FIX: was calling non-existent get_pid_by_telegram
             pid = patient.get("pid") or patient.get("id")
@@ -42,11 +48,13 @@ class WhatsAppPipeline:
                         "phone": phone,
                         "source": "whatsapp"
                     })
+                    
+                    # Send welcome message in detected language
+                    from src.services.language_service import get_template
+                    welcome_msg = get_template("greeting", detected_language)
+                    welcome_msg = f"✅ *Successfully Linked!*\n\nYour Patient ID is `{pid}`.\n{welcome_msg}"
 
-                    await whatsapp_service.send_message(
-                        phone,
-                        f"✅ *Successfully Linked!*\n\nYour Patient ID is `{pid}`.\nHow can I help you today?"
-                    )
+                    await whatsapp_service.send_message(phone, welcome_msg)
                     return
                 else:
                     welcome_msg = (
@@ -96,7 +104,8 @@ class WhatsAppPipeline:
             state = PharmacyState(
                 user_id=pid,
                 whatsapp_phone=phone,
-                user_message=text
+                user_message=text,
+                language=detected_language  # Set detected language in state
             )
 
             # BUG 2 FIX: front_desk_agent, pharmacist_agent, fulfillment_agent are

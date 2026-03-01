@@ -51,19 +51,18 @@ def handle_order_created(event: OrderCreatedEvent):
         else:
             order_status = "processing"
         
-        # Send notification using the correct service method
+        # Sent notification using the correct service method
         # Use event.phone directly (it contains the patient's number)
         chat_id = event.phone
         
-        # DISABLING EARLY NOTIFICATION: Handled by PaymentService upon Summary Page settlement
-        # result = send_order_notification(
-        #     chat_id=chat_id,
-        #     order_id=event.order_id,
-        #     items=event.items,
-        #     total_amount=event.total_amount,
-        #     status=order_status
-        # )
-        result = {"success": True}
+        # RE-ENABLING: Essential for Voice users who may not go through web checkout
+        result = send_order_notification(
+            chat_id=chat_id,
+            order_id=event.order_id,
+            items=event.items,
+            total_amount=event.total_amount,
+            status=order_status
+        )
         
         if result.get("success"):
             logger.info(f"Order notification sent for {event.order_id}")

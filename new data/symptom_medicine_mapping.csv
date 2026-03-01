@@ -1,0 +1,662 @@
+id,symptom,medicine_id,relevence_score,notes,created_at
+1,Fever,10001,0.87,Primary treatment for fever using Paracetamol Plus.,2026-02-09 22:42:06
+2,Fever,10145,0.91,Primary treatment for fever using Paracetamol Max.,2026-01-30 22:42:06
+3,Acute fever,10145,0.77,Recommended for acute cases of fever.,2026-02-28 22:42:06
+4,Fever,10289,0.9,Primary treatment for fever using Paracetamol Max.,2026-02-07 22:42:06
+5,Fever,10433,0.98,Primary treatment for fever using Paracetamol DS.,2026-02-07 22:42:06
+6,Fever,10577,0.98,Primary treatment for fever using Paracetamol Forte.,2026-02-06 22:42:06
+7,Fever,10721,0.96,Primary treatment for fever using Paracetamol Plus.,2026-02-10 22:42:06
+8,Acute fever,10721,0.74,Recommended for acute cases of fever.,2026-02-17 22:42:06
+9,Fever,10865,0.98,Primary treatment for fever using Paracetamol Max.,2026-02-02 22:42:06
+10,Acute fever,10865,0.79,Recommended for acute cases of fever.,2026-02-24 22:42:06
+11,Fever,11009,0.89,Primary treatment for fever using Paracetamol Lite.,2026-02-20 22:42:06
+12,Fever,11153,0.92,Primary treatment for fever using Paracetamol Forte.,2026-02-27 22:42:06
+13,Acute fever,11153,0.77,Recommended for acute cases of fever.,2026-01-31 22:42:06
+14,Fever,11297,0.91,Primary treatment for fever using Paracetamol XR.,2026-02-04 22:42:06
+15,Acute fever,11297,0.73,Recommended for acute cases of fever.,2026-02-14 22:42:06
+16,Fever,11441,0.97,Primary treatment for fever using Paracetamol Forte.,2026-02-16 22:42:06
+17,Fever,11585,0.92,Primary treatment for fever using Paracetamol SR.,2026-02-15 22:42:06
+18,Fever,10002,0.9,Primary treatment for fever using Ibuprofen SR.,2026-02-26 22:42:06
+19,Acute fever,10002,0.71,Recommended for acute cases of fever.,2026-02-21 22:42:06
+20,Fever,10146,0.99,Primary treatment for fever using Ibuprofen Lite.,2026-02-22 22:42:06
+21,Fever,10290,0.94,Primary treatment for fever using Ibuprofen Max.,2026-02-18 22:42:06
+22,Fever,10434,0.98,Primary treatment for fever using Ibuprofen Lite.,2026-02-05 22:42:06
+23,Fever,10578,0.9,Primary treatment for fever using Ibuprofen Max.,2026-01-29 22:42:06
+24,Fever,10722,0.92,Primary treatment for fever using Ibuprofen DS.,2026-02-11 22:42:06
+25,Fever,10866,0.95,Primary treatment for fever using Ibuprofen Max.,2026-02-18 22:42:06
+26,Fever,11010,0.9,Primary treatment for fever using Ibuprofen Lite.,2026-02-22 22:42:06
+27,Fever,11154,0.86,Primary treatment for fever using Ibuprofen DS.,2026-02-03 22:42:06
+28,Acute fever,11154,0.72,Recommended for acute cases of fever.,2026-02-07 22:42:06
+29,Fever,11298,0.94,Primary treatment for fever using Ibuprofen Plus.,2026-02-18 22:42:06
+30,Fever,11442,0.96,Primary treatment for fever using Ibuprofen.,2026-02-03 22:42:06
+31,Fever,11586,0.9,Primary treatment for fever using Ibuprofen Forte.,2026-02-14 22:42:06
+32,Headache,10001,0.95,Primary treatment for headache using Paracetamol Plus.,2026-02-10 22:42:06
+33,Headache,10145,0.96,Primary treatment for headache using Paracetamol Max.,2026-02-04 22:42:06
+34,Headache,10289,0.88,Primary treatment for headache using Paracetamol Max.,2026-02-19 22:42:06
+35,Headache,10433,0.91,Primary treatment for headache using Paracetamol DS.,2026-02-23 22:42:06
+36,Headache,10577,0.99,Primary treatment for headache using Paracetamol Forte.,2026-02-03 22:42:06
+37,Headache,10721,0.88,Primary treatment for headache using Paracetamol Plus.,2026-02-02 22:42:06
+38,Headache,10865,0.87,Primary treatment for headache using Paracetamol Max.,2026-02-12 22:42:06
+39,Headache,11009,0.89,Primary treatment for headache using Paracetamol Lite.,2026-02-22 22:42:06
+40,Headache,11153,0.88,Primary treatment for headache using Paracetamol Forte.,2026-02-08 22:42:06
+41,Headache,11297,0.9,Primary treatment for headache using Paracetamol XR.,2026-02-04 22:42:06
+42,Headache,11441,0.89,Primary treatment for headache using Paracetamol Forte.,2026-02-07 22:42:06
+43,Headache,11585,0.96,Primary treatment for headache using Paracetamol SR.,2026-02-12 22:42:06
+44,Headache,10002,0.92,Primary treatment for headache using Ibuprofen SR.,2026-02-11 22:42:06
+45,Headache,10146,0.87,Primary treatment for headache using Ibuprofen Lite.,2026-02-28 22:42:06
+46,Headache,10290,0.89,Primary treatment for headache using Ibuprofen Max.,2026-02-05 22:42:06
+47,Headache,10434,0.9,Primary treatment for headache using Ibuprofen Lite.,2026-02-21 22:42:06
+48,Headache,10578,0.96,Primary treatment for headache using Ibuprofen Max.,2026-02-26 22:42:06
+49,Headache,10722,0.86,Primary treatment for headache using Ibuprofen DS.,2026-02-17 22:42:06
+50,Headache,10866,0.85,Primary treatment for headache using Ibuprofen Max.,2026-02-08 22:42:06
+51,Headache,11010,0.89,Primary treatment for headache using Ibuprofen Lite.,2026-02-28 22:42:06
+52,Headache,11154,0.91,Primary treatment for headache using Ibuprofen DS.,2026-01-31 22:42:06
+53,Headache,11298,0.89,Primary treatment for headache using Ibuprofen Plus.,2026-02-10 22:42:06
+54,Acute headache,11298,0.74,Recommended for acute cases of headache.,2026-02-22 22:42:06
+55,Headache,11442,0.89,Primary treatment for headache using Ibuprofen.,2026-02-06 22:42:06
+56,Headache,11586,0.9,Primary treatment for headache using Ibuprofen Forte.,2026-02-25 22:42:06
+57,Headache,10061,0.85,Primary treatment for headache using Naproxen Lite.,2026-02-24 22:42:06
+58,Acute headache,10061,0.84,Recommended for acute cases of headache.,2026-02-03 22:42:06
+59,Headache,10205,0.96,Primary treatment for headache using Naproxen Max.,2026-01-31 22:42:06
+60,Acute headache,10205,0.83,Recommended for acute cases of headache.,2026-02-19 22:42:06
+61,Headache,10349,0.94,Primary treatment for headache using Naproxen Plus.,2026-02-16 22:42:06
+62,Headache,10493,0.94,Primary treatment for headache using Naproxen XR.,2026-02-23 22:42:06
+63,Headache,10637,0.98,Primary treatment for headache using Naproxen XR.,2026-02-26 22:42:06
+64,Acute headache,10637,0.78,Recommended for acute cases of headache.,2026-02-18 22:42:06
+65,Headache,10781,0.86,Primary treatment for headache using Naproxen.,2026-02-18 22:42:06
+66,Headache,10925,0.9,Primary treatment for headache using Naproxen DS.,2026-02-14 22:42:06
+67,Acute headache,10925,0.74,Recommended for acute cases of headache.,2026-02-08 22:42:06
+68,Headache,11069,0.97,Primary treatment for headache using Naproxen XR.,2026-02-24 22:42:06
+69,Headache,11213,0.91,Primary treatment for headache using Naproxen SR.,2026-02-28 22:42:06
+70,Acute headache,11213,0.84,Recommended for acute cases of headache.,2026-02-12 22:42:06
+71,Headache,11357,0.93,Primary treatment for headache using Naproxen.,2026-01-29 22:42:06
+72,Headache,11501,0.96,Primary treatment for headache using Naproxen Plus.,2026-02-20 22:42:06
+73,Bacterial Infection,10003,0.94,Primary treatment for bacterial infection using Amoxicillin.,2026-02-08 22:42:06
+74,Bacterial Infection,10147,0.96,Primary treatment for bacterial infection using Amoxicillin XR.,2026-01-31 22:42:06
+75,Bacterial Infection,10291,0.92,Primary treatment for bacterial infection using Amoxicillin XR.,2026-02-28 22:42:06
+76,Bacterial Infection,10435,0.87,Primary treatment for bacterial infection using Amoxicillin Max.,2026-02-16 22:42:06
+77,Acute bacterial infection,10435,0.84,Recommended for acute cases of bacterial infection.,2026-02-01 22:42:06
+78,Bacterial Infection,10579,0.91,Primary treatment for bacterial infection using Amoxicillin Lite.,2026-02-16 22:42:06
+79,Bacterial Infection,10723,0.87,Primary treatment for bacterial infection using Amoxicillin.,2026-02-10 22:42:06
+80,Acute bacterial infection,10723,0.81,Recommended for acute cases of bacterial infection.,2026-02-13 22:42:06
+81,Bacterial Infection,10867,0.86,Primary treatment for bacterial infection using Amoxicillin Lite.,2026-02-05 22:42:06
+82,Bacterial Infection,11011,0.93,Primary treatment for bacterial infection using Amoxicillin DS.,2026-02-07 22:42:06
+83,Bacterial Infection,11155,0.87,Primary treatment for bacterial infection using Amoxicillin Forte.,2026-01-29 22:42:06
+84,Bacterial Infection,11299,0.9,Primary treatment for bacterial infection using Amoxicillin.,2026-02-26 22:42:06
+85,Bacterial Infection,11443,0.98,Primary treatment for bacterial infection using Amoxicillin SR.,2026-02-14 22:42:06
+86,Acute bacterial infection,11443,0.7,Recommended for acute cases of bacterial infection.,2026-02-25 22:42:06
+87,Bacterial Infection,11587,0.99,Primary treatment for bacterial infection using Amoxicillin Forte.,2026-02-28 22:42:06
+88,Bacterial Infection,10012,0.89,Primary treatment for bacterial infection using Azithromycin Forte.,2026-02-28 22:42:06
+89,Acute bacterial infection,10012,0.78,Recommended for acute cases of bacterial infection.,2026-02-21 22:42:06
+90,Bacterial Infection,10156,0.92,Primary treatment for bacterial infection using Azithromycin Lite.,2026-02-27 22:42:06
+91,Acute bacterial infection,10156,0.79,Recommended for acute cases of bacterial infection.,2026-02-27 22:42:06
+92,Bacterial Infection,10300,0.95,Primary treatment for bacterial infection using Azithromycin Lite.,2026-02-11 22:42:06
+93,Bacterial Infection,10444,0.98,Primary treatment for bacterial infection using Azithromycin SR.,2026-02-07 22:42:06
+94,Bacterial Infection,10588,0.96,Primary treatment for bacterial infection using Azithromycin Max.,2026-01-29 22:42:06
+95,Bacterial Infection,10732,0.85,Primary treatment for bacterial infection using Azithromycin XR.,2026-02-20 22:42:06
+96,Bacterial Infection,10876,0.93,Primary treatment for bacterial infection using Azithromycin Lite.,2026-02-01 22:42:06
+97,Bacterial Infection,11020,0.9,Primary treatment for bacterial infection using Azithromycin Plus.,2026-02-01 22:42:06
+98,Bacterial Infection,11164,0.91,Primary treatment for bacterial infection using Azithromycin.,2026-02-19 22:42:06
+99,Bacterial Infection,11308,0.88,Primary treatment for bacterial infection using Azithromycin DS.,2026-01-30 22:42:06
+100,Bacterial Infection,11452,0.99,Primary treatment for bacterial infection using Azithromycin SR.,2026-02-25 22:42:06
+101,Bacterial Infection,11596,0.89,Primary treatment for bacterial infection using Azithromycin XR.,2026-02-08 22:42:06
+102,Bacterial Infection,10013,0.99,Primary treatment for bacterial infection using Ciprofloxacin SR.,2026-02-17 22:42:06
+103,Acute bacterial infection,10013,0.72,Recommended for acute cases of bacterial infection.,2026-02-06 22:42:06
+104,Bacterial Infection,10157,0.88,Primary treatment for bacterial infection using Ciprofloxacin Plus.,2026-02-17 22:42:06
+105,Bacterial Infection,10301,0.87,Primary treatment for bacterial infection using Ciprofloxacin Max.,2026-02-09 22:42:06
+106,Acute bacterial infection,10301,0.8,Recommended for acute cases of bacterial infection.,2026-02-11 22:42:06
+107,Bacterial Infection,10445,0.94,Primary treatment for bacterial infection using Ciprofloxacin Plus.,2026-02-02 22:42:06
+108,Bacterial Infection,10589,0.99,Primary treatment for bacterial infection using Ciprofloxacin.,2026-02-16 22:42:06
+109,Bacterial Infection,10733,0.92,Primary treatment for bacterial infection using Ciprofloxacin Max.,2026-02-25 22:42:06
+110,Acute bacterial infection,10733,0.82,Recommended for acute cases of bacterial infection.,2026-02-17 22:42:06
+111,Bacterial Infection,10877,0.99,Primary treatment for bacterial infection using Ciprofloxacin Forte.,2026-02-02 22:42:06
+112,Bacterial Infection,11021,0.98,Primary treatment for bacterial infection using Ciprofloxacin Plus.,2026-02-04 22:42:06
+113,Acute bacterial infection,11021,0.8,Recommended for acute cases of bacterial infection.,2026-02-01 22:42:06
+114,Bacterial Infection,11165,0.88,Primary treatment for bacterial infection using Ciprofloxacin DS.,2026-02-13 22:42:06
+115,Bacterial Infection,11309,0.93,Primary treatment for bacterial infection using Ciprofloxacin DS.,2026-02-15 22:42:06
+116,Acute bacterial infection,11309,0.73,Recommended for acute cases of bacterial infection.,2026-02-15 22:42:06
+117,Bacterial Infection,11453,0.93,Primary treatment for bacterial infection using Ciprofloxacin.,2026-02-12 22:42:06
+118,Bacterial Infection,11597,0.87,Primary treatment for bacterial infection using Ciprofloxacin Forte.,2026-02-03 22:42:06
+119,Bacterial Infection,10014,0.91,Primary treatment for bacterial infection using Doxycycline.,2026-02-18 22:42:06
+120,Acute bacterial infection,10014,0.77,Recommended for acute cases of bacterial infection.,2026-02-19 22:42:06
+121,Bacterial Infection,10158,0.99,Primary treatment for bacterial infection using Doxycycline XR.,2026-02-18 22:42:06
+122,Bacterial Infection,10302,0.98,Primary treatment for bacterial infection using Doxycycline Plus.,2026-01-31 22:42:06
+123,Bacterial Infection,10446,0.98,Primary treatment for bacterial infection using Doxycycline XR.,2026-02-06 22:42:06
+124,Acute bacterial infection,10446,0.82,Recommended for acute cases of bacterial infection.,2026-02-06 22:42:06
+125,Bacterial Infection,10590,0.97,Primary treatment for bacterial infection using Doxycycline Max.,2026-02-03 22:42:06
+126,Bacterial Infection,10734,0.96,Primary treatment for bacterial infection using Doxycycline DS.,2026-02-18 22:42:06
+127,Bacterial Infection,10878,0.98,Primary treatment for bacterial infection using Doxycycline DS.,2026-02-17 22:42:06
+128,Bacterial Infection,11022,0.97,Primary treatment for bacterial infection using Doxycycline.,2026-02-16 22:42:06
+129,Bacterial Infection,11166,0.87,Primary treatment for bacterial infection using Doxycycline SR.,2026-01-31 22:42:06
+130,Bacterial Infection,11310,0.97,Primary treatment for bacterial infection using Doxycycline Plus.,2026-02-20 22:42:06
+131,Bacterial Infection,11454,0.89,Primary treatment for bacterial infection using Doxycycline.,2026-02-14 22:42:06
+132,Bacterial Infection,11598,0.88,Primary treatment for bacterial infection using Doxycycline.,2026-02-09 22:42:06
+133,High Blood Pressure,10006,0.96,Primary treatment for high blood pressure using Amlodipine Lite.,2026-02-21 22:42:06
+134,High Blood Pressure,10150,0.98,Primary treatment for high blood pressure using Amlodipine.,2026-01-30 22:42:06
+135,High Blood Pressure,10294,0.87,Primary treatment for high blood pressure using Amlodipine XR.,2026-02-25 22:42:06
+136,High Blood Pressure,10438,0.92,Primary treatment for high blood pressure using Amlodipine Max.,2026-02-26 22:42:06
+137,Acute high blood pressure,10438,0.74,Recommended for acute cases of high blood pressure.,2026-02-19 22:42:06
+138,High Blood Pressure,10582,0.92,Primary treatment for high blood pressure using Amlodipine DS.,2026-02-13 22:42:06
+139,Acute high blood pressure,10582,0.78,Recommended for acute cases of high blood pressure.,2026-02-24 22:42:06
+140,High Blood Pressure,10726,0.92,Primary treatment for high blood pressure using Amlodipine Forte.,2026-02-25 22:42:06
+141,High Blood Pressure,10870,0.96,Primary treatment for high blood pressure using Amlodipine SR.,2026-02-05 22:42:06
+142,High Blood Pressure,11014,0.95,Primary treatment for high blood pressure using Amlodipine Forte.,2026-02-15 22:42:06
+143,High Blood Pressure,11158,0.99,Primary treatment for high blood pressure using Amlodipine Forte.,2026-02-05 22:42:06
+144,High Blood Pressure,11302,0.94,Primary treatment for high blood pressure using Amlodipine XR.,2026-01-31 22:42:06
+145,High Blood Pressure,11446,0.95,Primary treatment for high blood pressure using Amlodipine XR.,2026-02-06 22:42:06
+146,High Blood Pressure,11590,0.93,Primary treatment for high blood pressure using Amlodipine SR.,2026-02-08 22:42:06
+147,High Blood Pressure,10008,0.88,Primary treatment for high blood pressure using Lisinopril Plus.,2026-02-07 22:42:06
+148,High Blood Pressure,10152,0.86,Primary treatment for high blood pressure using Lisinopril SR.,2026-02-13 22:42:06
+149,High Blood Pressure,10296,0.89,Primary treatment for high blood pressure using Lisinopril Plus.,2026-02-14 22:42:06
+150,Acute high blood pressure,10296,0.82,Recommended for acute cases of high blood pressure.,2026-02-17 22:42:06
+151,High Blood Pressure,10440,0.97,Primary treatment for high blood pressure using Lisinopril Lite.,2026-02-07 22:42:06
+152,High Blood Pressure,10584,0.9,Primary treatment for high blood pressure using Lisinopril Lite.,2026-02-09 22:42:06
+153,High Blood Pressure,10728,0.94,Primary treatment for high blood pressure using Lisinopril Max.,2026-02-21 22:42:06
+154,High Blood Pressure,10872,0.88,Primary treatment for high blood pressure using Lisinopril Forte.,2026-02-13 22:42:06
+155,High Blood Pressure,11016,0.96,Primary treatment for high blood pressure using Lisinopril Plus.,2026-02-11 22:42:06
+156,Acute high blood pressure,11016,0.71,Recommended for acute cases of high blood pressure.,2026-02-19 22:42:06
+157,High Blood Pressure,11160,0.99,Primary treatment for high blood pressure using Lisinopril.,2026-02-08 22:42:06
+158,Acute high blood pressure,11160,0.77,Recommended for acute cases of high blood pressure.,2026-02-15 22:42:06
+159,High Blood Pressure,11304,0.86,Primary treatment for high blood pressure using Lisinopril Lite.,2026-02-13 22:42:06
+160,Acute high blood pressure,11304,0.75,Recommended for acute cases of high blood pressure.,2026-02-13 22:42:06
+161,High Blood Pressure,11448,0.9,Primary treatment for high blood pressure using Lisinopril XR.,2026-02-24 22:42:06
+162,High Blood Pressure,11592,0.9,Primary treatment for high blood pressure using Lisinopril Plus.,2026-02-08 22:42:06
+163,Acute high blood pressure,11592,0.83,Recommended for acute cases of high blood pressure.,2026-02-17 22:42:06
+164,High Blood Pressure,10031,0.97,Primary treatment for high blood pressure using Atenolol XR.,2026-02-03 22:42:06
+165,High Blood Pressure,10175,0.91,Primary treatment for high blood pressure using Atenolol Max.,2026-02-01 22:42:06
+166,Acute high blood pressure,10175,0.83,Recommended for acute cases of high blood pressure.,2026-02-18 22:42:06
+167,High Blood Pressure,10319,0.89,Primary treatment for high blood pressure using Atenolol Max.,2026-02-24 22:42:06
+168,Acute high blood pressure,10319,0.81,Recommended for acute cases of high blood pressure.,2026-02-07 22:42:06
+169,High Blood Pressure,10463,0.94,Primary treatment for high blood pressure using Atenolol XR.,2026-02-19 22:42:06
+170,High Blood Pressure,10607,0.98,Primary treatment for high blood pressure using Atenolol.,2026-02-05 22:42:06
+171,High Blood Pressure,10751,0.97,Primary treatment for high blood pressure using Atenolol Forte.,2026-02-21 22:42:06
+172,High Blood Pressure,10895,0.97,Primary treatment for high blood pressure using Atenolol.,2026-02-20 22:42:06
+173,High Blood Pressure,11039,0.91,Primary treatment for high blood pressure using Atenolol DS.,2026-02-15 22:42:06
+174,High Blood Pressure,11183,0.89,Primary treatment for high blood pressure using Atenolol Lite.,2026-02-14 22:42:06
+175,Acute high blood pressure,11183,0.74,Recommended for acute cases of high blood pressure.,2026-02-06 22:42:06
+176,High Blood Pressure,11327,0.95,Primary treatment for high blood pressure using Atenolol Forte.,2026-02-15 22:42:06
+177,Acute high blood pressure,11327,0.73,Recommended for acute cases of high blood pressure.,2026-02-02 22:42:06
+178,High Blood Pressure,11471,0.95,Primary treatment for high blood pressure using Atenolol XR.,2026-02-01 22:42:06
+179,Acute high blood pressure,11471,0.74,Recommended for acute cases of high blood pressure.,2026-02-04 22:42:06
+180,High Blood Pressure,10032,0.85,Primary treatment for high blood pressure using Metoprolol Forte.,2026-02-27 22:42:06
+181,High Blood Pressure,10176,0.9,Primary treatment for high blood pressure using Metoprolol XR.,2026-02-08 22:42:06
+182,Acute high blood pressure,10176,0.7,Recommended for acute cases of high blood pressure.,2026-02-14 22:42:06
+183,High Blood Pressure,10320,0.89,Primary treatment for high blood pressure using Metoprolol SR.,2026-02-26 22:42:06
+184,High Blood Pressure,10464,0.91,Primary treatment for high blood pressure using Metoprolol XR.,2026-02-18 22:42:06
+185,High Blood Pressure,10608,0.9,Primary treatment for high blood pressure using Metoprolol Plus.,2026-02-13 22:42:06
+186,Acute high blood pressure,10608,0.75,Recommended for acute cases of high blood pressure.,2026-02-13 22:42:06
+187,High Blood Pressure,10752,0.95,Primary treatment for high blood pressure using Metoprolol Lite.,2026-02-01 22:42:06
+188,High Blood Pressure,10896,0.93,Primary treatment for high blood pressure using Metoprolol Forte.,2026-02-14 22:42:06
+189,High Blood Pressure,11040,0.87,Primary treatment for high blood pressure using Metoprolol Forte.,2026-01-30 22:42:06
+190,High Blood Pressure,11184,0.95,Primary treatment for high blood pressure using Metoprolol Forte.,2026-02-07 22:42:06
+191,High Blood Pressure,11328,0.87,Primary treatment for high blood pressure using Metoprolol XR.,2026-01-31 22:42:06
+192,Acute high blood pressure,11328,0.79,Recommended for acute cases of high blood pressure.,2026-02-26 22:42:06
+193,High Blood Pressure,11472,0.89,Primary treatment for high blood pressure using Metoprolol DS.,2026-02-25 22:42:06
+194,High Blood Pressure,10033,0.94,Primary treatment for high blood pressure using Enalapril DS.,2026-02-08 22:42:06
+195,Acute high blood pressure,10033,0.79,Recommended for acute cases of high blood pressure.,2026-02-04 22:42:06
+196,High Blood Pressure,10177,0.85,Primary treatment for high blood pressure using Enalapril DS.,2026-02-19 22:42:06
+197,High Blood Pressure,10321,0.96,Primary treatment for high blood pressure using Enalapril XR.,2026-02-08 22:42:06
+198,High Blood Pressure,10465,0.85,Primary treatment for high blood pressure using Enalapril Max.,2026-02-28 22:42:06
+199,Acute high blood pressure,10465,0.79,Recommended for acute cases of high blood pressure.,2026-02-17 22:42:06
+200,High Blood Pressure,10609,0.96,Primary treatment for high blood pressure using Enalapril Max.,2026-02-27 22:42:06
+201,High Blood Pressure,10753,0.95,Primary treatment for high blood pressure using Enalapril Lite.,2026-02-23 22:42:06
+202,High Blood Pressure,10897,0.88,Primary treatment for high blood pressure using Enalapril Forte.,2026-02-09 22:42:06
+203,High Blood Pressure,11041,0.9,Primary treatment for high blood pressure using Enalapril DS.,2026-02-21 22:42:06
+204,High Blood Pressure,11185,0.99,Primary treatment for high blood pressure using Enalapril Plus.,2026-01-30 22:42:06
+205,Acute high blood pressure,11185,0.73,Recommended for acute cases of high blood pressure.,2026-02-03 22:42:06
+206,High Blood Pressure,11329,0.96,Primary treatment for high blood pressure using Enalapril Max.,2026-02-04 22:42:06
+207,High Blood Pressure,11473,0.99,Primary treatment for high blood pressure using Enalapril SR.,2026-02-08 22:42:06
+208,Acute high blood pressure,11473,0.75,Recommended for acute cases of high blood pressure.,2026-02-04 22:42:06
+209,High Cholesterol,10005,0.98,Primary treatment for high cholesterol using Atorvastatin Max.,2026-02-03 22:42:06
+210,High Cholesterol,10149,0.91,Primary treatment for high cholesterol using Atorvastatin Forte.,2026-02-18 22:42:06
+211,High Cholesterol,10293,0.96,Primary treatment for high cholesterol using Atorvastatin Plus.,2026-02-19 22:42:06
+212,High Cholesterol,10437,0.95,Primary treatment for high cholesterol using Atorvastatin Lite.,2026-02-12 22:42:06
+213,Acute high cholesterol,10437,0.83,Recommended for acute cases of high cholesterol.,2026-02-16 22:42:06
+214,High Cholesterol,10581,0.96,Primary treatment for high cholesterol using Atorvastatin Plus.,2026-02-10 22:42:06
+215,Acute high cholesterol,10581,0.72,Recommended for acute cases of high cholesterol.,2026-02-13 22:42:06
+216,High Cholesterol,10725,0.93,Primary treatment for high cholesterol using Atorvastatin Lite.,2026-02-24 22:42:06
+217,High Cholesterol,10869,0.88,Primary treatment for high cholesterol using Atorvastatin DS.,2026-02-06 22:42:06
+218,High Cholesterol,11013,0.9,Primary treatment for high cholesterol using Atorvastatin Forte.,2026-02-26 22:42:06
+219,Acute high cholesterol,11013,0.7,Recommended for acute cases of high cholesterol.,2026-02-14 22:42:06
+220,High Cholesterol,11157,0.91,Primary treatment for high cholesterol using Atorvastatin Forte.,2026-02-16 22:42:06
+221,High Cholesterol,11301,0.86,Primary treatment for high cholesterol using Atorvastatin Plus.,2026-02-12 22:42:06
+222,High Cholesterol,11445,0.87,Primary treatment for high cholesterol using Atorvastatin Max.,2026-02-16 22:42:06
+223,Acute high cholesterol,11445,0.75,Recommended for acute cases of high cholesterol.,2026-02-12 22:42:06
+224,High Cholesterol,11589,0.86,Primary treatment for high cholesterol using Atorvastatin XR.,2026-02-26 22:42:06
+225,Acute high cholesterol,11589,0.8,Recommended for acute cases of high cholesterol.,2026-02-24 22:42:06
+226,High Cholesterol,10036,0.98,Primary treatment for high cholesterol using Simvastatin XR.,2026-01-30 22:42:06
+227,High Cholesterol,10180,0.87,Primary treatment for high cholesterol using Simvastatin Plus.,2026-01-30 22:42:06
+228,High Cholesterol,10324,0.99,Primary treatment for high cholesterol using Simvastatin SR.,2026-02-21 22:42:06
+229,High Cholesterol,10468,0.9,Primary treatment for high cholesterol using Simvastatin.,2026-02-01 22:42:06
+230,Acute high cholesterol,10468,0.81,Recommended for acute cases of high cholesterol.,2026-02-10 22:42:06
+231,High Cholesterol,10612,0.87,Primary treatment for high cholesterol using Simvastatin.,2026-02-05 22:42:06
+232,Acute high cholesterol,10612,0.77,Recommended for acute cases of high cholesterol.,2026-02-15 22:42:06
+233,High Cholesterol,10756,0.94,Primary treatment for high cholesterol using Simvastatin Max.,2026-02-08 22:42:06
+234,High Cholesterol,10900,0.89,Primary treatment for high cholesterol using Simvastatin XR.,2026-01-31 22:42:06
+235,High Cholesterol,11044,0.96,Primary treatment for high cholesterol using Simvastatin Lite.,2026-02-17 22:42:06
+236,High Cholesterol,11188,0.87,Primary treatment for high cholesterol using Simvastatin Lite.,2026-02-21 22:42:06
+237,High Cholesterol,11332,0.88,Primary treatment for high cholesterol using Simvastatin Plus.,2026-02-07 22:42:06
+238,High Cholesterol,11476,0.92,Primary treatment for high cholesterol using Simvastatin Lite.,2026-01-29 22:42:06
+239,High Cholesterol,10037,0.87,Primary treatment for high cholesterol using Rosuvastatin DS.,2026-02-12 22:42:06
+240,High Cholesterol,10181,0.93,Primary treatment for high cholesterol using Rosuvastatin.,2026-02-17 22:42:06
+241,Acute high cholesterol,10181,0.8,Recommended for acute cases of high cholesterol.,2026-02-16 22:42:06
+242,High Cholesterol,10325,0.86,Primary treatment for high cholesterol using Rosuvastatin Max.,2026-02-24 22:42:06
+243,High Cholesterol,10469,0.95,Primary treatment for high cholesterol using Rosuvastatin SR.,2026-02-26 22:42:06
+244,High Cholesterol,10613,0.86,Primary treatment for high cholesterol using Rosuvastatin.,2026-02-12 22:42:06
+245,High Cholesterol,10757,0.89,Primary treatment for high cholesterol using Rosuvastatin.,2026-02-28 22:42:06
+246,Acute high cholesterol,10757,0.82,Recommended for acute cases of high cholesterol.,2026-02-14 22:42:06
+247,High Cholesterol,10901,0.94,Primary treatment for high cholesterol using Rosuvastatin Max.,2026-02-28 22:42:06
+248,Acute high cholesterol,10901,0.8,Recommended for acute cases of high cholesterol.,2026-02-08 22:42:06
+249,High Cholesterol,11045,0.91,Primary treatment for high cholesterol using Rosuvastatin XR.,2026-02-21 22:42:06
+250,High Cholesterol,11189,0.88,Primary treatment for high cholesterol using Rosuvastatin XR.,2026-01-31 22:42:06
+251,High Cholesterol,11333,0.92,Primary treatment for high cholesterol using Rosuvastatin Lite.,2026-02-02 22:42:06
+252,High Cholesterol,11477,0.88,Primary treatment for high cholesterol using Rosuvastatin XR.,2026-02-06 22:42:06
+253,Acid Reflux / Heartburn,10007,0.9,Primary treatment for acid reflux / heartburn using Omeprazole Forte.,2026-02-21 22:42:06
+254,Acid Reflux / Heartburn,10151,0.87,Primary treatment for acid reflux / heartburn using Omeprazole XR.,2026-02-06 22:42:06
+255,Acid Reflux / Heartburn,10295,0.85,Primary treatment for acid reflux / heartburn using Omeprazole DS.,2026-02-25 22:42:06
+256,Acute acid reflux / heartburn,10295,0.71,Recommended for acute cases of acid reflux / heartburn.,2026-01-30 22:42:06
+257,Acid Reflux / Heartburn,10439,0.98,Primary treatment for acid reflux / heartburn using Omeprazole.,2026-02-08 22:42:06
+258,Acute acid reflux / heartburn,10439,0.75,Recommended for acute cases of acid reflux / heartburn.,2026-02-21 22:42:06
+259,Acid Reflux / Heartburn,10583,0.88,Primary treatment for acid reflux / heartburn using Omeprazole DS.,2026-02-10 22:42:06
+260,Acid Reflux / Heartburn,10727,0.89,Primary treatment for acid reflux / heartburn using Omeprazole.,2026-02-05 22:42:06
+261,Acute acid reflux / heartburn,10727,0.72,Recommended for acute cases of acid reflux / heartburn.,2026-02-06 22:42:06
+262,Acid Reflux / Heartburn,10871,0.94,Primary treatment for acid reflux / heartburn using Omeprazole Max.,2026-02-14 22:42:06
+263,Acute acid reflux / heartburn,10871,0.75,Recommended for acute cases of acid reflux / heartburn.,2026-02-03 22:42:06
+264,Acid Reflux / Heartburn,11015,0.98,Primary treatment for acid reflux / heartburn using Omeprazole DS.,2026-02-09 22:42:06
+265,Acute acid reflux / heartburn,11015,0.83,Recommended for acute cases of acid reflux / heartburn.,2026-01-30 22:42:06
+266,Acid Reflux / Heartburn,11159,0.87,Primary treatment for acid reflux / heartburn using Omeprazole XR.,2026-02-11 22:42:06
+267,Acid Reflux / Heartburn,11303,0.95,Primary treatment for acid reflux / heartburn using Omeprazole Lite.,2026-02-14 22:42:06
+268,Acid Reflux / Heartburn,11447,0.85,Primary treatment for acid reflux / heartburn using Omeprazole Max.,2026-02-13 22:42:06
+269,Acid Reflux / Heartburn,11591,0.96,Primary treatment for acid reflux / heartburn using Omeprazole DS.,2026-02-19 22:42:06
+270,Acid Reflux / Heartburn,10038,0.93,Primary treatment for acid reflux / heartburn using Pantoprazole DS.,2026-02-11 22:42:06
+271,Acid Reflux / Heartburn,10182,0.91,Primary treatment for acid reflux / heartburn using Pantoprazole Lite.,2026-01-30 22:42:06
+272,Acid Reflux / Heartburn,10326,0.95,Primary treatment for acid reflux / heartburn using Pantoprazole DS.,2026-02-06 22:42:06
+273,Acute acid reflux / heartburn,10326,0.72,Recommended for acute cases of acid reflux / heartburn.,2026-02-03 22:42:06
+274,Acid Reflux / Heartburn,10470,0.94,Primary treatment for acid reflux / heartburn using Pantoprazole Forte.,2026-02-25 22:42:06
+275,Acid Reflux / Heartburn,10614,0.91,Primary treatment for acid reflux / heartburn using Pantoprazole DS.,2026-02-09 22:42:06
+276,Acute acid reflux / heartburn,10614,0.76,Recommended for acute cases of acid reflux / heartburn.,2026-02-17 22:42:06
+277,Acid Reflux / Heartburn,10758,0.87,Primary treatment for acid reflux / heartburn using Pantoprazole Plus.,2026-02-26 22:42:06
+278,Acid Reflux / Heartburn,10902,0.95,Primary treatment for acid reflux / heartburn using Pantoprazole DS.,2026-02-23 22:42:06
+279,Acute acid reflux / heartburn,10902,0.79,Recommended for acute cases of acid reflux / heartburn.,2026-02-16 22:42:06
+280,Acid Reflux / Heartburn,11046,0.98,Primary treatment for acid reflux / heartburn using Pantoprazole Lite.,2026-02-22 22:42:06
+281,Acid Reflux / Heartburn,11190,0.98,Primary treatment for acid reflux / heartburn using Pantoprazole Forte.,2026-02-18 22:42:06
+282,Acid Reflux / Heartburn,11334,0.98,Primary treatment for acid reflux / heartburn using Pantoprazole Forte.,2026-01-30 22:42:06
+283,Acid Reflux / Heartburn,11478,0.91,Primary treatment for acid reflux / heartburn using Pantoprazole.,2026-02-07 22:42:06
+284,Acid Reflux / Heartburn,10039,0.87,Primary treatment for acid reflux / heartburn using Ranitidine XR.,2026-02-22 22:42:06
+285,Acid Reflux / Heartburn,10183,0.93,Primary treatment for acid reflux / heartburn using Ranitidine Lite.,2026-02-21 22:42:06
+286,Acute acid reflux / heartburn,10183,0.75,Recommended for acute cases of acid reflux / heartburn.,2026-02-24 22:42:06
+287,Acid Reflux / Heartburn,10327,0.98,Primary treatment for acid reflux / heartburn using Ranitidine SR.,2026-02-27 22:42:06
+288,Acid Reflux / Heartburn,10471,0.98,Primary treatment for acid reflux / heartburn using Ranitidine Forte.,2026-02-13 22:42:06
+289,Acid Reflux / Heartburn,10615,0.86,Primary treatment for acid reflux / heartburn using Ranitidine Forte.,2026-02-26 22:42:06
+290,Acid Reflux / Heartburn,10759,0.87,Primary treatment for acid reflux / heartburn using Ranitidine XR.,2026-02-01 22:42:06
+291,Acid Reflux / Heartburn,10903,0.99,Primary treatment for acid reflux / heartburn using Ranitidine Lite.,2026-01-29 22:42:06
+292,Acid Reflux / Heartburn,11047,0.92,Primary treatment for acid reflux / heartburn using Ranitidine Lite.,2026-02-13 22:42:06
+293,Acute acid reflux / heartburn,11047,0.71,Recommended for acute cases of acid reflux / heartburn.,2026-02-27 22:42:06
+294,Acid Reflux / Heartburn,11191,0.86,Primary treatment for acid reflux / heartburn using Ranitidine SR.,2026-02-10 22:42:06
+295,Acid Reflux / Heartburn,11335,0.93,Primary treatment for acid reflux / heartburn using Ranitidine XR.,2026-02-09 22:42:06
+296,Acid Reflux / Heartburn,11479,0.88,Primary treatment for acid reflux / heartburn using Ranitidine Plus.,2026-02-04 22:42:06
+297,Allergies / Runny Nose,10009,0.91,Primary treatment for allergies / runny nose using Cetirizine SR.,2026-02-18 22:42:06
+298,Acute allergies / runny nose,10009,0.72,Recommended for acute cases of allergies / runny nose.,2026-01-30 22:42:06
+299,Allergies / Runny Nose,10153,0.92,Primary treatment for allergies / runny nose using Cetirizine Max.,2026-02-19 22:42:06
+300,Allergies / Runny Nose,10297,0.98,Primary treatment for allergies / runny nose using Cetirizine.,2026-02-09 22:42:06
+301,Acute allergies / runny nose,10297,0.79,Recommended for acute cases of allergies / runny nose.,2026-02-10 22:42:06
+302,Allergies / Runny Nose,10441,0.94,Primary treatment for allergies / runny nose using Cetirizine Lite.,2026-02-05 22:42:06
+303,Acute allergies / runny nose,10441,0.83,Recommended for acute cases of allergies / runny nose.,2026-02-25 22:42:06
+304,Allergies / Runny Nose,10585,0.98,Primary treatment for allergies / runny nose using Cetirizine DS.,2026-02-19 22:42:06
+305,Allergies / Runny Nose,10729,0.94,Primary treatment for allergies / runny nose using Cetirizine SR.,2026-01-29 22:42:06
+306,Acute allergies / runny nose,10729,0.79,Recommended for acute cases of allergies / runny nose.,2026-01-30 22:42:06
+307,Allergies / Runny Nose,10873,0.87,Primary treatment for allergies / runny nose using Cetirizine Plus.,2026-02-23 22:42:06
+308,Allergies / Runny Nose,11017,0.87,Primary treatment for allergies / runny nose using Cetirizine Plus.,2026-01-29 22:42:06
+309,Allergies / Runny Nose,11161,0.89,Primary treatment for allergies / runny nose using Cetirizine Max.,2026-02-06 22:42:06
+310,Acute allergies / runny nose,11161,0.71,Recommended for acute cases of allergies / runny nose.,2026-02-06 22:42:06
+311,Allergies / Runny Nose,11305,0.95,Primary treatment for allergies / runny nose using Cetirizine.,2026-02-11 22:42:06
+312,Allergies / Runny Nose,11449,0.97,Primary treatment for allergies / runny nose using Cetirizine Forte.,2026-01-30 22:42:06
+313,Allergies / Runny Nose,11593,0.93,Primary treatment for allergies / runny nose using Cetirizine Lite.,2026-02-08 22:42:06
+314,Allergies / Runny Nose,10010,0.99,Primary treatment for allergies / runny nose using Loratadine.,2026-02-17 22:42:06
+315,Allergies / Runny Nose,10154,0.95,Primary treatment for allergies / runny nose using Loratadine SR.,2026-02-09 22:42:06
+316,Allergies / Runny Nose,10298,0.95,Primary treatment for allergies / runny nose using Loratadine XR.,2026-02-06 22:42:06
+317,Allergies / Runny Nose,10442,0.98,Primary treatment for allergies / runny nose using Loratadine SR.,2026-02-28 22:42:06
+318,Acute allergies / runny nose,10442,0.72,Recommended for acute cases of allergies / runny nose.,2026-02-17 22:42:06
+319,Allergies / Runny Nose,10586,0.9,Primary treatment for allergies / runny nose using Loratadine XR.,2026-02-18 22:42:06
+320,Acute allergies / runny nose,10586,0.79,Recommended for acute cases of allergies / runny nose.,2026-02-05 22:42:06
+321,Allergies / Runny Nose,10730,0.87,Primary treatment for allergies / runny nose using Loratadine Max.,2026-02-15 22:42:06
+322,Allergies / Runny Nose,10874,0.97,Primary treatment for allergies / runny nose using Loratadine DS.,2026-01-30 22:42:06
+323,Acute allergies / runny nose,10874,0.77,Recommended for acute cases of allergies / runny nose.,2026-02-20 22:42:06
+324,Allergies / Runny Nose,11018,0.99,Primary treatment for allergies / runny nose using Loratadine SR.,2026-02-15 22:42:06
+325,Allergies / Runny Nose,11162,0.92,Primary treatment for allergies / runny nose using Loratadine XR.,2026-01-31 22:42:06
+326,Allergies / Runny Nose,11306,0.98,Primary treatment for allergies / runny nose using Loratadine DS.,2026-02-02 22:42:06
+327,Allergies / Runny Nose,11450,0.86,Primary treatment for allergies / runny nose using Loratadine.,2026-01-29 22:42:06
+328,Acute allergies / runny nose,11450,0.81,Recommended for acute cases of allergies / runny nose.,2026-02-08 22:42:06
+329,Allergies / Runny Nose,11594,0.89,Primary treatment for allergies / runny nose using Loratadine Forte.,2026-02-27 22:42:06
+330,Cough / Asthma,10011,0.94,Primary treatment for cough / asthma using Salbutamol XR.,2026-02-27 22:42:06
+331,Cough / Asthma,10155,0.87,Primary treatment for cough / asthma using Salbutamol Plus.,2026-02-01 22:42:06
+332,Cough / Asthma,10299,0.85,Primary treatment for cough / asthma using Salbutamol DS.,2026-02-20 22:42:06
+333,Acute cough / asthma,10299,0.74,Recommended for acute cases of cough / asthma.,2026-02-01 22:42:06
+334,Cough / Asthma,10443,0.88,Primary treatment for cough / asthma using Salbutamol Max.,2026-02-25 22:42:06
+335,Acute cough / asthma,10443,0.81,Recommended for acute cases of cough / asthma.,2026-02-19 22:42:06
+336,Cough / Asthma,10587,0.92,Primary treatment for cough / asthma using Salbutamol Lite.,2026-02-20 22:42:06
+337,Acute cough / asthma,10587,0.73,Recommended for acute cases of cough / asthma.,2026-02-16 22:42:06
+338,Cough / Asthma,10731,0.93,Primary treatment for cough / asthma using Salbutamol SR.,2026-02-25 22:42:06
+339,Cough / Asthma,10875,0.88,Primary treatment for cough / asthma using Salbutamol.,2026-02-17 22:42:06
+340,Cough / Asthma,11019,0.98,Primary treatment for cough / asthma using Salbutamol XR.,2026-02-28 22:42:06
+341,Cough / Asthma,11163,0.95,Primary treatment for cough / asthma using Salbutamol Lite.,2026-02-21 22:42:06
+342,Cough / Asthma,11307,0.94,Primary treatment for cough / asthma using Salbutamol Lite.,2026-01-30 22:42:06
+343,Cough / Asthma,11451,0.87,Primary treatment for cough / asthma using Salbutamol Plus.,2026-02-24 22:42:06
+344,Cough / Asthma,11595,0.94,Primary treatment for cough / asthma using Salbutamol DS.,2026-02-04 22:42:06
+345,Cough / Asthma,10084,0.89,Primary treatment for cough / asthma using Montelukast Lite.,2026-02-18 22:42:06
+346,Cough / Asthma,10228,0.96,Primary treatment for cough / asthma using Montelukast Forte.,2026-02-22 22:42:06
+347,Cough / Asthma,10372,0.98,Primary treatment for cough / asthma using Montelukast Forte.,2026-02-13 22:42:06
+348,Cough / Asthma,10516,0.98,Primary treatment for cough / asthma using Montelukast XR.,2026-02-08 22:42:06
+349,Cough / Asthma,10660,0.91,Primary treatment for cough / asthma using Montelukast Plus.,2026-02-17 22:42:06
+350,Cough / Asthma,10804,0.96,Primary treatment for cough / asthma using Montelukast DS.,2026-02-27 22:42:06
+351,Cough / Asthma,10948,0.92,Primary treatment for cough / asthma using Montelukast Forte.,2026-02-28 22:42:06
+352,Cough / Asthma,11092,0.97,Primary treatment for cough / asthma using Montelukast XR.,2026-02-08 22:42:06
+353,Cough / Asthma,11236,0.86,Primary treatment for cough / asthma using Montelukast Forte.,2026-02-11 22:42:06
+354,Cough / Asthma,11380,0.98,Primary treatment for cough / asthma using Montelukast XR.,2026-02-27 22:42:06
+355,Acute cough / asthma,11380,0.77,Recommended for acute cases of cough / asthma.,2026-02-14 22:42:06
+356,Cough / Asthma,11524,0.95,Primary treatment for cough / asthma using Montelukast XR.,2026-02-05 22:42:06
+357,Acute cough / asthma,11524,0.78,Recommended for acute cases of cough / asthma.,2026-02-06 22:42:06
+358,Diabetes (Type 2),10004,0.98,Primary treatment for diabetes (type 2) using Metformin Plus.,2026-01-30 22:42:06
+359,Diabetes (Type 2),10148,0.95,Primary treatment for diabetes (type 2) using Metformin Lite.,2026-02-07 22:42:06
+360,Diabetes (Type 2),10292,0.87,Primary treatment for diabetes (type 2) using Metformin SR.,2026-01-30 22:42:06
+361,Acute diabetes (type 2),10292,0.71,Recommended for acute cases of diabetes (type 2).,2026-02-11 22:42:06
+362,Diabetes (Type 2),10436,0.89,Primary treatment for diabetes (type 2) using Metformin Plus.,2026-02-07 22:42:06
+363,Diabetes (Type 2),10580,0.86,Primary treatment for diabetes (type 2) using Metformin.,2026-02-21 22:42:06
+364,Diabetes (Type 2),10724,0.95,Primary treatment for diabetes (type 2) using Metformin Plus.,2026-02-02 22:42:06
+365,Acute diabetes (type 2),10724,0.73,Recommended for acute cases of diabetes (type 2).,2026-02-06 22:42:06
+366,Diabetes (Type 2),10868,0.92,Primary treatment for diabetes (type 2) using Metformin DS.,2026-02-20 22:42:06
+367,Diabetes (Type 2),11012,0.91,Primary treatment for diabetes (type 2) using Metformin Plus.,2026-02-19 22:42:06
+368,Diabetes (Type 2),11156,0.85,Primary treatment for diabetes (type 2) using Metformin Plus.,2026-02-10 22:42:06
+369,Diabetes (Type 2),11300,0.93,Primary treatment for diabetes (type 2) using Metformin.,2026-02-19 22:42:06
+370,Diabetes (Type 2),11444,0.87,Primary treatment for diabetes (type 2) using Metformin Forte.,2026-02-10 22:42:06
+371,Acute diabetes (type 2),11444,0.82,Recommended for acute cases of diabetes (type 2).,2026-02-19 22:42:06
+372,Diabetes (Type 2),11588,0.9,Primary treatment for diabetes (type 2) using Metformin DS.,2026-01-30 22:42:06
+373,Anxiety / Insomnia,10019,0.89,Primary treatment for anxiety / insomnia using Alprazolam DS.,2026-02-08 22:42:06
+374,Acute anxiety / insomnia,10019,0.82,Recommended for acute cases of anxiety / insomnia.,2026-01-31 22:42:06
+375,Anxiety / Insomnia,10163,0.93,Primary treatment for anxiety / insomnia using Alprazolam XR.,2026-01-31 22:42:06
+376,Acute anxiety / insomnia,10163,0.79,Recommended for acute cases of anxiety / insomnia.,2026-01-30 22:42:06
+377,Anxiety / Insomnia,10307,0.94,Primary treatment for anxiety / insomnia using Alprazolam Lite.,2026-02-06 22:42:06
+378,Acute anxiety / insomnia,10307,0.75,Recommended for acute cases of anxiety / insomnia.,2026-02-05 22:42:06
+379,Anxiety / Insomnia,10451,0.95,Primary treatment for anxiety / insomnia using Alprazolam XR.,2026-01-29 22:42:06
+380,Anxiety / Insomnia,10595,0.89,Primary treatment for anxiety / insomnia using Alprazolam Forte.,2026-02-06 22:42:06
+381,Anxiety / Insomnia,10739,0.96,Primary treatment for anxiety / insomnia using Alprazolam SR.,2026-02-01 22:42:06
+382,Anxiety / Insomnia,10883,0.93,Primary treatment for anxiety / insomnia using Alprazolam XR.,2026-01-30 22:42:06
+383,Anxiety / Insomnia,11027,0.86,Primary treatment for anxiety / insomnia using Alprazolam Plus.,2026-02-17 22:42:06
+384,Acute anxiety / insomnia,11027,0.8,Recommended for acute cases of anxiety / insomnia.,2026-02-10 22:42:06
+385,Anxiety / Insomnia,11171,0.88,Primary treatment for anxiety / insomnia using Alprazolam SR.,2026-01-31 22:42:06
+386,Acute anxiety / insomnia,11171,0.71,Recommended for acute cases of anxiety / insomnia.,2026-02-13 22:42:06
+387,Anxiety / Insomnia,11315,0.98,Primary treatment for anxiety / insomnia using Alprazolam.,2026-02-09 22:42:06
+388,Anxiety / Insomnia,11459,0.91,Primary treatment for anxiety / insomnia using Alprazolam XR.,2026-02-16 22:42:06
+389,Anxiety / Insomnia,10020,0.92,Primary treatment for anxiety / insomnia using Diazepam SR.,2026-02-05 22:42:06
+390,Anxiety / Insomnia,10164,0.88,Primary treatment for anxiety / insomnia using Diazepam Max.,2026-02-02 22:42:06
+391,Anxiety / Insomnia,10308,0.93,Primary treatment for anxiety / insomnia using Diazepam SR.,2026-02-21 22:42:06
+392,Anxiety / Insomnia,10452,0.96,Primary treatment for anxiety / insomnia using Diazepam Forte.,2026-02-25 22:42:06
+393,Acute anxiety / insomnia,10452,0.71,Recommended for acute cases of anxiety / insomnia.,2026-02-05 22:42:06
+394,Anxiety / Insomnia,10596,0.87,Primary treatment for anxiety / insomnia using Diazepam DS.,2026-02-23 22:42:06
+395,Anxiety / Insomnia,10740,0.92,Primary treatment for anxiety / insomnia using Diazepam XR.,2026-02-22 22:42:06
+396,Anxiety / Insomnia,10884,0.94,Primary treatment for anxiety / insomnia using Diazepam Max.,2026-02-12 22:42:06
+397,Acute anxiety / insomnia,10884,0.74,Recommended for acute cases of anxiety / insomnia.,2026-02-01 22:42:06
+398,Anxiety / Insomnia,11028,0.85,Primary treatment for anxiety / insomnia using Diazepam XR.,2026-02-25 22:42:06
+399,Acute anxiety / insomnia,11028,0.78,Recommended for acute cases of anxiety / insomnia.,2026-01-30 22:42:06
+400,Anxiety / Insomnia,11172,0.86,Primary treatment for anxiety / insomnia using Diazepam XR.,2026-02-20 22:42:06
+401,Acute anxiety / insomnia,11172,0.75,Recommended for acute cases of anxiety / insomnia.,2026-02-21 22:42:06
+402,Anxiety / Insomnia,11316,0.86,Primary treatment for anxiety / insomnia using Diazepam Forte.,2026-02-23 22:42:06
+403,Acute anxiety / insomnia,11316,0.76,Recommended for acute cases of anxiety / insomnia.,2026-02-20 22:42:06
+404,Anxiety / Insomnia,11460,0.9,Primary treatment for anxiety / insomnia using Diazepam.,2026-02-21 22:42:06
+405,Depression,10017,0.91,Primary treatment for depression using Sertraline SR.,2026-02-14 22:42:06
+406,Depression,10161,0.94,Primary treatment for depression using Sertraline Lite.,2026-02-26 22:42:06
+407,Depression,10305,0.95,Primary treatment for depression using Sertraline Plus.,2026-02-23 22:42:06
+408,Depression,10449,0.95,Primary treatment for depression using Sertraline Max.,2026-02-16 22:42:06
+409,Depression,10593,0.95,Primary treatment for depression using Sertraline Forte.,2026-02-22 22:42:06
+410,Depression,10737,0.95,Primary treatment for depression using Sertraline DS.,2026-02-18 22:42:06
+411,Acute depression,10737,0.79,Recommended for acute cases of depression.,2026-02-07 22:42:06
+412,Depression,10881,0.88,Primary treatment for depression using Sertraline.,2026-02-25 22:42:06
+413,Acute depression,10881,0.8,Recommended for acute cases of depression.,2026-02-01 22:42:06
+414,Depression,11025,0.93,Primary treatment for depression using Sertraline Forte.,2026-02-27 22:42:06
+415,Acute depression,11025,0.76,Recommended for acute cases of depression.,2026-02-01 22:42:06
+416,Depression,11169,0.87,Primary treatment for depression using Sertraline XR.,2026-02-21 22:42:06
+417,Depression,11313,0.96,Primary treatment for depression using Sertraline Lite.,2026-02-07 22:42:06
+418,Acute depression,11313,0.81,Recommended for acute cases of depression.,2026-01-29 22:42:06
+419,Depression,11457,0.87,Primary treatment for depression using Sertraline Plus.,2026-02-04 22:42:06
+420,Depression,10018,0.96,Primary treatment for depression using Fluoxetine Lite.,2026-02-03 22:42:06
+421,Acute depression,10018,0.83,Recommended for acute cases of depression.,2026-02-26 22:42:06
+422,Depression,10162,0.94,Primary treatment for depression using Fluoxetine Max.,2026-02-24 22:42:06
+423,Depression,10306,0.89,Primary treatment for depression using Fluoxetine Forte.,2026-02-05 22:42:06
+424,Acute depression,10306,0.76,Recommended for acute cases of depression.,2026-02-19 22:42:06
+425,Depression,10450,0.98,Primary treatment for depression using Fluoxetine DS.,2026-02-13 22:42:06
+426,Depression,10594,0.86,Primary treatment for depression using Fluoxetine XR.,2026-02-09 22:42:06
+427,Depression,10738,0.97,Primary treatment for depression using Fluoxetine DS.,2026-02-10 22:42:06
+428,Depression,10882,0.88,Primary treatment for depression using Fluoxetine Max.,2026-02-09 22:42:06
+429,Depression,11026,0.96,Primary treatment for depression using Fluoxetine Plus.,2026-02-25 22:42:06
+430,Acute depression,11026,0.76,Recommended for acute cases of depression.,2026-02-12 22:42:06
+431,Depression,11170,0.91,Primary treatment for depression using Fluoxetine Lite.,2026-02-09 22:42:06
+432,Acute depression,11170,0.82,Recommended for acute cases of depression.,2026-02-25 22:42:06
+433,Depression,11314,0.87,Primary treatment for depression using Fluoxetine Forte.,2026-02-15 22:42:06
+434,Depression,11458,0.91,Primary treatment for depression using Fluoxetine Max.,2026-02-19 22:42:06
+435,Pain (Severe),10022,0.94,Primary treatment for pain (severe) using Tramadol DS.,2026-02-27 22:42:06
+436,Pain (Severe),10166,0.97,Primary treatment for pain (severe) using Tramadol DS.,2026-02-11 22:42:06
+437,Acute pain (severe),10166,0.73,Recommended for acute cases of pain (severe).,2026-02-08 22:42:06
+438,Pain (Severe),10310,0.88,Primary treatment for pain (severe) using Tramadol SR.,2026-02-16 22:42:06
+439,Pain (Severe),10454,0.91,Primary treatment for pain (severe) using Tramadol Plus.,2026-02-23 22:42:06
+440,Acute pain (severe),10454,0.77,Recommended for acute cases of pain (severe).,2026-02-03 22:42:06
+441,Pain (Severe),10598,0.87,Primary treatment for pain (severe) using Tramadol XR.,2026-01-29 22:42:06
+442,Pain (Severe),10742,0.95,Primary treatment for pain (severe) using Tramadol Max.,2026-02-28 22:42:06
+443,Pain (Severe),10886,0.9,Primary treatment for pain (severe) using Tramadol Forte.,2026-01-29 22:42:06
+444,Pain (Severe),11030,0.93,Primary treatment for pain (severe) using Tramadol SR.,2026-02-17 22:42:06
+445,Pain (Severe),11174,0.86,Primary treatment for pain (severe) using Tramadol Lite.,2026-02-03 22:42:06
+446,Acute pain (severe),11174,0.77,Recommended for acute cases of pain (severe).,2026-02-18 22:42:06
+447,Pain (Severe),11318,0.91,Primary treatment for pain (severe) using Tramadol Max.,2026-02-23 22:42:06
+448,Pain (Severe),11462,0.88,Primary treatment for pain (severe) using Tramadol Plus.,2026-02-08 22:42:06
+449,Acute pain (severe),11462,0.84,Recommended for acute cases of pain (severe).,2026-02-20 22:42:06
+450,Pain (Severe),10023,0.9,Primary treatment for pain (severe) using Morphine Lite.,2026-02-17 22:42:06
+451,Pain (Severe),10167,0.97,Primary treatment for pain (severe) using Morphine SR.,2026-02-13 22:42:06
+452,Pain (Severe),10311,0.87,Primary treatment for pain (severe) using Morphine DS.,2026-02-19 22:42:06
+453,Pain (Severe),10455,0.97,Primary treatment for pain (severe) using Morphine SR.,2026-02-25 22:42:06
+454,Acute pain (severe),10455,0.7,Recommended for acute cases of pain (severe).,2026-02-07 22:42:06
+455,Pain (Severe),10599,0.99,Primary treatment for pain (severe) using Morphine SR.,2026-02-06 22:42:06
+456,Pain (Severe),10743,0.95,Primary treatment for pain (severe) using Morphine Max.,2026-02-04 22:42:06
+457,Pain (Severe),10887,0.97,Primary treatment for pain (severe) using Morphine Lite.,2026-02-19 22:42:06
+458,Pain (Severe),11031,0.87,Primary treatment for pain (severe) using Morphine.,2026-02-26 22:42:06
+459,Pain (Severe),11175,0.92,Primary treatment for pain (severe) using Morphine SR.,2026-01-31 22:42:06
+460,Pain (Severe),11319,0.91,Primary treatment for pain (severe) using Morphine Forte.,2026-02-24 22:42:06
+461,Acute pain (severe),11319,0.8,Recommended for acute cases of pain (severe).,2026-02-06 22:42:06
+462,Pain (Severe),11463,0.95,Primary treatment for pain (severe) using Morphine SR.,2026-02-02 22:42:06
+463,Pain (Severe),10024,0.98,Primary treatment for pain (severe) using Codeine Lite.,2026-01-30 22:42:06
+464,Acute pain (severe),10024,0.74,Recommended for acute cases of pain (severe).,2026-01-31 22:42:06
+465,Pain (Severe),10168,0.88,Primary treatment for pain (severe) using Codeine Max.,2026-01-31 22:42:06
+466,Pain (Severe),10312,0.88,Primary treatment for pain (severe) using Codeine Max.,2026-01-30 22:42:06
+467,Pain (Severe),10456,0.95,Primary treatment for pain (severe) using Codeine Forte.,2026-02-23 22:42:06
+468,Pain (Severe),10600,0.85,Primary treatment for pain (severe) using Codeine Lite.,2026-02-11 22:42:06
+469,Pain (Severe),10744,0.92,Primary treatment for pain (severe) using Codeine SR.,2026-02-28 22:42:06
+470,Pain (Severe),10888,0.95,Primary treatment for pain (severe) using Codeine Lite.,2026-02-09 22:42:06
+471,Pain (Severe),11032,0.86,Primary treatment for pain (severe) using Codeine SR.,2026-02-09 22:42:06
+472,Pain (Severe),11176,0.88,Primary treatment for pain (severe) using Codeine Max.,2026-02-14 22:42:06
+473,Pain (Severe),11320,0.9,Primary treatment for pain (severe) using Codeine XR.,2026-02-21 22:42:06
+474,Pain (Severe),11464,0.93,Primary treatment for pain (severe) using Codeine Lite.,2026-02-24 22:42:06
+475,Blood Clots (Prevention),10025,0.97,Primary treatment for blood clots (prevention) using Warfarin SR.,2026-02-03 22:42:06
+476,Blood Clots (Prevention),10169,0.88,Primary treatment for blood clots (prevention) using Warfarin Max.,2026-02-27 22:42:06
+477,Blood Clots (Prevention),10313,0.89,Primary treatment for blood clots (prevention) using Warfarin Lite.,2026-02-14 22:42:06
+478,Acute blood clots (prevention),10313,0.78,Recommended for acute cases of blood clots (prevention).,2026-02-21 22:42:06
+479,Blood Clots (Prevention),10457,0.96,Primary treatment for blood clots (prevention) using Warfarin DS.,2026-02-08 22:42:06
+480,Blood Clots (Prevention),10601,0.96,Primary treatment for blood clots (prevention) using Warfarin Lite.,2026-02-25 22:42:06
+481,Blood Clots (Prevention),10745,0.96,Primary treatment for blood clots (prevention) using Warfarin DS.,2026-01-29 22:42:06
+482,Acute blood clots (prevention),10745,0.74,Recommended for acute cases of blood clots (prevention).,2026-02-14 22:42:06
+483,Blood Clots (Prevention),10889,0.92,Primary treatment for blood clots (prevention) using Warfarin.,2026-02-06 22:42:06
+484,Blood Clots (Prevention),11033,0.99,Primary treatment for blood clots (prevention) using Warfarin SR.,2026-02-13 22:42:06
+485,Blood Clots (Prevention),11177,0.86,Primary treatment for blood clots (prevention) using Warfarin DS.,2026-02-06 22:42:06
+486,Blood Clots (Prevention),11321,0.86,Primary treatment for blood clots (prevention) using Warfarin DS.,2026-02-16 22:42:06
+487,Blood Clots (Prevention),11465,0.94,Primary treatment for blood clots (prevention) using Warfarin XR.,2026-02-14 22:42:06
+488,Blood Clots (Prevention),10026,0.89,Primary treatment for blood clots (prevention) using Clopidogrel Max.,2026-02-02 22:42:06
+489,Acute blood clots (prevention),10026,0.74,Recommended for acute cases of blood clots (prevention).,2026-02-08 22:42:06
+490,Blood Clots (Prevention),10170,0.95,Primary treatment for blood clots (prevention) using Clopidogrel DS.,2026-02-22 22:42:06
+491,Blood Clots (Prevention),10314,0.92,Primary treatment for blood clots (prevention) using Clopidogrel Forte.,2026-01-30 22:42:06
+492,Blood Clots (Prevention),10458,0.87,Primary treatment for blood clots (prevention) using Clopidogrel DS.,2026-02-14 22:42:06
+493,Acute blood clots (prevention),10458,0.73,Recommended for acute cases of blood clots (prevention).,2026-02-18 22:42:06
+494,Blood Clots (Prevention),10602,0.9,Primary treatment for blood clots (prevention) using Clopidogrel DS.,2026-02-01 22:42:06
+495,Blood Clots (Prevention),10746,0.93,Primary treatment for blood clots (prevention) using Clopidogrel Max.,2026-02-19 22:42:06
+496,Blood Clots (Prevention),10890,0.87,Primary treatment for blood clots (prevention) using Clopidogrel Plus.,2026-02-04 22:42:06
+497,Blood Clots (Prevention),11034,0.98,Primary treatment for blood clots (prevention) using Clopidogrel SR.,2026-02-04 22:42:06
+498,Blood Clots (Prevention),11178,0.98,Primary treatment for blood clots (prevention) using Clopidogrel Plus.,2026-02-12 22:42:06
+499,Acute blood clots (prevention),11178,0.73,Recommended for acute cases of blood clots (prevention).,2026-02-28 22:42:06
+500,Blood Clots (Prevention),11322,0.93,Primary treatment for blood clots (prevention) using Clopidogrel Max.,2026-02-12 22:42:06
+501,Blood Clots (Prevention),11466,0.97,Primary treatment for blood clots (prevention) using Clopidogrel Forte.,2026-02-03 22:42:06
+502,Blood Clots (Prevention),10027,0.87,Primary treatment for blood clots (prevention) using Rivaroxaban Plus.,2026-02-02 22:42:06
+503,Acute blood clots (prevention),10027,0.71,Recommended for acute cases of blood clots (prevention).,2026-02-01 22:42:06
+504,Blood Clots (Prevention),10171,0.95,Primary treatment for blood clots (prevention) using Rivaroxaban Max.,2026-02-28 22:42:06
+505,Blood Clots (Prevention),10315,0.95,Primary treatment for blood clots (prevention) using Rivaroxaban.,2026-02-10 22:42:06
+506,Blood Clots (Prevention),10459,0.95,Primary treatment for blood clots (prevention) using Rivaroxaban SR.,2026-02-25 22:42:06
+507,Blood Clots (Prevention),10603,0.92,Primary treatment for blood clots (prevention) using Rivaroxaban Plus.,2026-02-24 22:42:06
+508,Blood Clots (Prevention),10747,0.85,Primary treatment for blood clots (prevention) using Rivaroxaban.,2026-02-02 22:42:06
+509,Blood Clots (Prevention),10891,0.97,Primary treatment for blood clots (prevention) using Rivaroxaban Plus.,2026-02-20 22:42:06
+510,Acute blood clots (prevention),10891,0.7,Recommended for acute cases of blood clots (prevention).,2026-02-12 22:42:06
+511,Blood Clots (Prevention),11035,0.99,Primary treatment for blood clots (prevention) using Rivaroxaban Plus.,2026-02-23 22:42:06
+512,Blood Clots (Prevention),11179,0.9,Primary treatment for blood clots (prevention) using Rivaroxaban Lite.,2026-02-26 22:42:06
+513,Blood Clots (Prevention),11323,0.99,Primary treatment for blood clots (prevention) using Rivaroxaban Forte.,2026-01-30 22:42:06
+514,Acute blood clots (prevention),11323,0.79,Recommended for acute cases of blood clots (prevention).,2026-02-06 22:42:06
+515,Blood Clots (Prevention),11467,0.97,Primary treatment for blood clots (prevention) using Rivaroxaban.,2026-02-07 22:42:06
+516,Acute blood clots (prevention),11467,0.71,Recommended for acute cases of blood clots (prevention).,2026-02-06 22:42:06
+517,Edema / Fluid Retention,10028,0.9,Primary treatment for edema / fluid retention using Furosemide Max.,2026-02-23 22:42:06
+518,Edema / Fluid Retention,10172,0.94,Primary treatment for edema / fluid retention using Furosemide SR.,2026-02-11 22:42:06
+519,Acute edema / fluid retention,10172,0.82,Recommended for acute cases of edema / fluid retention.,2026-02-04 22:42:06
+520,Edema / Fluid Retention,10316,0.98,Primary treatment for edema / fluid retention using Furosemide XR.,2026-02-03 22:42:06
+521,Acute edema / fluid retention,10316,0.82,Recommended for acute cases of edema / fluid retention.,2026-02-26 22:42:06
+522,Edema / Fluid Retention,10460,0.91,Primary treatment for edema / fluid retention using Furosemide Max.,2026-02-11 22:42:06
+523,Edema / Fluid Retention,10604,0.95,Primary treatment for edema / fluid retention using Furosemide Plus.,2026-02-05 22:42:06
+524,Acute edema / fluid retention,10604,0.78,Recommended for acute cases of edema / fluid retention.,2026-02-06 22:42:06
+525,Edema / Fluid Retention,10748,0.87,Primary treatment for edema / fluid retention using Furosemide Max.,2026-02-18 22:42:06
+526,Edema / Fluid Retention,10892,0.86,Primary treatment for edema / fluid retention using Furosemide Lite.,2026-02-01 22:42:06
+527,Edema / Fluid Retention,11036,0.9,Primary treatment for edema / fluid retention using Furosemide XR.,2026-02-13 22:42:06
+528,Acute edema / fluid retention,11036,0.82,Recommended for acute cases of edema / fluid retention.,2026-02-21 22:42:06
+529,Edema / Fluid Retention,11180,0.88,Primary treatment for edema / fluid retention using Furosemide Max.,2026-02-07 22:42:06
+530,Edema / Fluid Retention,11324,0.89,Primary treatment for edema / fluid retention using Furosemide Plus.,2026-02-11 22:42:06
+531,Acute edema / fluid retention,11324,0.81,Recommended for acute cases of edema / fluid retention.,2026-02-07 22:42:06
+532,Edema / Fluid Retention,11468,0.88,Primary treatment for edema / fluid retention using Furosemide Lite.,2026-02-22 22:42:06
+533,Edema / Fluid Retention,10029,0.87,Primary treatment for edema / fluid retention using Spironolactone XR.,2026-02-16 22:42:06
+534,Edema / Fluid Retention,10173,0.88,Primary treatment for edema / fluid retention using Spironolactone Plus.,2026-01-31 22:42:06
+535,Acute edema / fluid retention,10173,0.8,Recommended for acute cases of edema / fluid retention.,2026-02-15 22:42:06
+536,Edema / Fluid Retention,10317,0.92,Primary treatment for edema / fluid retention using Spironolactone Max.,2026-01-29 22:42:06
+537,Acute edema / fluid retention,10317,0.76,Recommended for acute cases of edema / fluid retention.,2026-02-16 22:42:06
+538,Edema / Fluid Retention,10461,0.92,Primary treatment for edema / fluid retention using Spironolactone.,2026-02-19 22:42:06
+539,Edema / Fluid Retention,10605,0.95,Primary treatment for edema / fluid retention using Spironolactone DS.,2026-02-23 22:42:06
+540,Acute edema / fluid retention,10605,0.75,Recommended for acute cases of edema / fluid retention.,2026-02-01 22:42:06
+541,Edema / Fluid Retention,10749,0.91,Primary treatment for edema / fluid retention using Spironolactone.,2026-02-15 22:42:06
+542,Edema / Fluid Retention,10893,0.87,Primary treatment for edema / fluid retention using Spironolactone Max.,2026-02-20 22:42:06
+543,Edema / Fluid Retention,11037,0.87,Primary treatment for edema / fluid retention using Spironolactone Lite.,2026-02-06 22:42:06
+544,Edema / Fluid Retention,11181,0.87,Primary treatment for edema / fluid retention using Spironolactone Lite.,2026-02-06 22:42:06
+545,Edema / Fluid Retention,11325,0.96,Primary treatment for edema / fluid retention using Spironolactone XR.,2026-02-27 22:42:06
+546,Acute edema / fluid retention,11325,0.72,Recommended for acute cases of edema / fluid retention.,2026-02-09 22:42:06
+547,Edema / Fluid Retention,11469,0.87,Primary treatment for edema / fluid retention using Spironolactone Lite.,2026-02-08 22:42:06
+548,Acute edema / fluid retention,11469,0.75,Recommended for acute cases of edema / fluid retention.,2026-02-20 22:42:06
+549,Edema / Fluid Retention,10030,0.88,Primary treatment for edema / fluid retention using Hydrochlorothiazide XR.,2026-02-09 22:42:06
+550,Acute edema / fluid retention,10030,0.75,Recommended for acute cases of edema / fluid retention.,2026-02-04 22:42:06
+551,Edema / Fluid Retention,10174,0.98,Primary treatment for edema / fluid retention using Hydrochlorothiazide SR.,2026-02-11 22:42:06
+552,Edema / Fluid Retention,10318,0.88,Primary treatment for edema / fluid retention using Hydrochlorothiazide Max.,2026-02-26 22:42:06
+553,Edema / Fluid Retention,10462,0.94,Primary treatment for edema / fluid retention using Hydrochlorothiazide XR.,2026-02-23 22:42:06
+554,Acute edema / fluid retention,10462,0.81,Recommended for acute cases of edema / fluid retention.,2026-02-11 22:42:06
+555,Edema / Fluid Retention,10606,0.86,Primary treatment for edema / fluid retention using Hydrochlorothiazide DS.,2026-02-28 22:42:06
+556,Edema / Fluid Retention,10750,0.87,Primary treatment for edema / fluid retention using Hydrochlorothiazide.,2026-02-13 22:42:06
+557,Edema / Fluid Retention,10894,0.86,Primary treatment for edema / fluid retention using Hydrochlorothiazide Plus.,2026-02-01 22:42:06
+558,Acute edema / fluid retention,10894,0.82,Recommended for acute cases of edema / fluid retention.,2026-02-23 22:42:06
+559,Edema / Fluid Retention,11038,0.97,Primary treatment for edema / fluid retention using Hydrochlorothiazide SR.,2026-02-15 22:42:06
+560,Acute edema / fluid retention,11038,0.77,Recommended for acute cases of edema / fluid retention.,2026-02-06 22:42:06
+561,Edema / Fluid Retention,11182,0.99,Primary treatment for edema / fluid retention using Hydrochlorothiazide Lite.,2026-02-22 22:42:06
+562,Edema / Fluid Retention,11326,0.97,Primary treatment for edema / fluid retention using Hydrochlorothiazide Plus.,2026-02-24 22:42:06
+563,Acute edema / fluid retention,11326,0.79,Recommended for acute cases of edema / fluid retention.,2026-02-05 22:42:06
+564,Edema / Fluid Retention,11470,0.93,Primary treatment for edema / fluid retention using Hydrochlorothiazide Plus.,2026-02-02 22:42:06
+565,Muscle Pain / Arthritis,10002,0.97,Primary treatment for muscle pain / arthritis using Ibuprofen SR.,2026-02-02 22:42:06
+566,Muscle Pain / Arthritis,10146,0.88,Primary treatment for muscle pain / arthritis using Ibuprofen Lite.,2026-02-28 22:42:06
+567,Muscle Pain / Arthritis,10290,0.94,Primary treatment for muscle pain / arthritis using Ibuprofen Max.,2026-02-12 22:42:06
+568,Muscle Pain / Arthritis,10434,0.9,Primary treatment for muscle pain / arthritis using Ibuprofen Lite.,2026-02-13 22:42:06
+569,Muscle Pain / Arthritis,10578,0.92,Primary treatment for muscle pain / arthritis using Ibuprofen Max.,2026-02-11 22:42:06
+570,Muscle Pain / Arthritis,10722,0.95,Primary treatment for muscle pain / arthritis using Ibuprofen DS.,2026-02-16 22:42:06
+571,Muscle Pain / Arthritis,10866,0.93,Primary treatment for muscle pain / arthritis using Ibuprofen Max.,2026-02-08 22:42:06
+572,Muscle Pain / Arthritis,11010,0.91,Primary treatment for muscle pain / arthritis using Ibuprofen Lite.,2026-02-02 22:42:06
+573,Muscle Pain / Arthritis,11154,0.98,Primary treatment for muscle pain / arthritis using Ibuprofen DS.,2026-02-24 22:42:06
+574,Acute muscle pain / arthritis,11154,0.81,Recommended for acute cases of muscle pain / arthritis.,2026-02-07 22:42:06
+575,Muscle Pain / Arthritis,11298,0.88,Primary treatment for muscle pain / arthritis using Ibuprofen Plus.,2026-01-30 22:42:06
+576,Muscle Pain / Arthritis,11442,0.86,Primary treatment for muscle pain / arthritis using Ibuprofen.,2026-02-07 22:42:06
+577,Muscle Pain / Arthritis,11586,0.97,Primary treatment for muscle pain / arthritis using Ibuprofen Forte.,2026-02-16 22:42:06
+578,Muscle Pain / Arthritis,10061,0.96,Primary treatment for muscle pain / arthritis using Naproxen Lite.,2026-02-08 22:42:06
+579,Muscle Pain / Arthritis,10205,0.97,Primary treatment for muscle pain / arthritis using Naproxen Max.,2026-02-18 22:42:06
+580,Acute muscle pain / arthritis,10205,0.79,Recommended for acute cases of muscle pain / arthritis.,2026-02-24 22:42:06
+581,Muscle Pain / Arthritis,10349,0.98,Primary treatment for muscle pain / arthritis using Naproxen Plus.,2026-02-27 22:42:06
+582,Muscle Pain / Arthritis,10493,0.89,Primary treatment for muscle pain / arthritis using Naproxen XR.,2026-02-05 22:42:06
+583,Acute muscle pain / arthritis,10493,0.81,Recommended for acute cases of muscle pain / arthritis.,2026-02-07 22:42:06
+584,Muscle Pain / Arthritis,10637,0.88,Primary treatment for muscle pain / arthritis using Naproxen XR.,2026-02-19 22:42:06
+585,Muscle Pain / Arthritis,10781,0.9,Primary treatment for muscle pain / arthritis using Naproxen.,2026-01-30 22:42:06
+586,Acute muscle pain / arthritis,10781,0.78,Recommended for acute cases of muscle pain / arthritis.,2026-01-30 22:42:06
+587,Muscle Pain / Arthritis,10925,0.91,Primary treatment for muscle pain / arthritis using Naproxen DS.,2026-02-01 22:42:06
+588,Muscle Pain / Arthritis,11069,0.98,Primary treatment for muscle pain / arthritis using Naproxen XR.,2026-02-21 22:42:06
+589,Muscle Pain / Arthritis,11213,0.96,Primary treatment for muscle pain / arthritis using Naproxen SR.,2026-02-15 22:42:06
+590,Muscle Pain / Arthritis,11357,0.9,Primary treatment for muscle pain / arthritis using Naproxen.,2026-02-20 22:42:06
+591,Muscle Pain / Arthritis,11501,0.86,Primary treatment for muscle pain / arthritis using Naproxen Plus.,2026-02-05 22:42:06
+592,Acute muscle pain / arthritis,11501,0.72,Recommended for acute cases of muscle pain / arthritis.,2026-02-22 22:42:06
+593,Muscle Pain / Arthritis,10060,0.97,Primary treatment for muscle pain / arthritis using Diclofenac XR.,2026-02-03 22:42:06
+594,Muscle Pain / Arthritis,10204,0.89,Primary treatment for muscle pain / arthritis using Diclofenac Max.,2026-02-01 22:42:06
+595,Acute muscle pain / arthritis,10204,0.71,Recommended for acute cases of muscle pain / arthritis.,2026-02-15 22:42:06
+596,Muscle Pain / Arthritis,10348,0.91,Primary treatment for muscle pain / arthritis using Diclofenac Max.,2026-02-14 22:42:06
+597,Muscle Pain / Arthritis,10492,0.85,Primary treatment for muscle pain / arthritis using Diclofenac Plus.,2026-02-14 22:42:06
+598,Muscle Pain / Arthritis,10636,0.96,Primary treatment for muscle pain / arthritis using Diclofenac Forte.,2026-02-10 22:42:06
+599,Muscle Pain / Arthritis,10780,0.88,Primary treatment for muscle pain / arthritis using Diclofenac Lite.,2026-02-17 22:42:06
+600,Acute muscle pain / arthritis,10780,0.74,Recommended for acute cases of muscle pain / arthritis.,2026-02-23 22:42:06
+601,Muscle Pain / Arthritis,10924,0.85,Primary treatment for muscle pain / arthritis using Diclofenac SR.,2026-02-14 22:42:06
+602,Muscle Pain / Arthritis,11068,0.99,Primary treatment for muscle pain / arthritis using Diclofenac Forte.,2026-02-11 22:42:06
+603,Muscle Pain / Arthritis,11212,0.99,Primary treatment for muscle pain / arthritis using Diclofenac XR.,2026-02-20 22:42:06
+604,Muscle Pain / Arthritis,11356,0.85,Primary treatment for muscle pain / arthritis using Diclofenac SR.,2026-02-18 22:42:06
+605,Muscle Pain / Arthritis,11500,0.97,Primary treatment for muscle pain / arthritis using Diclofenac Plus.,2026-02-08 22:42:06
+606,Fungal Infection,10016,0.98,Primary treatment for fungal infection using Fluconazole Max.,2026-02-17 22:42:06
+607,Acute fungal infection,10016,0.74,Recommended for acute cases of fungal infection.,2026-02-03 22:42:06
+608,Fungal Infection,10160,0.86,Primary treatment for fungal infection using Fluconazole.,2026-02-18 22:42:06
+609,Fungal Infection,10304,0.94,Primary treatment for fungal infection using Fluconazole SR.,2026-02-19 22:42:06
+610,Fungal Infection,10448,0.91,Primary treatment for fungal infection using Fluconazole Lite.,2026-02-06 22:42:06
+611,Fungal Infection,10592,0.9,Primary treatment for fungal infection using Fluconazole Max.,2026-02-19 22:42:06
+612,Fungal Infection,10736,0.87,Primary treatment for fungal infection using Fluconazole Max.,2026-02-04 22:42:06
+613,Fungal Infection,10880,0.9,Primary treatment for fungal infection using Fluconazole.,2026-02-22 22:42:06
+614,Acute fungal infection,10880,0.82,Recommended for acute cases of fungal infection.,2026-02-24 22:42:06
+615,Fungal Infection,11024,0.85,Primary treatment for fungal infection using Fluconazole SR.,2026-01-30 22:42:06
+616,Fungal Infection,11168,0.86,Primary treatment for fungal infection using Fluconazole SR.,2026-02-18 22:42:06
+617,Fungal Infection,11312,0.88,Primary treatment for fungal infection using Fluconazole.,2026-02-14 22:42:06
+618,Fungal Infection,11456,0.97,Primary treatment for fungal infection using Fluconazole DS.,2026-02-14 22:42:06
+619,Fungal Infection,11600,0.91,Primary treatment for fungal infection using Fluconazole DS.,2026-02-10 22:42:06
+620,Nerve Pain,10021,0.86,Primary treatment for nerve pain using Gabapentin.,2026-02-03 22:42:06
+621,Nerve Pain,10165,0.98,Primary treatment for nerve pain using Gabapentin Lite.,2026-02-27 22:42:06
+622,Nerve Pain,10309,0.96,Primary treatment for nerve pain using Gabapentin Plus.,2026-02-20 22:42:06
+623,Nerve Pain,10453,0.91,Primary treatment for nerve pain using Gabapentin DS.,2026-02-25 22:42:06
+624,Nerve Pain,10597,0.87,Primary treatment for nerve pain using Gabapentin Plus.,2026-02-12 22:42:06
+625,Acute nerve pain,10597,0.75,Recommended for acute cases of nerve pain.,2026-02-27 22:42:06
+626,Nerve Pain,10741,0.91,Primary treatment for nerve pain using Gabapentin Plus.,2026-01-31 22:42:06
+627,Nerve Pain,10885,0.94,Primary treatment for nerve pain using Gabapentin Plus.,2026-02-13 22:42:06
+628,Nerve Pain,11029,0.89,Primary treatment for nerve pain using Gabapentin DS.,2026-02-02 22:42:06
+629,Nerve Pain,11173,0.9,Primary treatment for nerve pain using Gabapentin XR.,2026-02-12 22:42:06
+630,Nerve Pain,11317,0.85,Primary treatment for nerve pain using Gabapentin.,2026-02-15 22:42:06
+631,Nerve Pain,11461,0.95,Primary treatment for nerve pain using Gabapentin Plus.,2026-02-27 22:42:06
+632,Stomach Ache,10001,0.62,Categorical treatment for stomach ache.,2026-01-29 22:42:06
+633,Stomach Ache,10017,0.76,Categorical treatment for stomach ache.,2026-02-13 22:42:06
+634,Stomach Ache,10022,0.63,Categorical treatment for stomach ache.,2026-02-07 22:42:06
+635,Stomach Ache,10027,0.61,Categorical treatment for stomach ache.,2026-02-13 22:42:06
+636,Stomach Ache,10038,0.79,Categorical treatment for stomach ache.,2026-02-12 22:42:06
+637,Stomach Ache,10044,0.65,Categorical treatment for stomach ache.,2026-02-09 22:42:06
+638,Stomach Ache,10048,0.64,Categorical treatment for stomach ache.,2026-02-07 22:42:06
+639,Stomach Ache,10084,0.6,Categorical treatment for stomach ache.,2026-02-24 22:42:06
+640,Stomach Ache,10091,0.63,Categorical treatment for stomach ache.,2026-02-19 22:42:06
+641,Stomach Ache,10124,0.72,Categorical treatment for stomach ache.,2026-02-22 22:42:06
+642,Skin Rash,10002,0.66,Categorical treatment for skin rash.,2026-02-24 22:42:06
+643,Skin Rash,10008,0.8,Categorical treatment for skin rash.,2026-02-13 22:42:06
+644,Skin Rash,10014,0.78,Categorical treatment for skin rash.,2026-02-13 22:42:06
+645,Skin Rash,10018,0.64,Categorical treatment for skin rash.,2026-02-18 22:42:06
+646,Skin Rash,10020,0.74,Categorical treatment for skin rash.,2026-02-08 22:42:06
+647,Skin Rash,10059,0.73,Categorical treatment for skin rash.,2026-02-02 22:42:06
+648,Skin Rash,10116,0.78,Categorical treatment for skin rash.,2026-02-26 22:42:06
+649,Skin Rash,10151,0.66,Categorical treatment for skin rash.,2026-02-28 22:42:06
+650,Skin Rash,10164,0.6,Categorical treatment for skin rash.,2026-02-15 22:42:06
+651,Skin Rash,10165,0.79,Categorical treatment for skin rash.,2026-02-20 22:42:06
+652,Eye Irritation,10003,0.66,Categorical treatment for eye irritation.,2026-02-16 22:42:06
+653,Eye Irritation,10042,0.8,Categorical treatment for eye irritation.,2026-02-21 22:42:06
+654,Eye Irritation,10053,0.71,Categorical treatment for eye irritation.,2026-02-17 22:42:06
+655,Eye Irritation,10056,0.73,Categorical treatment for eye irritation.,2026-02-26 22:42:06
+656,Eye Irritation,10109,0.65,Categorical treatment for eye irritation.,2026-02-01 22:42:06
+657,Eye Irritation,10111,0.66,Categorical treatment for eye irritation.,2026-02-15 22:42:06
+658,Eye Irritation,10119,0.71,Categorical treatment for eye irritation.,2026-02-24 22:42:06
+659,Eye Irritation,10127,0.7,Categorical treatment for eye irritation.,2026-02-02 22:42:06
+660,Eye Irritation,10135,0.66,Categorical treatment for eye irritation.,2026-02-15 22:42:06
+661,Eye Irritation,10142,0.65,Categorical treatment for eye irritation.,2026-02-13 22:42:06

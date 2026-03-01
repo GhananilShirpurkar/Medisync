@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
 
 /* Reset & Base Dashboard Layout Junk */
 .admin-dashboard.protera-bio-theme {
@@ -38,7 +38,7 @@
 }
 
 .bio-stat-card:not(:last-child)::after {
-  content: '';
+  content: "";
   position: absolute;
   right: 0;
   top: 10%;
@@ -78,7 +78,7 @@
 }
 
 .digital-font {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: "Share Tech Mono", monospace;
   letter-spacing: -0.02em;
 }
 
@@ -154,12 +154,12 @@
   background: linear-gradient(to right, #85ba9e, #a0c4c4);
 }
 
-.color-purple-light {
-  background: linear-gradient(to right, #beaeda, #a495ba);
+.color-emerald-light {
+  background: linear-gradient(to right, #6ee7b7, #34d399);
 }
 
-.color-purple-dark {
-  background: linear-gradient(to right, #8b63a6, #754d8f);
+.color-emerald-dark {
+  background: linear-gradient(to right, #10b981, #059669);
 }
 
 /* Mutation & Longevity Impact Table */
@@ -270,8 +270,17 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: radial-gradient(circle at 70% 30%, rgba(139, 92, 246, 0.4) 0%, transparent 60%),
-    radial-gradient(circle at 30% 70%, rgba(245, 158, 11, 0.25) 0%, transparent 50%);
+  background-image:
+    radial-gradient(
+      circle at 70% 30%,
+      rgba(16, 185, 129, 0.4) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 30% 70%,
+      rgba(245, 158, 11, 0.25) 0%,
+      transparent 50%
+    );
   filter: blur(40px);
   z-index: 1;
   opacity: 0.8;
@@ -318,7 +327,13 @@
 }
 
 @keyframes pulse {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
 }

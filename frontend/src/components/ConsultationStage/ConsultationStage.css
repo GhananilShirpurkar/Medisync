@@ -100,7 +100,7 @@
 
 .stage-message-row.user .stage-message-text {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: white;
   max-width: 75%;
@@ -142,7 +142,7 @@
 .stage-message-row.ai .stage-message-text,
 .stage-message-row.assistant-response .stage-message-text {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 17px;
   color: #1E293B;
   max-width: 85%;
   line-height: 1.7;
@@ -173,10 +173,11 @@
 
 /* Elegant and highly readable AI messages */
 .stage-message-row.assistant-response .stage-message-text {
-  font-family: var(--font-human, 'Plus Jakarta Sans', sans-serif) !important;
-  font-size: 15px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
   font-style: normal !important;
-  line-height: 1.6 !important;
+  line-height: 1.7 !important;
   color: #1e293b !important;
   background: #ffffff !important;
   border: 1px solid rgba(0, 102, 255, 0.08) !important;
@@ -184,7 +185,7 @@
     0 4px 12px rgba(0, 0, 0, 0.03),
     0 1px 2px rgba(0, 0, 0, 0.02) !important;
   position: relative;
-  padding: 16px 20px !important;
+  padding: 18px 22px !important;
 }
 
 .stage-message-row.assistant-response .stage-message-text::before {
@@ -197,7 +198,7 @@
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: var(--font-machine, monospace);
+  font-family: 'IBM Plex Mono', monospace;
   font-weight: 700;
   font-style: normal;
   letter-spacing: 0.1em;
@@ -468,12 +469,12 @@
 
 .reasoning-content li {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   color: #475569;
   display: flex;
   align-items: baseline;
   gap: 8px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .reasoning-content li::before {
@@ -563,9 +564,9 @@
 
 .escalation-trigger-text {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   color: #475569;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .escalation-trigger-btn {
@@ -687,7 +688,7 @@
 
 .checkout-sub {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   color: #1E293B;
   font-weight: 500;
 }

@@ -166,8 +166,12 @@ const SummaryPage = () => {
     if (!orderSummary) return null;
 
     return (
-        <div className="summary-v3-container">
-            <div className="summary-dashboard">
+        <>
+            <title>Order Summary | MediSync</title>
+            <meta name="description" content="View your MediSync order summary and payment status." />
+            <meta property="og:title" content="Order Summary | MediSync" />
+            <div className="summary-v3-container">
+                <div className="summary-dashboard">
                 
                 {/* GLOBAL HEADER BAR */}
                 <header className="global-header animate-fade-up-0">
@@ -344,6 +348,7 @@ const SummaryPage = () => {
 
             </div>
         </div>
+        </>
     );
 };
 

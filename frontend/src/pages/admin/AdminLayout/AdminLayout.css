@@ -495,10 +495,10 @@
 .risk-rejected,
 .risk-canceled {
   background: #f5f3ff;
-  color: #7c3aed;
+  color: #059669;
 }
 
 .risk-rejected .risk-dot,
 .risk-canceled .risk-dot {
-  background: #8b5cf6;
+  background: #10b981;
 }

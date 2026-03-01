@@ -93,6 +93,8 @@ def route_after_inventory(state: PharmacyState) -> Literal["fulfillment", "end"]
         )
         event_bus.publish(event)
         return "end"
+
+    # Safe Gate: Inventory done, proceed to fulfillment (which handles confirmation gate)
     return "fulfillment"
 
 

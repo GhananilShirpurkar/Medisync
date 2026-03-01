@@ -36,13 +36,24 @@ const IdentityPage = () => {
       const phone = cleanPhone(digits);
       setIsLoading(true);
       try {
-        await sendOTPAPI(phone);
-        toast.success("Verification code sent to WhatsApp!");
+        const result = await sendOTPAPI(phone);
+        
+        // Check if WhatsApp worked or fallback to console
+        if (result.method === 'console') {
+          toast.success(
+            `Code generated! ${result.debug_code ? `Code: ${result.debug_code}` : 'Check console'}`,
+            { duration: 8000 }
+          );
+          console.log('🔐 VERIFICATION CODE:', result.debug_code);
+        } else {
+          toast.success("Verification code sent to WhatsApp!");
+        }
+        
         setStep('otp');
         setIsLoading(false);
       } catch (err) {
         console.error("[IdentityFlow] OTP Send Error:", err);
-        toast.error("Failed to send verification code. Check WhatsApp Sandbox session.");
+        toast.error("Failed to send verification code. Check console or WhatsApp Sandbox.");
         setIsLoading(false);
         triggerError();
       }
@@ -102,7 +113,9 @@ const IdentityPage = () => {
           ) : (
             <form onSubmit={handlePhoneSubmit} className="identity-form">
               <div className={`input-line-wrapper ${isFocused ? 'focused' : ''} ${isError ? 'error-flash' : ''}`}>
+                <label className="visually-hidden" style={{display: "none"}} htmlFor="phoneInput">Enter your phone number</label>
                 <input 
+                  id="phoneInput"
                   type="text"
                   className="identity-input-line"
                   value={phoneValue}
@@ -112,6 +125,7 @@ const IdentityPage = () => {
                   placeholder="Enter your phone number..."
                   autoComplete="off"
                   disabled={step === 'otp'}
+                  aria-label="Enter your phone number"
                 />
                 <button type="submit" style={{ display: 'none' }} />
               </div>
@@ -124,12 +138,15 @@ const IdentityPage = () => {
           <span className="identity-label upload-trigger" onClick={() => fileInputRef.current.click()}>
             UPLOAD PRESCRIPTION
           </span>
+          <label className="visually-hidden" style={{display: "none"}} htmlFor="fileInput">Upload Prescription</label>
           <input 
+            id="fileInput"
             type="file" 
             ref={fileInputRef} 
             className="hidden-file-input" 
             accept="image/*"
             onChange={handleFileUpload}
+            aria-label="Upload Prescription Image"
           />
         </div>
       </div>
@@ -145,7 +162,9 @@ const IdentityPage = () => {
             
             <form onSubmit={handleOTPSubmit} className="identity-form">
               <div className={`input-line-wrapper focused ${isError ? 'error-flash' : ''}`}>
+                <label className="visually-hidden" style={{display: "none"}} htmlFor="otpInput">Enter 4-digit code</label>
                 <input 
+                  id="otpInput"
                   type="text"
                   className="identity-input-line"
                   value={otpValue}
@@ -154,6 +173,7 @@ const IdentityPage = () => {
                   autoComplete="off"
                   maxLength={4}
                   autoFocus
+                  aria-label="Enter 4-digit Verification Code"
                 />
                 <button type="submit" style={{ display: 'none' }} />
               </div>

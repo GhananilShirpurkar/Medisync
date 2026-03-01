@@ -56,7 +56,15 @@ class WhatsAppService:
             "cancelled": "❌"
         }.get(status, "ℹ️")
         
-        items_text = "\n".join([f"• {item.get('name', 'Unknown')} x{item.get('quantity', 1)}" for item in items])
+        items_text_list = []
+        for item in items:
+            name = item.get("name", "Unknown")
+            qty = item.get("quantity", 1)
+            dosage = item.get("dosage")
+            dosage_str = f" ({dosage})" if dosage else ""
+            items_text_list.append(f"• {name}{dosage_str} x{qty}")
+        
+        items_text = "\n".join(items_text_list)
         
         message = (
             f"{status_emoji} *Order {status.title()}*\n\n"

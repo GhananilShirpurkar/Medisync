@@ -172,7 +172,10 @@ class OTPVerifyRequest(BaseModel):
 
 @router.post("/auth/otp/send")
 async def send_otp(request: OTPSendRequest):
-    """Generate and send a 4-digit OTP via WhatsApp."""
+    """
+    Generate and send a 4-digit OTP via WhatsApp.
+    Falls back to console output if WhatsApp fails (development mode).
+    """
     import random
     from datetime import timedelta
     
@@ -185,16 +188,44 @@ async def send_otp(request: OTPSendRequest):
         "expires": datetime.now() + timedelta(minutes=5)
     }
     
-    # Send via WhatsApp
+    # Try to send via WhatsApp
     message = f"🔐 *MediSync Verification*\n\nYour secure access code is: *{code}*\n\nThis code expires in 5 minutes. Please do not share it with anyone."
     result = whatsapp_service.send_message(request.phone, message)
     
     if not result.get("success"):
-        logger.error(f"Failed to send OTP to {request.phone}: {result.get('error')}")
-        # For demo purposes, we log the code even if WhatsApp fails
-        print(f"DEBUG OTP for {request.phone}: {code}")
+        error_msg = result.get('error', 'Unknown error')
+        logger.warning(f"WhatsApp send failed for {request.phone}: {error_msg}")
+        
+        # Development fallback: Print to console
+        print("\n" + "="*70)
+        print("📱 WHATSAPP SEND FAILED - DEVELOPMENT MODE")
+        print("="*70)
+        print(f"Phone: {request.phone}")
+        print(f"🔐 Verification Code: {code}")
+        print(f"⏰ Expires: 5 minutes")
+        print(f"❌ Error: {error_msg}")
+        print("\n💡 To fix:")
+        print("   1. Join Twilio WhatsApp Sandbox:")
+        print("      - Send 'join <your-code>' to +1 415 523 8886")
+        print("      - Get your code at: https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn")
+        print("   2. Or use the code above for testing")
+        print("="*70 + "\n")
+        
+        # Return success with debug info for development
+        return {
+            "success": True,
+            "message": "OTP generated (WhatsApp unavailable - check console)",
+            "method": "console",
+            "debug_code": code,  # Only for development!
+            "error": error_msg
+        }
     
-    return {"success": True, "message": "OTP sent via WhatsApp"}
+    logger.info(f"OTP sent successfully to {request.phone} via WhatsApp")
+    return {
+        "success": True,
+        "message": "OTP sent via WhatsApp",
+        "method": "whatsapp"
+    }
 
 @router.post("/auth/otp/verify")
 async def verify_otp(request: OTPVerifyRequest):
@@ -397,6 +428,11 @@ async def send_message(request: ConversationRequest):
             role="user",
             content=request.message
         )
+        
+        # Detect language from user message
+        from src.services.language_service import detect_language
+        detected_language = detect_language(request.message)
+        logger.info(f"Detected language: {detected_language} for message: {request.message[:50]}")
 
         # Get conversation history
         messages = conversation_service.get_messages(request.session_id)
@@ -591,22 +627,8 @@ async def send_message(request: ConversationRequest):
         
         # Inherit previous intent if the user is answering a clarifying question
         # (e.g. they say "20" or "for last 5 days", which misclassifies as 'refill' or 'generic_help')
-        previous_intent = session.get("intent")
         if previous_intent == "symptom" and intent != "symptom":
-            # Check if the last assistant message was a symptom-related question
-            last_assistant = next(
-                (m for m in reversed(messages) if m.get("role") == "assistant"), None
-            )
-            symptom_flow_keywords = [
-                "how long", "duration", "severity", "symptoms",
-                "experiencing", "feeling", "describe", "pain",
-                "sorry to hear", "tell me more"
-            ]
-            is_symptom_followup = last_assistant and any(
-                kw in (last_assistant.get("content", "")).lower()
-                for kw in symptom_flow_keywords
-            )
-            if is_symptom_followup or intent in ["unknown", "greeting", "generic_help", "refill"] or intent_result.get("confidence", 1.0) < 0.5:
+            if intent in ["unknown", "greeting", "generic_help", "refill"] or intent_result.get("confidence", 1.0) < 0.5:
                 print(f"DEBUG: Inheriting previous intent: {previous_intent} (was {intent} with confidence {intent_result.get('confidence')})")
                 intent = previous_intent
         
@@ -687,7 +709,7 @@ async def send_message(request: ConversationRequest):
             message=request.message,
             patient_context=patient_context,
             turn_count=turn_count,
-            language=intent_result.get("language", "en"),
+            language=detected_language,  # Use detected language
             conversation_history=messages
         )
         print(f"DEBUG: clarifying_question response: {clarifying_question[:50] if clarifying_question else 'None'}")
@@ -1649,8 +1671,63 @@ async def voice_input(
                 detail="No speech detected in audio. Please try again."
             )
         
-        print(f"✅ Transcription: '{transcription}'")
+        # logger.info(f"✅ Transcription: '{transcription}'")
         
+        # ------------------------------------------------------------------
+        # ORDER CONFIRMATION INTERCEPT (VOICE)
+        # Check if user is replying YES/NO to a pending order via voice
+        # ------------------------------------------------------------------
+        if confirmation_store.is_pending(session_id):
+            # Clean transcription: remove punctuation, strip whitespace, uppercase
+            import re
+            clean_reply = re.sub(r'[^\w\s]', '', transcription).strip().upper()
+            
+            if clean_reply in ["YES", "OK", "CONFIRM", "YEAH", "YEP", "SURE"]:
+                pending = confirmation_store.get_pending(session_id)
+                entry = confirmation_store.consume(session_id, pending["token"])
+                if entry:
+                    pending_state = PharmacyState(**entry["pending_pharmacy_state"])
+                    pending_state.confirmation_confirmed = True
+                    pending_state.conversation_phase = "fulfillment_executing"
+                    conversation_service.transition_phase(session_id, "fulfillment_executing")
+                    
+                    try:
+                        final_state = fulfillment_agent(pending_state)
+                        response_message = format_order_confirmation(final_state)
+                        conversation_service.transition_phase(session_id, "completed")
+                        
+                        conversation_service.add_message(
+                            session_id=session_id,
+                            role="assistant",
+                            content=response_message,
+                            agent_name="fulfillment"
+                        )
+                        
+                        return VoiceInputResponse(
+                            session_id=session_id,
+                            transcription=transcription,
+                            transcription_confidence=transcription_result.get("language_probability", 0.0),
+                            language=transcription_result.get("language", "en"),
+                            message=response_message,
+                            intent="purchase",
+                            next_step="order_complete"
+                        )
+                    except Exception as e:
+                        logger.error(f"Voice fulfillment error: {e}")
+            elif clean_reply in ["NO", "CANCEL", "STOP", "NOT NOW", "NAH"]:
+                confirmation_store.cancel(session_id)
+                response_message = "Order cancelled. How else can I help you?"
+                conversation_service.add_message(session_id, "assistant", response_message)
+                return VoiceInputResponse(
+                    session_id=session_id,
+                    transcription=transcription,
+                    transcription_confidence=transcription_result.get("language_probability", 0.0),
+                    language=transcription_result.get("language", "en"),
+                    message=response_message,
+                    intent="unknown",
+                    next_step="clarification"
+                )
+
         # Add transcription as user message
         conversation_service.add_message(
             session_id=session_id,
@@ -1715,19 +1792,7 @@ async def voice_input(
         # If user was discussing symptoms and now says something vague, keep the symptom flow
         previous_intent = session.get("intent")
         if previous_intent == "symptom" and intent != "symptom":
-            last_assistant = next(
-                (m for m in reversed(messages) if m.get("role") == "assistant"), None
-            )
-            symptom_flow_keywords = [
-                "how long", "duration", "severity", "symptoms",
-                "experiencing", "feeling", "describe", "pain",
-                "sorry to hear", "tell me more"
-            ]
-            is_symptom_followup = last_assistant and any(
-                kw in (last_assistant.get("content", "")).lower()
-                for kw in symptom_flow_keywords
-            )
-            if is_symptom_followup or intent in ["unknown", "greeting", "generic_help", "refill"] or intent_result.get("confidence", 1.0) < 0.5:
+            if intent in ["unknown", "greeting", "generic_help", "refill"] or intent_result.get("confidence", 1.0) < 0.5:
                 print(f"🧠 Voice: inheriting previous intent '{previous_intent}' (was '{intent}')")
                 intent = previous_intent
         
@@ -1908,10 +1973,19 @@ async def voice_input(
                 )
                 state.trace_metadata["front_desk"] = {"patient_context": patient_context}
                 
-                # Run through full LangGraph pipeline
-                result = await agent_graph.ainvoke(state)
-                final_state = PharmacyState(**result) if isinstance(result, dict) else result
-                response_message = format_order_confirmation(final_state)
+                try:
+                    # Run through full LangGraph pipeline
+                    result = await agent_graph.ainvoke(state)
+                    final_state = PharmacyState(**result) if isinstance(result, dict) else result
+                    response_message = format_order_confirmation(final_state)
+                    next_step = "add_to_cart"
+                except ConfirmationRequiredError:
+                    # Fulfillment gate stopped it - this is expected!
+                    # Save the state to the confirmation store so it can be resumed by the next "YES"
+                    confirmation_store.create(session_id, state.dict())
+                    response_message = "I have found the items. Would you like to confirm the order? Reply YES to proceed."
+                    next_step = "awaiting_confirmation"
+                    final_state = state # Fallback to input state for trace conversion below
                 
                 conversation_service.add_message(
                     session_id=session_id,
@@ -1952,7 +2026,7 @@ async def voice_input(
                     recommendations=recommendations,
                     needs_clarification=False,
                     patient_context=patient_context,
-                    next_step="add_to_cart"
+                    next_step=next_step
                 )
             else:
                 response_message = "I couldn't find suitable medicines for your symptoms. Could you describe your symptoms in more detail?"
@@ -2034,11 +2108,19 @@ async def voice_input(
                 )
                 state.trace_metadata["front_desk"] = {"patient_context": patient_context}
                 
-                # Run through full LangGraph pipeline
-                result = await agent_graph.ainvoke(state)
-                final_state = PharmacyState(**result) if isinstance(result, dict) else result
-                response_message = format_order_confirmation(final_state)
-                
+                try:
+                    # Run through full LangGraph pipeline
+                    result = await agent_graph.ainvoke(state)
+                    final_state = PharmacyState(**result) if isinstance(result, dict) else result
+                    response_message = format_order_confirmation(final_state)
+                    next_step = "add_to_cart"
+                except ConfirmationRequiredError:
+                    # Save for later YES
+                    confirmation_store.create(session_id, state.dict())
+                    response_message = f"I've added {medicine['name']} to your order. Would you like to confirm? Reply YES to proceed."
+                    next_step = "awaiting_confirmation"
+                    final_state = state
+
                 recommendation = MedicineRecommendation(
                     medicine_name=medicine["name"],
                     price=medicine["price"],
@@ -2080,7 +2162,7 @@ async def voice_input(
                     recommendations=[recommendation],
                     needs_clarification=False,
                     patient_context=patient_context,
-                    next_step="add_to_cart"
+                    next_step=next_step
                 )
             else:
                 response_message = f"I couldn't find '{medicine_name}' in our inventory. Could you check the spelling or try a different medicine?"
@@ -2318,8 +2400,9 @@ async def _get_symptom_recommendations(
     from src.services import llm_service
 
     # --- Clean up noisy combined conversation into a concise list of symptoms ---
-    prompt = f"""Extract ONLY the core medical symptoms from the following conversation text.
-Do not include ages, durations, feelings, greetings, or conversational filler.
+    prompt = f"""Extract medical symptoms from the following conversation text.
+If the user asks for a specific medicine (e.g., "I want Paracetamol"), include the condition that medicine usually treats (e.g., "pain, fever") if no other clear symptoms are mentioned.
+Do not include ages, durations, feelings, or conversational filler.
 Return them as a simple comma-separated list. If no clear symptoms exist, return "unknown".
 
 Text: {message}
@@ -2332,13 +2415,20 @@ Symptoms:"""
             temperature=0.0
         )
         cleaned_symptoms_text = text_resp.strip().lower()
-        print(f"SYMPTOM RECS: Cleaned raw input '{message[:50]}...' into '{cleaned_symptoms_text}'")
+        # logger.info(f"SYMPTOM RECS: Cleaned raw input '{message[:50]}...' into '{cleaned_symptoms_text}'")
+        
+        # Fallback if cleaner returns "unknown" but we have a non-empty original message
+        if "unknown" in cleaned_symptoms_text and len(message.strip()) > 5:
+            print("SYMPTOM RECS: Cleaner returned 'unknown', falling back to raw message for matching.")
+            cleaned_symptoms_text = message
+            
     except Exception as e:
-        print(f"SYMPTOM RECS: Failed to clean symptoms via LLM: {e}")
+        logger.error(f"SYMPTOM RECS: Failed to clean symptoms via LLM: {e}")
         cleaned_symptoms_text = message
         
     # Use the cleaned text for the rest of the matching logic
     message = cleaned_symptoms_text
+    # logger.info(f"DEBUG: Processing symptoms after cleaning: '{message}'")
 
     # ── Normalise message ──────────────────────────────────────────────
     message_lower = message.lower()
@@ -2463,7 +2553,7 @@ Symptoms:"""
                                 if len(recommendations) >= 3:
                                     break
 
-            print(f"SYMPTOM RECS: Pass 2 (keyword fallback) found total {len(recommendations)} result(s)")
+            # logger.info(f"SYMPTOM RECS: Pass 2 (keyword fallback) found total {len(recommendations)} result(s)")
         except Exception as e:
             print(f"SYMPTOM RECS: Pass 2 (keyword fallback) failed: {e}")
 

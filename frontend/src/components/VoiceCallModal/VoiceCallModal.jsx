@@ -317,7 +317,7 @@ const VoiceCallModal = () => {
           return { name: r.medicine_name, stockStatus: r.stock > 0 ? 'In Stock' : 'Out of Stock', price: r.price, warnings: [], substitute: null };
         });
         pipelineStore.dispatch('CHECKOUT_READY', {
-          orderSummary: { pid: storeState.pid, complaint: data.transcription, validation: { status: 'Approved', severity: 0 }, items, substitutions: [], totalPrice, orderId: `ORD-${Math.floor(Math.random() * 9999)}` }
+          orderSummary: { pid: storeState.pid, complaint: data.transcription, validation: { status: 'Approved', severity: 0 }, items, substitutions: [], totalPrice, orderId: data.order_id || `ORD-${Math.floor(Math.random() * 9999)}` }
         });
       }
 

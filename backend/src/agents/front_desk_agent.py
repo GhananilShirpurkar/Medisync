@@ -9,12 +9,18 @@ Responsibilities:
 - Maintain session memory
 - Route to appropriate downstream agent
 - Log structured conversation summary
+- Multi-language support (Hindi, English, Hinglish, Marathi)
 """
 
 from typing import Dict, List, Optional
 from src.services import llm_service
 from src.services.intent_classifier import classify_intent
-from src.prompts.front_desk_prompts import SYSTEM_PROMPT_PHARMACIST
+from src.services.language_service import (
+    detect_language, 
+    get_system_prompt, 
+    normalize_medicine_name,
+    translate_symptom
+)
 from src.state import OrderItem
 
 class FrontDeskAgent:
@@ -101,7 +107,7 @@ Respond in JSON format:
         response = llm_service.parse_structured(prompt)
         return response
     
-    def extract_medicine_items(self, message: str) -> List[OrderItem]:
+    def extract_medicine_items(self, message: str, language: str = "en") -> List[OrderItem]:
         """
         Extract medicine items (name, quantity, dosage) from user message using LLM.
 
@@ -109,6 +115,8 @@ Respond in JSON format:
         - "I need 2 paracetamol"       → quantity: 2, dosage: null
         - "paracetamol 500mg"           → quantity: 1, dosage: "500mg"
         - "3 strips of ibuprofen 400mg" → quantity: 3, dosage: "400mg"
+        
+        Supports multi-language input (Hindi, Marathi, Hinglish).
 
         Returns:
             List of OrderItem with extracted medicine_name, quantity, dosage.
@@ -119,8 +127,12 @@ Respond in JSON format:
         for raw in extraction.get("items", []):
             if not raw.get("medicine_name"):
                 continue
+            
+            # Normalize medicine name across languages
+            normalized_name = normalize_medicine_name(raw["medicine_name"])
+            
             items.append(OrderItem(
-                medicine_name=raw["medicine_name"],
+                medicine_name=normalized_name,
                 quantity=int(raw.get("quantity") or 1),
                 dosage=raw.get("dosage") or None,
             ))
@@ -182,7 +194,8 @@ Respond in JSON format:
         if patient_context:
             context_str = ", ".join([f"{k}: {v}" for k, v in patient_context.items() if v])
 
-        formatted_system_prompt = SYSTEM_PROMPT_PHARMACIST.format(patient_context=context_str)
+        # Use language-aware system prompt
+        formatted_system_prompt = get_system_prompt(language, context_str)
 
         response_text = llm_service.call_llm_chat(
             formatted_system_prompt, message, history=conversation_history

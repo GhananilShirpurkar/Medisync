@@ -18,6 +18,7 @@ Usage:
     python seo_checker.py <project_path>
 """
 import sys
+import os
 import json
 import re
 from pathlib import Path
@@ -77,18 +78,16 @@ def is_page_file(file_path: Path) -> bool:
 
 def find_pages(project_path: Path) -> list:
     """Find page files to check."""
-    patterns = ['**/*.html', '**/*.htm', '**/*.jsx', '**/*.tsx']
-    
     files = []
-    for pattern in patterns:
-        for f in project_path.glob(pattern):
-            # Skip excluded directories
-            if any(skip in f.parts for skip in SKIP_DIRS):
-                continue
-            
-            # Check if it's likely a page
-            if is_page_file(f):
-                files.append(f)
+    extensions = {'.html', '.htm', '.jsx', '.tsx'}
+    
+    for root, dirs, filenames in os.walk(project_path):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        for f in filenames:
+            file_path = Path(root) / f
+            if file_path.suffix.lower() in extensions:
+                if is_page_file(file_path):
+                    files.append(file_path)
     
     return files[:50]  # Limit to 50 files
 

@@ -131,65 +131,83 @@ class PaymentService:
         
         txn_id = f"TXN{uuid.uuid4().hex[:12].upper()}"
         
-        with get_db_context() as session:
-            payment = session.query(Payment).filter(Payment.id == payment_id).first()
-            if not payment:
-                logger.error(f"Payment {payment_id} not found during mock confirmation")
-                return
-            
-            payment.status = "success"
-            payment.transaction_id = txn_id
-            payment.paid_at = datetime.utcnow()
-            
-            # Also update order status
-            order = session.query(Order).filter(Order.order_id == payment.order_id).first()
-            if order:
-                order.status = "fulfilled"
+        # We need these values extracted before the session commits to avoid lazy loading issues
+        order_id = None
+        amount = 0.0
+        
+        try:
+            with get_db_context() as session:
+                payment = session.query(Payment).filter(Payment.id == payment_id).first()
+                if not payment:
+                    logger.error(f"Payment {payment_id} not found during mock confirmation")
+                    return
                 
-            session.commit()
-            logger.info(f"✅ Mock Payment SUCCESS for {payment_id} | Txn: {txn_id}")
+                payment.status = "success"
+                payment.transaction_id = txn_id
+                payment.paid_at = datetime.utcnow()
+                
+                order_id = payment.order_id
+                amount = payment.amount
+                
+                # Also update order status
+                order = session.query(Order).filter(Order.order_id == payment.order_id).first()
+                if order:
+                    order.status = "fulfilled"
+                    
+                session.commit()
+                logger.info(f"✅ Mock Payment SUCCESS for {payment_id} | Txn: {txn_id}")
+        except Exception as e:
+            logger.error(f"Database error during mock_confirm_payment for {payment_id}: {e}", exc_info=True)
+            return
             
-            # TRIGGER WHATSAPP NOTIFICATION
-            # In a real flow, this might be handled by an event consumer
-            self._send_success_notification(payment.order_id, payment.amount, txn_id)
+        # TRIGGER WHATSAPP NOTIFICATION
+        # In a real flow, this might be handled by an event consumer
+        if order_id is not None:
+            self._send_success_notification(order_id, amount, txn_id)
 
     def _send_success_notification(self, order_id: str, amount: float, txn_id: str):
-        # Fetch order details to send a rich notification
-        from src.models import Patient
-        with get_db_context() as session:
-            order = session.query(Order).filter(Order.order_id == order_id).first()
-            if not order:
-                return
-            
-            patient = session.query(Patient).filter(Patient.user_id == order.user_id).first()
-            phone = patient.phone if patient else None
-            
-            if not phone:
-                # Fallback to session phone or default for demo
-                phone = "9067939108" 
-            
-            items_list = []
-            for item in order.items:
-                items_list.append({
-                    "name": item.medicine_name,
-                    "quantity": item.quantity
-                })
+        try:
+            # Fetch order details to send a rich notification
+            from src.models import Patient
+            with get_db_context() as session:
+                order = session.query(Order).filter(Order.order_id == order_id).first()
+                if not order:
+                    logger.warning(f"Order {order_id} not found when trying to send receipt.")
+                    return
+                
+                patient = session.query(Patient).filter(Patient.user_id == order.user_id).first()
+                phone = patient.phone if patient else None
+                
+                logger.info(f"Preparing to send WhatsApp receipt for Order {order_id} to phone {phone}")
+                
+                if not phone:
+                    # Fallback to session phone or default for demo
+                    phone = "9067939108" 
+                
+                items_list = []
+                for item in order.items:
+                    items_list.append({
+                        "name": item.medicine_name,
+                        "quantity": item.quantity
+                    })
 
-            # Format message
-            items_text = "\n".join([f"• {i['name']} × {i['quantity']}" for i in items_list])
-            message = (
-                f"Your MediSync order is confirmed! 💊\n\n"
-                f"*Order ID:* `{order_id}`\n"
-                f"*Items:*\n{items_text}\n"
-                f"*Amount Paid:* ₹{amount:.2f}\n"
-                f"*Transaction ID:* `{txn_id}`\n"
-                f"*Pharmacy:* MediSync Main\n"
-                f"*Estimated pickup:* 15 mins\n\n"
-                f"Show this message at counter.\n"
-                f"Reply HELP for support."
-            )
-            
-            whatsapp_service.send_message(phone, message)
-            logger.info(f"📱 WhatsApp receipt sent for Order {order_id}")
+                # Format message
+                items_text = "\n".join([f"• {i['name']} × {i['quantity']}" for i in items_list])
+                message = (
+                    f"Your MediSync order is confirmed! 💊\n\n"
+                    f"*Order ID:* `{order_id}`\n"
+                    f"*Items:*\n{items_text}\n"
+                    f"*Amount Paid:* ₹{amount:.2f}\n"
+                    f"*Transaction ID:* `{txn_id}`\n"
+                    f"*Pharmacy:* MediSync Main\n"
+                    f"*Estimated pickup:* 15 mins\n\n"
+                    f"Show this message at counter.\n"
+                    f"Reply HELP for support."
+                )
+                
+                whatsapp_service.send_message(phone, message)
+                logger.info(f"📱 WhatsApp receipt sent for Order {order_id}")
+        except Exception as e:
+            logger.error(f"Failed to send WhatsApp success notification for {order_id}: {e}", exc_info=True)
 
 payment_service = PaymentService()

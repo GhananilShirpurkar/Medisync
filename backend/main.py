@@ -20,6 +20,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.state import PharmacyState
 from src.graph import agent_graph
 from src.db_config import init_db, get_db_type, get_db_context
+from src.events.event_bus import get_event_bus
+from src.events.handlers.notification_handler import register_notification_handlers
 from utils.tracing import check_tracing
 from src.agents.proactive_intelligence_agent import run_batch_analysis
 
@@ -58,7 +60,13 @@ logger.info("🔮 Prediction Service Initialized")
 @app.on_event("startup")
 def startup_event():
     """Initialize database on startup."""
+    # Initialize database
     init_db()
+    
+    # Register event handlers
+    event_bus = get_event_bus()
+    register_notification_handlers(event_bus)
+    
     logger.info(f"🗄️  Database: {get_db_type()}")
     # Index medicines for semantic search
     from src.database import Database
