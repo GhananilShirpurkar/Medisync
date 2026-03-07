@@ -260,6 +260,9 @@ def call_llm_extract(user_message: str) -> Dict:
 You are a pharmacy assistant.
 
 Extract structured information from this message.
+Pay close attention to quantities. If the user says "1000 paracetamol",
+the quantity MUST be 1000, not 1. Always preserve the exact number the user specifies.
+If no quantity is mentioned, default to 1.
 
 Message:
 \"\"\"{user_message}\"\"\"
@@ -314,17 +317,25 @@ Return JSON ONLY in this exact format:
 
 def _mock_extract(user_message: str) -> Dict:
     """Mock extraction for offline mode."""
-    user_message = user_message.lower()
+    import re
+    user_lower = user_message.lower()
     items = []
     
-    # Simple keyword extraction
-    if "paracetamol" in user_message:
-        items.append({"medicine_name": "Paracetamol", "dosage": "500mg", "quantity": 1})
-    if "amoxicillin" in user_message:
-        items.append({"medicine_name": "Amoxicillin", "dosage": "250mg", "quantity": 1})
+    # Simple keyword extraction with quantity parsing
+    for med_name, default_dosage in [("paracetamol", "500mg"), ("amoxicillin", "250mg")]:
+        if med_name in user_lower:
+            qty = 1
+            # Try "1000 paracetamol" pattern
+            qty_match = re.search(rf'(\d+)\s*{med_name}', user_lower)
+            if not qty_match:
+                # Try "paracetamol x 1000" pattern
+                qty_match = re.search(rf'{med_name}\s*[x×]\s*(\d+)', user_lower)
+            if qty_match:
+                qty = int(qty_match.group(1))
+            items.append({"medicine_name": med_name.title(), "dosage": default_dosage, "quantity": qty})
         
     intent = "inquiry"
-    if any(word in user_message for word in ["buy", "order", "purchase", "need", "want"]):
+    if any(word in user_lower for word in ["buy", "order", "purchase", "need", "want"]):
         intent = "purchase"
         
     return {

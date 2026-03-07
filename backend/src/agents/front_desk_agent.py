@@ -172,9 +172,21 @@ Respond in JSON format:
         if intent == "known_medicine":
             return None
 
-        # ── greeting or generic_help: always ask for details ──────────────
+        # ── greeting or generic_help: generate a natural response ─────────
         if intent in ("greeting", "generic_help"):
-            return "How can I help you today? Please tell me your symptoms or the medicine you are looking for."
+            context_str = "None yet"
+            if patient_context:
+                context_str = ", ".join([f"{k}: {v}" for k, v in patient_context.items() if v])
+            formatted_system_prompt = get_system_prompt(language, context_str)
+            response = llm_service.call_llm_chat(
+                formatted_system_prompt,
+                message,
+                history=conversation_history
+            )
+            # If the LLM signals readiness (unlikely for greeting but safe), skip
+            if "READY_TO_RECOMMEND" in response:
+                return None
+            return response
 
         # ── symptom: allow multi-turn clarification up to a limit ─────────
         if intent == "symptom":

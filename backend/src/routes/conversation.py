@@ -270,14 +270,6 @@ async def create_session(request: CreateSessionRequest):
     try:
         session_id = conversation_service.create_session(request.user_id)
         
-        # Add welcome message
-        conversation_service.add_message(
-            session_id=session_id,
-            role="assistant",
-            content="Hello! I'm your MediSync pharmacy assistant. How can I help you today?",
-            agent_name="front_desk"
-        )
-        
         return CreateSessionResponse(
             session_id=session_id,
             created_at=datetime.now().isoformat()
@@ -872,12 +864,10 @@ Red Flags Detected:
             )
             
             if recommendations:
-                # Only extract medicine items when user named specific medicines (not symptoms)
-                extracted_map = {}
-                if intent != "symptom":
-                    extracted = front_desk_agent.extract_medicine_items(request.message)
-                    extracted_map = {
-                        item.medicine_name.lower(): item for item in extracted
+                # Extract quantities/dosages the user may have specified
+                extracted = front_desk_agent.extract_medicine_items(request.message)
+                extracted_map = {
+                    item.medicine_name.lower(): item for item in extracted
                 }
                 order_items = []
                 for r in recommendations:
