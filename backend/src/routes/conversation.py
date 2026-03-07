@@ -319,6 +319,11 @@ async def send_message(request: ConversationRequest):
         if confirmation_store.is_pending(request.session_id):
             pending = confirmation_store.get_pending(request.session_id)
             user_reply = request.message.strip().upper()
+            
+            # Use intent classifier to understand if they are pivoting instead of just answering yes/no
+            from src.services.intent_classifier import classify_intent
+            intent_check = classify_intent(request.message)
+            
             conversation_service.add_message(
                 session_id=request.session_id,
                 role="user",
@@ -330,6 +335,31 @@ async def send_message(request: ConversationRequest):
                 user_reply = "YES"
             elif user_reply in ["NO", "N", "NOPE", "CANCEL", "STOP", "नाही", "नहीं"]:
                 user_reply = "NO"
+            
+            if intent_check.get("intent") == "alternative_request":
+                # User wants an alternative instead of confirming or canceling!
+                conversation_service.transition_phase(request.session_id, "intake")
+                conversation_service.update_session(request.session_id, intent="symptom")
+                
+                pivot_prompt = "The user rejected the previous medicine recommendation and asked for an alternative or different brand. Apologize and assure them you will find different options for their symptoms immediately."
+                pivot_msg = llm_service.call_llm_chat(pivot_prompt, request.message)
+                
+                conversation_service.add_message(request.session_id, "assistant", pivot_msg, "system")
+                
+                await trace_manager.emit(
+                    session_id=request.session_id,
+                    agent_name="API Gateway",
+                    step_name="Waiting for response",
+                    action_type="event",
+                    status="completed"
+                )
+                
+                return ConversationResponse(
+                    session_id=request.session_id,
+                    message=pivot_msg,
+                    intent="symptom",
+                    next_step="intake"
+                )
             
             if user_reply == 'YES':
                 # Consume atomically — prevents double execution
@@ -842,6 +872,43 @@ Red Flags Detected:
                 # Headache + mild fever should still get medicine suggestions.
                 pass
 
+        # Handle simple conversational requests directly 
+        if intent == "general_inquiry":
+            system_prompt = "You are the MediSync Pharmacy receptionist. The user is asking a general question or greeting you. Respond politely and concisely (1-2 sentences). Do not ask for medical context unless they mention a symptom."
+            response_text = llm_service.call_llm_chat(system_prompt, request.message, history=messages)
+            
+            conversation_service.add_message(
+                session_id=request.session_id,
+                role="assistant",
+                content=response_text,
+                agent_name="FRONT_DESK"
+            )
+
+            await trace_manager.emit(
+                session_id=request.session_id,
+                agent_name="FRONT_DESK",
+                step_name="Responding to general inquiry...",
+                action_type="response",
+                status="completed",
+                details={"message": response_text}
+            )
+            
+            await trace_manager.emit(
+                session_id=request.session_id,
+                agent_name="API Gateway",
+                step_name="Waiting for response",
+                action_type="event",
+                status="completed"
+            )
+
+            return ConversationResponse(
+                session_id=request.session_id,
+                message=response_text,
+                intent=intent,
+                needs_clarification=False,
+                patient_context=patient_context,
+                next_step="clarification"
+            )
         
         # Step 5: Generate recommendations based on intent
         if intent == "symptom":
@@ -938,6 +1005,16 @@ Red Flags Detected:
                 header = ""
                 if replacement_lines:
                     header = "\n".join(replacement_lines) + "\n\n"
+
+                # Generate dynamic explanation for the recommendation
+                explanation = front_desk_agent.generate_recommendation_explanation(
+                    symptoms=combined_symptoms,
+                    recommendations=[{"medicine_name": item.medicine_name, "indications": "symptoms"} for item in order_items],
+                    patient_context=patient_context,
+                    language=detected_language
+                )
+                
+                header += explanation
 
                 confirmation_message = (
                     header

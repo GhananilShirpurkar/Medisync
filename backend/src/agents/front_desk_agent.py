@@ -258,3 +258,47 @@ Respond in JSON format:
             "summary": f"User intent: {intent}. Context: {patient_context}",
             "next_agent": self.route_to_agent(intent, patient_context)
         }
+
+    def generate_recommendation_explanation(
+        self, 
+        symptoms: str, 
+        recommendations: List[Dict], 
+        patient_context: Dict,
+        language: str = "en"
+    ) -> str:
+        """
+        Dynamically explain why these specific medicines are being recommended
+        based on the user's symptoms and context.
+        """
+        # If no recommendations, just fallback
+        if not recommendations:
+            return ""
+
+        meds_str = ", ".join([f"{r.get('medicine_name')} (for {r.get('indications', 'symptoms')})" for r in recommendations])
+        context_str = ", ".join([f"{k}: {v}" for k, v in patient_context.items() if v]) if patient_context else "None"
+
+        system_prompt = f"""You are the MediSync Pharmacist.
+You are about to recommend the following medicines to the patient: {meds_str}
+
+The patient presented with these symptoms: "{symptoms}"
+Patient Context: {context_str}
+
+Write a natural, empathetic, and concise explanation (1-2 sentences) of WHY you are recommending these specific medicines for their symptoms. Do NOT generate the actual order confirmation list, just the warm explanation.
+"""
+        
+        # Add language constraints
+        if language == "hi":
+            system_prompt += "\nRespond in clear, simple Hindi (Devanagari script)."
+        elif language == "mr":
+            system_prompt += "\nRespond in clear, simple Marathi (Devanagari script)."
+        elif language == "mixed":
+            system_prompt += "\nRespond in Hinglish (Hindi words in Roman script)."
+        else:
+            system_prompt += "\nRespond in English."
+
+        try:
+            explanation = llm_service.call_llm_chat(system_prompt, "Please explain the recommendation.")
+            return explanation + "\n\n"
+        except Exception as e:
+            print(f"Failed to generate explanation: {e}")
+            return ""
