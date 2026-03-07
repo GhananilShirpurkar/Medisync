@@ -16,8 +16,8 @@ if [[ "$1" == "--setup" ]]; then
     shift
 fi
 
-# ── FIXED: use persistent subdomain for Twilio Sandbox stability ──
-SUBDOMAIN="medisync-koanoir"
+# ── STATIC NGROK DOMAIN ──
+SUBDOMAIN="elianna-epiploic-centrically.ngrok-free.dev"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -183,30 +183,29 @@ fi
 
 # Start Tunnel
 echo -e "${BLUE}→ Starting Public Tunnel for WhatsApp...${NC}"
-stale_tunnel=$(pgrep -f "localtunnel.*$SUBDOMAIN" || true)
+
+# Add local path for ngrok bin
+export PATH=$PATH:~/.local/bin
+
+stale_tunnel=$(pgrep -f "ngrok.*$SUBDOMAIN" || true)
 if [ ! -z "$stale_tunnel" ]; then
-    pkill -f "localtunnel.*$SUBDOMAIN" 2>/dev/null; sleep 1
+    pkill -f "ngrok.*$SUBDOMAIN" 2>/dev/null; sleep 1
 fi
 
 TUNNEL_LOG="/tmp/medisync_tunnel.log"
-yes | npx localtunnel --port 8000 --subdomain "$SUBDOMAIN" > "$TUNNEL_LOG" 2>&1 &
+ngrok http 8000 --domain="$SUBDOMAIN" > /dev/null 2>&1 &
 TUNNEL_PID=$!
 
-TUNNEL_URL=""
-for i in $(seq 1 15); do
-    sleep 1
-    TUNNEL_URL=$(grep -o 'https://[^ ]*\.loca\.lt' "$TUNNEL_LOG" | head -n 1)
-    if [ ! -z "$TUNNEL_URL" ]; then break; fi
-done
+TUNNEL_URL="https://$SUBDOMAIN"
+sleep 2
 
 if [ ! -z "$TUNNEL_URL" ]; then
     echo -e "${GREEN}✓ Tunnel running at: $TUNNEL_URL${NC}"
-    curl --max-time 10 -s -o /dev/null "$TUNNEL_URL" -H "Bypass-Tunnel-Reminder: true" || true
     
     echo -e "${YELLOW}  Registering WhatsApp Webhook...${NC}"
     cd "$BACKEND_DIR"
-    python scripts/register_whatsapp_webhook.py "https://medisync-koanoir.loca.lt/api/webhook/whatsapp" 2>/dev/null || \
-        echo -e "${YELLOW}  ⚠️  Webhook registration failed. Path: https://medisync-koanoir.loca.lt/api/webhook/whatsapp${NC}"
+    python scripts/register_whatsapp_webhook.py "$TUNNEL_URL/api/webhook/whatsapp" 2>/dev/null || \
+        echo -e "${YELLOW}  ⚠️  Webhook registration failed. Path: $TUNNEL_URL/api/webhook/whatsapp${NC}"
 else
     echo -e "${RED}✗ Tunnel failed to start.${NC}"
 fi
@@ -219,7 +218,7 @@ echo -e "${BLUE}Backend API:${NC}  http://localhost:8000"
 echo -e "${BLUE}Frontend:${NC}     http://localhost:5173"
 if [ ! -z "$TUNNEL_URL" ]; then
     echo -e "${BLUE}Public API:${NC}   $TUNNEL_URL"
-    echo -e "${BLUE}WhatsApp WH:${NC}  https://medisync-koanoir.loca.lt/api/webhook/whatsapp"
+    echo -e "${BLUE}WhatsApp WH:${NC}  $TUNNEL_URL/api/webhook/whatsapp"
 fi
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${NC}"

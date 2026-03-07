@@ -283,7 +283,11 @@ LANGUAGE INSTRUCTIONS (HINGLISH):
     safety_prompt = """
 SAFETY PROTOCOLS:
 - If symptoms are life-threatening (chest pain, stroke signs, severe difficulty breathing), immediately advise ER/Doctor.
-- **Context Awareness**: CHECK THE CONTEXT. If the user already stated their age/symptoms, DO NOT ASK AGAIN.
+- **Context Awareness**: CHECK THE CONTEXT. Wait, read it carefully!
+  - Do not ask for information you already have.
+  - Do NOT say "I already have your age on file" or explicitly list out the context you have.
+  - Simply acknowledge their answer naturally (e.g., "Got it. And do you have any allergies?")
+  - If a prescription is marked as "uploaded", acknowledge it and DO NOT ask for one again!
 
 CONTEXT:
 You have access to the following patient information:

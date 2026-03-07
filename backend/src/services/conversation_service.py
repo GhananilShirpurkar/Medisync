@@ -72,10 +72,11 @@ class ConversationService:
                 "patient_conditions": session.patient_conditions or [],
                 "whatsapp_phone": session.whatsapp_phone,
                 
-                # 🔥 NEW FIELDS
+                # Conversation state
                 "conversation_phase": session.conversation_phase,
                 "last_medicine_discussed": session.last_medicine_discussed,
                 "last_recommendations": session.last_recommendations or [],
+                "prescription_uploaded": session.prescription_uploaded or False,
                 
                 "turn_count": session.turn_count,
                 "created_at": session.created_at.isoformat() if session.created_at else None,
@@ -149,6 +150,10 @@ class ConversationService:
                 val_severity = patient_context.get("symptom_severity")
                 if val_severity:
                     session.patient_symptom_severity = val_severity
+                
+                # Track prescription upload
+                if patient_context.get("prescription_uploaded"):
+                    session.prescription_uploaded = True
             
             if status:
                 session.status = status

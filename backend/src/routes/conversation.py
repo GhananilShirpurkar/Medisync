@@ -257,7 +257,8 @@ def _get_merged_context(session: Dict) -> Dict:
         "phone": session.get("whatsapp_phone"),
         "name": session.get("user_id") if str(session.get("user_id", "")).startswith("PID-") else None,
         "symptom_duration": session.get("patient_symptom_duration"),
-        "symptom_severity": session.get("patient_symptom_severity")
+        "symptom_severity": session.get("patient_symptom_severity"),
+        "prescription_uploaded": session.get("prescription_uploaded", False)
     }
 
 @router.post("/create", response_model=CreateSessionResponse, status_code=status.HTTP_201_CREATED)
@@ -847,15 +848,22 @@ Red Flags Detected:
             # Get full conversation history to extract all symptoms mentioned
             all_messages = conversation_service.get_messages(request.session_id)
             
-            # Combine recent, relevant user messages — filter out noise
-            noise_words = {"yes", "no", "ok", "okay", "hello", "hi", "hey", "thanks", "thank you"}
-            user_msgs = [
-                msg.get("content", "") for msg in all_messages
-                if msg.get("role") == "user"
-                and len(msg.get("content", "").strip()) > 3
-                and msg.get("content", "").strip().lower() not in noise_words
-            ]
-            combined_symptoms = " ".join(user_msgs[-3:])[:500]  # Last 3 relevant, truncated
+            # Find the actual symptom description by backtracking through user messages
+            # Skip short answers to clarifying questions (like age or "no")
+            symptom_descriptions = []
+            for msg in all_messages:
+                if msg.get("role") == "user":
+                    content = msg.get("content", "").strip()
+                    # Keep if it describes a symptom: length > 2 words or contains symptom keywords
+                    if len(content.split()) > 2 or any(word in content.lower() for word in ["pain", "ache", "fever", "cough", "cold", "feel", "having", "head"]):
+                        symptom_descriptions.append(content)
+                        
+            if symptom_descriptions:
+                # Use the most recent meaty description
+                combined_symptoms = symptom_descriptions[-1][:500]
+            else:
+                # Fallback to current message if we can't find anything
+                combined_symptoms = request.message[:500]
             
             # Find medicines for symptoms
             recommendations = await _get_symptom_recommendations(
@@ -884,7 +892,8 @@ Red Flags Detected:
                     whatsapp_phone=patient_context.get("phone") or session.get("whatsapp_phone"),
                     user_message=request.message,
                     intent=intent,
-                    extracted_items=order_items
+                    extracted_items=order_items,
+                    prescription_uploaded=session.get("prescription_uploaded", False)
                 )
                 
                 # Run Risk Scoring
@@ -1186,7 +1195,8 @@ Red Flags Detected:
                         whatsapp_phone=patient_context.get("phone") or session.get("whatsapp_phone"),
                         user_message=request.message,
                         intent=intent,
-                        extracted_items=order_items
+                        extracted_items=order_items,
+                        prescription_uploaded=session.get("prescription_uploaded", False)
                     )
                     
                     # Run Risk Scoring

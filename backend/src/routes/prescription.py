@@ -98,7 +98,8 @@ async def upload_prescription(
                 "age": extracted_data.get("patient_age"),
                 "allergies": extracted_data.get("allergies", []),
                 "existing_conditions": extracted_data.get("conditions", []),
-                "patient_name": extracted_data.get("patient_name")
+                "patient_name": extracted_data.get("patient_name"),
+                "prescription_uploaded": True  # Mark that a prescription was uploaded
             }
             conversation_service.update_session(session_id, patient_context=pc_to_save)
             if extracted_data.get("patient_name"):

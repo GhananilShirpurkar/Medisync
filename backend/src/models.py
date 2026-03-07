@@ -277,6 +277,9 @@ class ConversationSession(Base):
     patient_symptom_duration = Column(String(100))
     patient_symptom_severity = Column(String(50))
     
+    # Prescription tracking
+    prescription_uploaded = Column(Boolean, default=False)
+    
     # Session metadata
     turn_count = Column(Integer, default=0)
     
