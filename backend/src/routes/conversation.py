@@ -984,6 +984,21 @@ Red Flags Detected:
                         replacement_info = rep   # pass to store for audit
 
                 if has_replacement:
+                    # Swap the OOS order items with their replacements
+                    replacement_map = {
+                        rep["original"]: rep for rep in state.replacement_pending
+                        if rep.get("replacement_found")
+                    }
+                    for i, item in enumerate(order_items):
+                        rep = replacement_map.get(item.medicine_name)
+                        if rep:
+                            order_items[i] = OrderItem(
+                                medicine_name=rep["suggested"],
+                                dosage=item.dosage,
+                                quantity=item.quantity,
+                            )
+                    # Update the state with swapped items
+                    state.extracted_items = order_items
                     state.conversation_phase = "replacement_suggested"
                     conversation_service.transition_phase(
                         request.session_id, "replacement_suggested"
@@ -1240,12 +1255,9 @@ Red Flags Detected:
                             response_message += f"\n\n💡 **Pharmacist Tip:** Since you're buying {medicine['name']}, I recommend adding **{rec['medicine']}** {rec['reason'].lower()}"
                     else:
                         response_message += "Currently out of stock. "
-                        if item_status.get("alternatives"):
-                            alt = item_status['alternatives'][0] # Take best alternative
-                            response_message += f"\n\n🔄 **Substitute Available:** We have **{alt['name']}** (₹{alt['price']}) which is a generic equivalent. Would you like that instead?"
-                            
-                            # Update recommendation object to point to the substitute? 
-                            # Maybe clearer to keep original intent but offer substitute in text.
+                        substitute = item_status.get("substitute")
+                        if substitute:
+                            response_message += f"\n\n🔄 **Substitute Available:** We have **{substitute['name']}** (₹{substitute['price']}) which is a medicinal equivalent ({substitute.get('reasoning', 'same therapeutic class')}). Would you like that instead?"
                         elif medicine.get("generic_equivalent"):
                             response_message += f"Alternative: {medicine['generic_equivalent']}"
                 
@@ -1258,9 +1270,27 @@ Red Flags Detected:
                         qty = extracted[0].quantity
                         dosage_val = extracted[0].dosage
 
+                    # If the medicine is OOS, swap the order to use the substitute
+                    order_med_name = medicine["name"]
+                    order_price = medicine.get('price', 0)
+                    oos_swap_header = ""
+                    
+                    if not item_status["available"]:
+                        substitute = item_status.get("substitute")
+                        if substitute:
+                            sub_med = db.get_medicine(substitute["name"])
+                            if sub_med and sub_med["stock"] > 0:
+                                order_med_name = substitute["name"]
+                                order_price = substitute["price"]
+                                oos_swap_header = (
+                                    f"⚠️ *{medicine['name']}* is currently out of stock.\n"
+                                    f"🔄 Substituted with *{substitute['name']}* "
+                                    f"({substitute.get('reasoning', 'medicinal equivalent')}).\n\n"
+                                )
+
                     order_items = [
                         OrderItem(
-                            medicine_name=medicine["name"],
+                            medicine_name=order_med_name,
                             dosage=dosage_val,
                             quantity=qty
                         )
@@ -1281,15 +1311,15 @@ Red Flags Detected:
                     
                     state.trace_metadata["front_desk"] = {"patient_context": patient_context}
 
-                    # Build confirmation message (look up price from DB)
-                    price = medicine.get('price', 0)
-                    line_total = price * qty
+                    # Build confirmation message (using the potentially swapped medicine)
+                    line_total = order_price * qty
                     dosage_str = f" {dosage_val}" if dosage_val else ""
-                    items_text = f"  \u2022 {medicine['name']}{dosage_str} \u00d7 {qty} \u2014 \u20b9{line_total:.2f}"
+                    items_text = f"  \u2022 {order_med_name}{dosage_str} \u00d7 {qty} \u2014 \u20b9{line_total:.2f}"
                     confirmation_message = (
-                        f"Please confirm your order:\n\n{items_text}\n\n"
-                        f"Total: \u20b9{line_total:.2f}\n\n"
-                        "Reply *YES* to confirm or *NO* to cancel."
+                        oos_swap_header
+                        + f"Please confirm your order:\n\n{items_text}\n\n"
+                        + f"Total: \u20b9{line_total:.2f}\n\n"
+                        + "Reply *YES* to confirm or *NO* to cancel."
                     )
 
                     # Open the confirmation gate with idempotency token
