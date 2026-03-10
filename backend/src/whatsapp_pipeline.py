@@ -83,21 +83,16 @@ class WhatsAppPipeline:
                             extracted_items=[OrderItem(
                                 medicine_name=pending_refill.medicine_name,
                                 quantity=1
-                            )]
+                            )],
+                            confirmation_confirmed=True  # Auto-confirm for refill YES
                         )
                         result = await agent_graph.ainvoke(refill_state)
                         final_state = PharmacyState(**result) if isinstance(result, dict) else result
 
                         pending_refill.refill_confirmed = True
                         db.commit()
-
-                        await whatsapp_service.send_message(
-                            phone,
-                            f"✅ *Refill order placed!*\n\n"
-                            f"Order ID: `{final_state.order_id}`\n"
-                            f"Medicine: {pending_refill.medicine_name}\n\n"
-                            f"Please collect at the counter.\n\u2014 MediSync"
-                        )
+                        
+                        # Automated notification is sent via OrderCreatedEvent
                         return  # Handled — skip normal pipeline
 
             # 3. Process through Agents
@@ -128,11 +123,9 @@ class WhatsAppPipeline:
                     return
 
                 if state.pharmacist_decision == "approved":
+                    # fulfillment_agent now emits OrderCreatedEvent which triggers notification
                     state = fulfillment_agent(state)
-                    await whatsapp_service.send_message(
-                        phone,
-                        f"✅ *Order Confirmed!*\n\nOrder ID: `{state.order_id}`"
-                    )
+                    # Redundant manual notification removed
                     return
 
             await whatsapp_service.send_message(phone, "I'm processing your request...")
@@ -189,9 +182,12 @@ class WhatsAppPipeline:
 
                 state = pharmacist_agent(state)
                 if state.pharmacist_decision == "approved":
+                    # fulfillment_agent now emits OrderCreatedEvent which triggers notification
                     state = fulfillment_agent(state)
-                    message += f"\n\n*Order ID:* `{state.order_id}`"
+                    # Redundant manual notification removed
+                    # message += f"\n\n*Order ID:* `{state.order_id}`"
 
+                # If vision was just for identification/info, we still send finding medicines
                 await whatsapp_service.send_message(phone, message)
 
             elif state.pharmacist_decision == "needs_review":

@@ -27,12 +27,15 @@ class WhatsAppService:
         return phone
 
     def send_message(self, phone: str, message: str) -> Dict[str, Any]:
+        to_number = self._format_number(phone)
+        logger.info(f"📤 Attempting WhatsApp: {to_number} via {self.from_number}")
         try:
             msg = self.client.messages.create(
                 from_=self.from_number,
-                to=self._format_number(phone),
+                to=to_number,
                 body=message
             )
+            logger.info(f"✅ WhatsApp Delivered to Twilio! SID: {msg.sid}")
             return {
                 "success": True,
                 "message_id": msg.sid,
@@ -40,7 +43,7 @@ class WhatsAppService:
                 "method": "whatsapp"
             }
         except Exception as e:
-            logger.error(f"WhatsApp send failed: {e}")
+            logger.error(f"❌ WhatsApp Failed for {to_number}: {e}")
             return {
                 "success": False,
                 "error": str(e),

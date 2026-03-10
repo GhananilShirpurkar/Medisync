@@ -153,6 +153,25 @@ class EventBus:
         
         # Wait for all handlers to complete
         await asyncio.gather(*tasks, return_exceptions=True)
+
+    def publish_background(self, event: Event):
+        """
+        Publish an event in the background without blocking.
+        
+        This is useful for synchronous code (like agents) to emit events
+        that will be processed by the event loop.
+        
+        Args:
+            event: Event instance to publish
+        """
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self.publish_async(event))
+            logger.info(f"Event {type(event).__name__} scheduled in background")
+        except RuntimeError:
+            # Fallback if no loop is running (e.g., during tests or script execution)
+            logger.warning(f"No running event loop found. Publishing {type(event).__name__} synchronously.")
+            self.publish(event)
     
     async def _execute_handler_async(self, handler: Callable, event: Event):
         """

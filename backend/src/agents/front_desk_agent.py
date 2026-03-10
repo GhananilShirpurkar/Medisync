@@ -174,6 +174,12 @@ Respond in JSON format:
 
         # ── greeting or generic_help: generate a natural response ─────────
         if intent in ("greeting", "generic_help"):
+            # If user said "Hello, I want Dolo", don't just say "Hello", let it fall through to lookup
+            if intent == "greeting":
+                items = self.extract_medicine_items(message, language)
+                if items:
+                    return None
+            
             context_str = "None yet"
             if patient_context:
                 context_str = ", ".join([f"{k}: {v}" for k, v in patient_context.items() if v])

@@ -10,11 +10,17 @@ Responsibilities:
 - Return clean responses
 """
 
+from dotenv import load_dotenv
+import os
+import logging
+
+# Load environment variables IMMEDIATELY
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-import os
-import logging
+import asyncio
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.state import PharmacyState

@@ -223,7 +223,9 @@ def fulfillment_agent(state: PharmacyState) -> PharmacyState:
         }
         
         # Step 8: Emit OrderCreatedEvent — triggers WhatsApp notification
-        event_bus.publish(OrderCreatedEvent(
+        logger.info(f"Fulfillment complete for {state.order_id}. Publishing OrderCreatedEvent to phone: {state.whatsapp_phone}")
+        event_bus = get_event_bus()
+        event_bus.publish_background(OrderCreatedEvent(
             order_id=state.order_id,
             user_id=state.user_id or "anonymous",
             phone=state.whatsapp_phone,
@@ -244,7 +246,7 @@ def fulfillment_agent(state: PharmacyState) -> PharmacyState:
         }
         logger.error(f"Fulfillment TransactionError: {e.message} — {e.details}")
         try:
-            event_bus.publish(OrderFailedEvent(
+            event_bus.publish_background(OrderFailedEvent(
                 user_id=state.user_id or "anonymous",
                 error=e.message,
                 error_type="TransactionError"
@@ -265,7 +267,7 @@ def fulfillment_agent(state: PharmacyState) -> PharmacyState:
         }
         logger.error(f"Fulfillment OutOfStockError: {e.message}")
         try:
-            event_bus.publish(OrderFailedEvent(
+            event_bus.publish_background(OrderFailedEvent(
                 user_id=state.user_id or "anonymous",
                 error=e.message,
                 error_type="OutOfStockError"
@@ -288,7 +290,7 @@ def fulfillment_agent(state: PharmacyState) -> PharmacyState:
         logger.error(f"Fulfillment unexpected error: {str(e)}")
         logger.error(f"FULFILLMENT TRACEBACK: {traceback.format_exc()}")
         try:
-            event_bus.publish(OrderFailedEvent(
+            event_bus.publish_background(OrderFailedEvent(
                 user_id=state.user_id or "anonymous",
                 error=str(e),
                 error_type=type(e).__name__

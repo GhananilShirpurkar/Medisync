@@ -91,10 +91,13 @@ export const sendOTPAPI = async (phone) => {
 };
 
 export const verifyOTPAPI = async (phone, code) => {
+  const storeState = pipelineStore.get();
+  const sessionId = storeState.sessionId;
+
   const res = await fetch('http://localhost:8000/api/conversation/auth/otp/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phone, code })
+    body: JSON.stringify({ phone, code, session_id: sessionId })
   });
   if (!res.ok) throw new Error('Invalid or expired OTP');
   return await res.json();

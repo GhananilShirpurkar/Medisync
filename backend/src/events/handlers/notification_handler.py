@@ -55,6 +55,11 @@ def handle_order_created(event: OrderCreatedEvent):
         # Use event.phone directly (it contains the patient's number)
         chat_id = event.phone
         
+        if not chat_id:
+            logger.warning(f"Skipping order notification for {event.order_id}: No phone number provided")
+            _log_notification(event, "order_confirmation", "skipped", "No phone number")
+            return
+
         # RE-ENABLING: Essential for Voice users who may not go through web checkout
         result = send_order_notification(
             chat_id=chat_id,

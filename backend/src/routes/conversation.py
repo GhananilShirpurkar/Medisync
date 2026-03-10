@@ -95,6 +95,7 @@ class ConversationResponse(BaseModel):
     next_step: Optional[str] = None
     severity_assessment: Optional[Dict[str, Any]] = None  # NEW: Severity scoring
     client_action: Optional[str] = None  # NEW: Trigger client-side actions
+    order_id: Optional[str] = None       # NEW: Return real order ID
 
 
 class VoiceInputResponse(BaseModel):
@@ -163,6 +164,7 @@ class OTPSendRequest(BaseModel):
 class OTPVerifyRequest(BaseModel):
     phone: str
     code: str
+    session_id: Optional[str] = None
 
 
 
@@ -187,6 +189,8 @@ async def send_otp(request: OTPSendRequest):
         "code": code,
         "expires": datetime.now() + timedelta(minutes=5)
     }
+    
+    logger.info(f"Generated OTP {code} for {request.phone}")
     
     # Try to send via WhatsApp
     message = f"🔐 *MediSync Verification*\n\nYour secure access code is: *{code}*\n\nThis code expires in 5 minutes. Please do not share it with anyone."
@@ -241,6 +245,14 @@ async def verify_otp(request: OTPVerifyRequest):
         
     if request.code != entry["code"]:
         raise HTTPException(status_code=400, detail="Invalid verification code")
+        
+    # Success - Link to session if provided
+    if request.session_id:
+        conversation_service.update_session(
+            session_id=request.session_id,
+            patient_context={"whatsapp_phone": request.phone}
+        )
+        logger.info(f"Verified phone {request.phone} linked to session {request.session_id}")
         
     # Success
     del otp_store[request.phone]
@@ -312,6 +324,10 @@ async def send_message(request: ConversationRequest):
                 detail="Session not found"
             )
 
+        # Initialize identity response variables
+        identity_prefix = ""
+        resolved_patient_context = {}
+
         # ------------------------------------------------------------------
         # ORDER CONFIRMATION INTERCEPT
         # Check before anything else — user is replying YES/NO to a pending order
@@ -356,7 +372,7 @@ async def send_message(request: ConversationRequest):
                 
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=pivot_msg,
+                    message=identity_prefix + pivot_msg,
                     intent="symptom",
                     next_step="intake"
                 )
@@ -375,9 +391,10 @@ async def send_message(request: ConversationRequest):
                         request.session_id, "fulfillment_executing"
                     )
                     try:
+                        # Ensure whatsapp_phone is in the state
+                        pending_state.whatsapp_phone = pending_state.whatsapp_phone or session.get("whatsapp_phone")
+                        
                         final_state = fulfillment_agent(pending_state)
-                        import traceback
-                        logger.error(f"FULFILLMENT TRACEBACK: {traceback.format_exc()}")
                         response_message = format_order_confirmation(final_state)
                         conversation_service.transition_phase(
                             request.session_id, "completed"
@@ -402,10 +419,11 @@ async def send_message(request: ConversationRequest):
                 )
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=response_message,
+                    message=identity_prefix + response_message,
                     intent='purchase',
                     needs_clarification=False,
-                    next_step='order_complete'
+                    next_step='order_complete',
+                    order_id=final_state.order_id
                 )
             elif user_reply == 'NO':
                 confirmation_store.cancel(request.session_id)
@@ -421,7 +439,7 @@ async def send_message(request: ConversationRequest):
                 )
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=response_message,
+                    message=identity_prefix + response_message,
                     intent='purchase',
                     needs_clarification=False,
                     next_step='cancelled'
@@ -491,7 +509,7 @@ async def send_message(request: ConversationRequest):
 
                         return ConversationResponse(
                             session_id=request.session_id,
-                            message=response_message,
+                            message=identity_prefix + response_message,
                             intent="purchase",
                             recommendations=None,
                             needs_clarification=False,
@@ -551,50 +569,31 @@ async def send_message(request: ConversationRequest):
                 "session_id": request.session_id
             }))
 
-            async def send_opening_message(pid: str, phone: str, session_id: str):
-                patient = db.resolve_patient(phone)
-                orders = patient.get('orders', [])
-                
-                if orders:
-                    last_item = orders[-1].get('items', [{}])[0].get('name', 'your last order')
-                    opening = f"Welcome back. Last visit you ordered {last_item}. What brings you in today?"
-                else:
-                    opening = "Welcome to MediSync. Please describe your symptoms or tell me which medicine you need."
-                
+            # Step 0.1: Generate opening message for the prefix
+            patient = db.resolve_patient(formatted_phone)
+            orders = patient.get('orders', [])
+            if orders:
+                last_item = orders[-1].get('items', [{}])[0].get('name', 'your last order')
+                opening = f"Welcome back. Last visit you ordered {last_item}. What brings you in today? "
+            else:
+                opening = "Welcome to MediSync. Please describe your symptoms or tell me which medicine you need. "
+
+            identity_prefix = opening
+            resolved_patient_context = patient_info
+            
+            # Still emit the trace so it shows up in logs too
+            async def log_opening():
                 await trace_manager.emit(
-                    session_id=session_id,
+                    session_id=request.session_id,
                     agent_name="FRONT_DESK",
                     step_name="Thinking: Preparing a warm welcome...",
                     action_type="response",
                     status="completed",
                     details={"message": opening}
                 )
-
-            asyncio.create_task(send_opening_message(pid, formatted_phone, request.session_id))
-
-            welcome_msg = ""
-            if is_new:
-                welcome_msg = f"Thanks! I've registered you with Patient ID: {pid}. "
-                welcome_msg += "I've linked your phone for WhatsApp notifications."
-            else:
-                welcome_msg = f"Welcome back, {patient_info.get('name') or pid}. "
-
-            welcome_msg += "\nHow can I help you today?"
-
-            conversation_service.add_message(
-                session_id=request.session_id,
-                role="assistant",
-                content=welcome_msg,
-                agent_name="identity_agent"
-            )
-
-            return ConversationResponse(
-                session_id=request.session_id,
-                message=welcome_msg,
-                intent="identity_resolved",
-                patient_context=patient_info,
-                next_step="intake"
-            )
+            import asyncio
+            asyncio.create_task(log_opening())
+            # FALL THROUGH to process the actual request in the same turn!
         elif not is_returning_user:
             # We already emitted "Scan for Phone Number" started, so emit completed
             await trace_manager.emit(
@@ -635,6 +634,10 @@ async def send_message(request: ConversationRequest):
         )
 
         intent_result, patient_context = await asyncio.gather(intent_future, context_future)
+        
+        # Merge identity context if we just resolved it
+        if resolved_patient_context:
+            patient_context.update(resolved_patient_context)
 
         await trace_manager.emit(
             session_id=request.session_id,
@@ -716,7 +719,7 @@ async def send_message(request: ConversationRequest):
             
             return ConversationResponse(
                 session_id=request.session_id,
-                message=response_message,
+                message=identity_prefix + response_message,
                 intent=intent,
                 needs_clarification=False,
                 patient_context=patient_context,
@@ -776,7 +779,7 @@ async def send_message(request: ConversationRequest):
             
             return ConversationResponse(
                 session_id=request.session_id,
-                message=clarifying_question,
+                message=identity_prefix + clarifying_question,
                 intent=intent,
                 needs_clarification=True,
                 clarifying_question=clarifying_question,
@@ -857,7 +860,7 @@ Red Flags Detected:
                 
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=emergency_message,
+                    message=identity_prefix + emergency_message,
                     intent=intent,
                     recommendations=None,
                     needs_clarification=False,
@@ -903,7 +906,7 @@ Red Flags Detected:
 
             return ConversationResponse(
                 session_id=request.session_id,
-                message=response_text,
+                message=identity_prefix + response_text,
                 intent=intent,
                 needs_clarification=False,
                 patient_context=patient_context,
@@ -1076,7 +1079,7 @@ Red Flags Detected:
 
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=confirmation_message,
+                    message=identity_prefix + confirmation_message,
                     intent=intent,
                     recommendations=recommendations,
                     needs_clarification=True,
@@ -1159,7 +1162,7 @@ Red Flags Detected:
 
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=response_message,
+                    message=identity_prefix + response_message,
                     intent="symptom",  # Redirect to symptom intent
                     needs_clarification=True,
                     patient_context=patient_context,
@@ -1374,7 +1377,7 @@ Red Flags Detected:
 
                 return ConversationResponse(
                     session_id=request.session_id,
-                    message=response_message,
+                    message=identity_prefix + response_message,
                     intent=intent,
                     recommendations=[recommendation],
                     needs_clarification=True if (not is_info_query and not is_fuzzy_match) else (is_fuzzy_match and not is_info_query),
@@ -1430,7 +1433,7 @@ Red Flags Detected:
             
             return ConversationResponse(
                 session_id=request.session_id,
-                message=response_message,
+                message=identity_prefix + response_message,
                 intent=intent,
                 needs_clarification=False,
                 patient_context=patient_context,
@@ -1458,7 +1461,7 @@ Red Flags Detected:
 
             return ConversationResponse(
                 session_id=request.session_id,
-                message=response_message,
+                message=identity_prefix + response_message,
                 intent=intent,
                 needs_clarification=False,
                 patient_context=patient_context,
@@ -1497,18 +1500,9 @@ Red Flags Detected:
                 status="completed"
             )
 
-            # Trace: Complete API Gateway
-            await trace_manager.emit(
-                session_id=request.session_id,
-                agent_name="API Gateway",
-                step_name="Waiting for response",
-                action_type="event",
-                status="completed"
-            )
-
             return ConversationResponse(
                 session_id=request.session_id,
-                message=response_message,
+                message=identity_prefix + response_message,
                 intent=intent,
                 needs_clarification=True,
                 patient_context=patient_context,
@@ -1630,6 +1624,11 @@ async def confirm_order(request: ConfirmOrderRequest):
 
     # Hydrate state and set the confirmation flag
     pending_state = PharmacyState(**entry["pending_pharmacy_state"])
+    
+    # PROPAGATE PHONE FROM SESSION (was verified after gate opened)
+    if session and session.get("whatsapp_phone"):
+        pending_state.whatsapp_phone = pending_state.whatsapp_phone or session.get("whatsapp_phone")
+
     pending_state.confirmation_confirmed = True
     pending_state.conversation_phase = "fulfillment_executing"
 
@@ -1794,6 +1793,11 @@ async def voice_input(
                 entry = confirmation_store.consume(session_id, pending["token"])
                 if entry:
                     pending_state = PharmacyState(**entry["pending_pharmacy_state"])
+                    
+                    # PROPAGATE PHONE FROM SESSION
+                    if session and session.get("whatsapp_phone"):
+                        pending_state.whatsapp_phone = pending_state.whatsapp_phone or session.get("whatsapp_phone")
+
                     pending_state.confirmation_confirmed = True
                     pending_state.conversation_phase = "fulfillment_executing"
                     conversation_service.transition_phase(session_id, "fulfillment_executing")
