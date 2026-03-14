@@ -146,7 +146,9 @@ def transcribe_audio(audio_path: str, language: Optional[str] = None) -> Dict[st
         }
         
     except Exception as e:
-        print(f"❌ Whisper transcription failed: {e}")
+        import traceback
+        error_tb = traceback.format_exc()
+        print(f"❌ Whisper transcription failed: {e}\n{error_tb}")
         return {
             "success": False,
             "error": str(e),
@@ -183,7 +185,9 @@ def transcribe_audio_from_bytes(audio_bytes: bytes, format: str = "wav") -> Dict
         return result
         
     except Exception as e:
-        print(f"❌ Error processing audio bytes: {e}")
+        import traceback
+        error_tb = traceback.format_exc()
+        print(f"❌ Error processing audio bytes: {e}\n{error_tb}")
         return {
             "success": False,
             "error": str(e),

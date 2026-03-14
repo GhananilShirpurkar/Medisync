@@ -44,9 +44,11 @@ class FusionCalculator:
         self.last_event_agent = agent
         self.last_event_type = type_
         
+        agent_norm = agent.lower().replace(" ", "").replace("_", "")
+        
         # 1. Update Phase and Completion
-        if status == "completed" and agent not in self.agents_completed:
-            self.agents_completed.add(agent)
+        if status == "completed" and agent_norm not in self.agents_completed:
+            self.agents_completed.add(agent_norm)
             old_completion = self.scores["pipeline_completion"]
             self.scores["pipeline_completion"] = min(1.0, len(self.agents_completed) / self.total_agents_expected)
             if self.scores["pipeline_completion"] != old_completion:
@@ -54,20 +56,20 @@ class FusionCalculator:
                 
         # Phase tracking
         old_phase = self.pipeline_phase
-        if agent in ["IdentityAgent", "FrontDesk"]:
+        if "identity" in agent_norm or "frontdesk" in agent_norm:
             self.pipeline_phase = "intake"
-        elif agent in ["VisionAgent", "MedicalValidator"]:
+        elif "vision" in agent_norm or "medical" in agent_norm:
             self.pipeline_phase = "validation"
-        elif agent == "Inventory":
+        elif "inventory" in agent_norm:
             self.pipeline_phase = "inventory"
-        elif agent == "Fulfillment":
+        elif "fulfillment" in agent_norm:
             self.pipeline_phase = "fulfillment"
             
         if status in ["failed", "rejected"] or "failed" in type_:
             self.pipeline_phase = "halted"
             self.halt_reason = details.get("reason", details.get("error", f"{agent} Failed"))
             
-        if status == "completed" and agent == "Fulfillment":
+        if status == "completed" and "fulfillment" in agent_norm:
             self.pipeline_phase = "complete"
 
         if old_phase != self.pipeline_phase:
@@ -76,37 +78,46 @@ class FusionCalculator:
         # 2. Extract specific scores from event details
         
         # Identity
-        if agent == "IdentityAgent" and "confidence" in details:
-            self.scores["identity_resolution"] = details["confidence"]
-            changed = True
+        if "identity" in agent_norm:
+            if "confidence" in details:
+                self.scores["identity_resolution"] = details["confidence"]
+                changed = True
+            elif "is_new" in details and status == "completed":
+                self.scores["identity_resolution"] = 1.0
+                changed = True
             
         # Intent Classification & Extraction
-        if agent == "FrontDesk":
+        if "frontdesk" in agent_norm:
             if "confidence" in details:
                 self.scores["intent_classification"] = details["confidence"]
-                self.scores["intent_extraction"] = details.get("confidence", 0.0) # often same
+                self.scores["intent_extraction"] = details.get("confidence", 0.0)
+                changed = True
+            elif status == "completed" and "intent" in details:
+                self.scores["intent_classification"] = 0.85
+                self.scores["intent_extraction"] = 0.85
                 changed = True
                 
         # Vision / OCR
-        if agent == "VisionAgent" and "confidence_score" in details:
+        if "vision" in agent_norm and "confidence_score" in details:
             self.scores["ocr_confidence"] = details["confidence_score"]
             changed = True
-        if agent == "MedicalValidator" and "reconstruction_confidence" in details:
+        if "medical" in agent_norm and "reconstruction_confidence" in details:
             self.scores["ocr_confidence"] = details["reconstruction_confidence"]
             changed = True
             
         # Severity Scorer
-        if "severity_score" in details:
-            score = details["severity_score"]
-            try:
-                score_val = float(score)
-                self.scores["severity_inverted"] = max(0.0, 1.0 - (score_val / 10.0))
-                changed = True
-            except (ValueError, TypeError):
-                pass
+        for sev_key in ["severity_score", "severity"]:
+            if sev_key in details:
+                score = details[sev_key]
+                try:
+                    score_val = float(score)
+                    self.scores["severity_inverted"] = max(0.0, 1.0 - (score_val / 10.0))
+                    changed = True
+                except (ValueError, TypeError):
+                    pass
                 
         # Contraindications / Safety
-        if agent == "MedicalValidator":
+        if "medical" in agent_norm:
             if "safe_to_dispense" in details:
                 safe = details["safe_to_dispense"]
                 self.scores["contraindication_clear"] = 1.0 if safe else 0.0
@@ -117,7 +128,7 @@ class FusionCalculator:
                 changed = True
 
         # Inventory match
-        if agent == "Inventory":
+        if "inventory" in agent_norm:
             if "match_score" in details:
                 self.scores["inventory_match_score"] = float(details["match_score"])
                 changed = True

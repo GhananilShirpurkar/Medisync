@@ -196,26 +196,24 @@ async def send_otp(request: OTPSendRequest):
     message = f"🔐 *MediSync Verification*\n\nYour secure access code is: *{code}*\n\nThis code expires in 5 minutes. Please do not share it with anyone."
     result = whatsapp_service.send_message(request.phone, message)
     
+    # Unconditionally log to console for development testing
+    # Since Twilio Sandbox "queues" the message but drops it if the recipient
+    # hasn't joined the sandbox, we need a reliable way to get the OTP locally.
+    print("\n" + "="*70)
+    print("📱 MEDISYNC VERIFICATION OTP")
+    print("="*70)
+    print(f"Phone: {request.phone}")
+    print(f"🔐 Verification Code: {code}")
+    print(f"⏰ Expires: 5 minutes")
+    print("\n💡 NOTE: If you are not receiving WhatsApp messages:")
+    print("   1. Join Twilio WhatsApp Sandbox first:")
+    print("      - Send 'join <your-code>' to +1 415 523 8886")
+    print("   2. Or just use the code above for testing")
+    print("="*70 + "\n")
+    
     if not result.get("success"):
         error_msg = result.get('error', 'Unknown error')
         logger.warning(f"WhatsApp send failed for {request.phone}: {error_msg}")
-        
-        # Development fallback: Print to console
-        print("\n" + "="*70)
-        print("📱 WHATSAPP SEND FAILED - DEVELOPMENT MODE")
-        print("="*70)
-        print(f"Phone: {request.phone}")
-        print(f"🔐 Verification Code: {code}")
-        print(f"⏰ Expires: 5 minutes")
-        print(f"❌ Error: {error_msg}")
-        print("\n💡 To fix:")
-        print("   1. Join Twilio WhatsApp Sandbox:")
-        print("      - Send 'join <your-code>' to +1 415 523 8886")
-        print("      - Get your code at: https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn")
-        print("   2. Or use the code above for testing")
-        print("="*70 + "\n")
-        
-        # Return success with debug info for development
         return {
             "success": True,
             "message": "OTP generated (WhatsApp unavailable - check console)",
@@ -227,7 +225,7 @@ async def send_otp(request: OTPSendRequest):
     logger.info(f"OTP sent successfully to {request.phone} via WhatsApp")
     return {
         "success": True,
-        "message": "OTP sent via WhatsApp",
+        "message": "OTP sent via WhatsApp (also printed to console)",
         "method": "whatsapp"
     }
 
@@ -2578,14 +2576,15 @@ Symptoms:"""
         from src.db_config import get_db_context
         
         if semantic_search_service.enabled:
-            # 0.35 is a good baseline for SentenceTransformers
+            # Lowering the baseline from 0.35 to 0.15 because symptoms are matched
+            # against long verbose technical indications, yielding low cosine similarity (e.g. 0.25)
             individual_symptoms = [s.strip() for s in message.split(',')] if ',' in message else [message]
             
             for symp in individual_symptoms:
                 if not symp or symp == "unknown": continue
                     
                 semantic_results = semantic_search_service.search(
-                    symp, top_k=5, threshold=0.35
+                    symp, top_k=5, threshold=0.15
                 )
                 
                 if semantic_results:
